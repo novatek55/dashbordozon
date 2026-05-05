@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Ozon Unitka Helper</title>
+  <style>
+    body { font: 13px system-ui, sans-serif; margin: 0; padding: 12px; width: 320px; color: #1e293b; }
+    h3 { margin: 0 0 8px; font-size: 14px; }
+    .section { margin-bottom: 14px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
+    .section label { display: block; font-size: 11px; color: #64748b; margin-bottom: 4px; }
+    .section input, .section select {
+      width: 100%; padding: 5px 7px; border: 1px solid #cbd5e1; border-radius: 4px;
+      font: inherit; box-sizing: border-box;
+    }
+    button {
+      width: 100%; padding: 7px; margin-top: 8px;
+      background: #3b82f6; color: #fff; border: 0; border-radius: 4px;
+      font: inherit; font-weight: 500; cursor: pointer;
+    }
+    button:disabled { background: #94a3b8; cursor: wait; }
+    button:hover:not(:disabled) { background: #2563eb; }
+    button.secondary { background: #10b981; }
+    button.secondary:hover:not(:disabled) { background: #059669; }
+    .row { display: flex; gap: 6px; }
+    .row > * { flex: 1; }
+    #status { margin-top: 10px; padding: 6px 8px; border-radius: 4px; font-size: 11.5px; display: none; }
+    #status.ok { background: #dcfce7; color: #166534; display: block; }
+    #status.err { background: #fee2e2; color: #991b1b; display: block; }
+    #status.info { background: #dbeafe; color: #1e3a8a; display: block; }
+    .hint { font-size: 10.5px; color: #94a3b8; margin-top: 4px; }
+    .settings { border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <h3>Ozon Unitka Helper</h3>
+
+  <div class="section">
+    <label>Калькулятор Ozon — товар (URL или SKU)</label>
+    <input type="text" id="calcQuery" placeholder="https://www.ozon.ru/product/... или SKU">
+    <button id="calcBtn">📐 Забрать из калькулятора</button>
+    <div class="hint">Парсит цену, габариты, вес, комиссии. Сохраняет в БД.</div>
+  </div>
+
+  <div class="section">
+    <label>Bestsellers (что продавать)</label>
+    <div class="row">
+      <select id="bestPeriod">
+        <option value="monthly" selected>28 дней</option>
+        <option value="weekly">7 дней</option>
+      </select>
+      <input type="number" id="bestLimit" min="10" max="500" value="50" step="10">
+    </div>
+    <input type="text" id="bestSearch" placeholder="Поиск по названию (опционально)" style="margin-top: 4px;">
+    <button id="bestBtn" class="secondary">📊 Забрать bestsellers</button>
+    <div class="hint">Категория → Аналитика → Что продавать. Нужна авторизация в seller.ozon.ru.</div>
+  </div>
+
+  <div id="status"></div>
+
+  <div class="settings">
+    <label style="font-size: 11px; color: #64748b;">Дашборд URL</label>
+    <input type="text" id="dashboardUrl" value="http://127.0.0.1:8088">
+    <label style="font-size: 11px; color: #64748b; margin-top: 6px;">Company ID (для seller BFF)</label>
+    <input type="text" id="companyId" placeholder="146478">
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

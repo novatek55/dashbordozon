@@ -1,0 +1,72 @@
+# Конвертированная конфигурация (из предоставленного JSON)
+region: ru
+block-ads: false
+use-xray-core-when-possible: false
+execute-config-as-is: false
+log-level: warn
+resolve-destination: true
+ipv6-mode: ipv4_only
+remote-dns-address: "tcp://8.8.8.8"
+remote-dns-domain-strategy: ""
+direct-dns-address: "1.1.1.1"
+direct-dns-domain-strategy: ""
+
+mixed-port: 12334
+tproxy-port: 12335
+redir-port: 12336
+port: 12337
+
+tun-implementation: gvisor
+mtu: 9000
+strict-route: true
+connection-test-url: "http://captive.apple.com/hotspot-detect.html"
+url-test-interval: 600
+
+enable-clash-api: true
+clash-api-port: 16756
+
+enable-tun: false
+enable-tun-service: true
+set-system-proxy: false
+bypass-lan: true
+allow-connection-from-lan: false
+enable-fake-dns: false
+independent-dns-cache: true
+
+rules: []
+proxies: []
+proxy-groups: []
+
+mux:
+  enable: false
+  padding: false
+  max-streams: 8
+  protocol: h2mux
+
+tls-tricks:
+  enable-fragment: false
+  fragment-size: "10-30"
+  fragment-sleep: "2-8"
+  mixed-sni-case: false
+  enable-padding: false
+  padding-size: "1-1500"
+
+warp:
+  enable: false
+  mode: warp_over_proxy
+  clean-ip: auto
+  clean-port: 0
+  noise: "1-3"
+  noise-size: "10-30"
+  noise-delay: "10-30"
+  noise-mode: m4
+
+warp2:
+  enable: false
+  mode: warp_over_proxy
+  clean-ip: auto
+  clean-port: 0
+  noise: "1-3"
+  noise-size: "10-30"
+  noise-delay: "10-30"
+  noise-mode: m4

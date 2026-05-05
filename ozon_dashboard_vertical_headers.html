@@ -1,0 +1,150 @@
+
+<div style="padding: 1rem 0;">
+
+  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem;">
+    <div style="width: 32px; height: 32px; border-radius: var(--border-radius-md); background: #0069FF12; display: flex; align-items: center; justify-content: center;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12V4a1 1 0 011-1h10a1 1 0 011 1v8a1 1 0 01-1 1H3a1 1 0 01-1-1z" stroke="#0069FF" stroke-width="1.2"/><path d="M2 6h12" stroke="#0069FF" stroke-width="1.2"/><path d="M6 6v7" stroke="#0069FF" stroke-width="1.2"/></svg>
+    </div>
+    <div>
+      <p style="margin: 0; font-size: 16px; font-weight: 500; color: var(--color-text-primary);">Начисления и компенсации</p>
+      <p style="margin: 2px 0 0; font-size: 13px; color: var(--color-text-secondary);">Март 2026 — 35 артикулов</p>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 1.25rem;">
+    <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 16px;">
+      <p style="margin: 0; font-size: 12px; color: var(--color-text-secondary);">Выручка</p>
+      <p style="margin: 4px 0 0; font-size: 20px; font-weight: 500; color: var(--color-text-primary);">6 744 377</p>
+    </div>
+    <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 16px;">
+      <p style="margin: 0; font-size: 12px; color: var(--color-text-secondary);">Валовая прибыль</p>
+      <p style="margin: 4px 0 0; font-size: 20px; font-weight: 500; color: #0F6E56;">1 102 172</p>
+    </div>
+    <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 16px;">
+      <p style="margin: 0; font-size: 12px; color: var(--color-text-secondary);">Маржинальность</p>
+      <p style="margin: 4px 0 0; font-size: 20px; font-weight: 500; color: #0F6E56;">42%</p>
+    </div>
+    <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 16px;">
+      <p style="margin: 0; font-size: 12px; color: var(--color-text-secondary);">ДРР</p>
+      <p style="margin: 4px 0 0; font-size: 20px; font-weight: 500; color: #854F0B;">11,4%</p>
+    </div>
+  </div>
+
+  <div style="background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden;">
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1200px;">
+        <thead>
+          <tr id="hdr"></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <p style="margin: 10px 0 0; font-size: 12px; color: var(--color-text-tertiary); text-align: right;">35 строк загружено</p>
+</div>
+
+<script>
+const cols = [
+  { label: "Артикул", bg: "var(--color-background-secondary)", color: "var(--color-text-secondary)", align: "left", w: "160px", vertical: false },
+  { label: "Выручка / продажи − возвраты", bg: "#EAF3DE", color: "#27500A", align: "right", w: "80px", vertical: true },
+  { label: "Продажи (шт)", bg: "#EAF3DE", color: "#27500A", align: "right", w: "65px", vertical: true },
+  { label: "Продвижение и реклама", bg: "#FAEEDA", color: "#633806", align: "right", w: "80px", vertical: true },
+  { label: "Оплата за клик", bg: "#FAEEDA", color: "#633806", align: "right", w: "75px", vertical: true },
+  { label: "ДРР (к выручке)", bg: "#FAEEDA", color: "#633806", align: "right", w: "70px", vertical: true },
+  { label: "Итого начислено на р/с", bg: "#E6F1FB", color: "#0C447C", align: "right", w: "80px", vertical: true },
+  { label: "Материальная себестоимость", bg: "var(--color-background-secondary)", color: "var(--color-text-secondary)", align: "right", w: "80px", vertical: true },
+  { label: "Валовая прибыль", bg: "#E1F5EE", color: "#085041", align: "right", w: "80px", vertical: true },
+  { label: "Маржинальность РС %", bg: "#E1F5EE", color: "#085041", align: "right", w: "70px", vertical: true },
+  { label: "Выручка / продажи − возвраты", bg: "#EEEDFE", color: "#3C3489", align: "right", w: "80px", vertical: true },
+  { label: "Продажи (шт)", bg: "#EEEDFE", color: "#3C3489", align: "right", w: "65px", vertical: true },
+  { label: "Возвраты, руб", bg: "#FCEBEB", color: "#791F1F", align: "right", w: "75px", vertical: true },
+  { label: "Возвраты, %", bg: "#FCEBEB", color: "#791F1F", align: "right", w: "65px", vertical: true },
+  { label: "Логистика на 1 ед", bg: "var(--color-background-secondary)", color: "var(--color-text-secondary)", align: "right", w: "75px", vertical: true },
+  { label: "Логистика % к выручке", bg: "var(--color-background-secondary)", color: "var(--color-text-secondary)", align: "right", w: "75px", vertical: true },
+];
+
+const hdr = document.getElementById("hdr");
+cols.forEach(c => {
+  const th = document.createElement("th");
+  th.style.cssText = `height:140px; vertical-align:bottom; padding:0 4px 10px; border-bottom:0.5px solid var(--color-border-tertiary); background:${c.bg}; min-width:${c.w};`;
+  if (c.vertical) {
+    const d = document.createElement("div");
+    d.style.cssText = `writing-mode:vertical-rl; transform:rotate(180deg); font-weight:500; color:${c.color}; font-size:11px; white-space:nowrap; margin:0 auto; line-height:1.3;`;
+    d.textContent = c.label;
+    th.appendChild(d);
+  } else {
+    th.style.textAlign = "left";
+    th.style.paddingLeft = "12px";
+    th.style.fontWeight = "500";
+    th.style.color = c.color;
+    th.style.fontSize = "11px";
+    th.textContent = c.label;
+  }
+  hdr.appendChild(th);
+});
+
+const rows = [
+  ["115 танк","250 952","48","29 507","25 700","11.8%","29 975","11 424","8 143","3%","250 952","48","7 000","2.8%","19 113","1 200"],
+  ["215 адидас с полками","778 987","65","83 507","65 700","10.7%","82 975","31 424","58 143","7%","778 987","65","5 600","0.7%","12 443","890"],
+  ["105 носорог","135 588","120","6 637","5 200","4.9%","128 951","42 000","18 540","14%","135 588","120","3 200","2.4%","8 330","6 637"],
+  ["210 уличный 500","0","0","0","0","0%","20 130","0","0","0%","0","0","0","0%","0","0"],
+  ["3001968993","0","0","0","0","0%","2 295","0","0","0%","0","0","0","0%","0","0"],
+  ["401 держатель","1 669","12","0","0","0%","915","500","254","15%","1 669","12","0","0%","340","0"],
+  ["114 подстолье","171 928","83","883","700","0.5%","171 045","52 000","35 200","20%","171 928","83","2 100","1.2%","5 600","883"],
+  ["114-3","121 954","45","0","0","0%","121 954","38 000","22 100","18%","121 954","45","1 800","1.5%","4 200","0"],
+  ["122 v напольный","8 000","5","0","0","0%","8 000","2 400","1 600","20%","8 000","5","0","0%","890","0"],
+  ["123 v п_1000","5 250","3","0","0","0%","5 250","1 600","900","17%","5 250","3","0","0%","560","0"],
+];
+
+const tbody = document.getElementById("tbody");
+
+const sumRow = document.createElement("tr");
+sumRow.style.cssText = "border-bottom:2px solid var(--color-border-secondary); font-weight:500; background: var(--color-background-secondary);";
+const sumData = ["Итого","6 744 377","873","827 992","771 381","11,4%","2 652 307","838 002","1 102 172","42%","6 744 377","873","144 687","2.75%","776 709","890"];
+sumData.forEach((v, j) => {
+  const td = document.createElement("td");
+  td.style.cssText = `padding:10px ${j===0?'12':'8'}px; text-align:${j===0?'left':'right'}; font-size:12px; font-variant-numeric:tabular-nums; color:var(--color-text-primary);`;
+  if (j === 0) td.style.fontWeight = "500";
+  td.textContent = v;
+  sumRow.appendChild(td);
+});
+tbody.appendChild(sumRow);
+
+rows.forEach((row, i) => {
+  const tr = document.createElement("tr");
+  tr.style.borderBottom = "0.5px solid var(--color-border-tertiary)";
+  if (i % 2 === 0) tr.style.background = "transparent";
+  else tr.style.background = "var(--color-background-secondary)";
+
+  row.forEach((cell, j) => {
+    const td = document.createElement("td");
+    td.style.cssText = `padding:9px ${j===0?'12':'8'}px; text-align:${cols[j].align}; font-size:12px; font-variant-numeric:tabular-nums;`;
+
+    if (j === 0) {
+      td.style.fontWeight = "500";
+      td.style.whiteSpace = "nowrap";
+      td.style.overflow = "hidden";
+      td.style.textOverflow = "ellipsis";
+      td.style.maxWidth = "160px";
+      td.style.color = "var(--color-text-primary)";
+    } else {
+      const clean = cell.replace(/[%\s]/g, "");
+      const num = parseFloat(clean);
+      if (num === 0) {
+        td.style.color = "var(--color-text-tertiary)";
+      } else if (j >= 3 && j <= 5) {
+        td.style.color = "#854F0B";
+      } else if (j === 8 || j === 9) {
+        td.style.color = "#0F6E56";
+      } else if (j >= 12 && j <= 13) {
+        td.style.color = "#A32D2D";
+      } else {
+        td.style.color = "var(--color-text-primary)";
+      }
+    }
+    td.textContent = cell;
+    tr.appendChild(td);
+  });
+  tbody.appendChild(tr);
+});
+</script>

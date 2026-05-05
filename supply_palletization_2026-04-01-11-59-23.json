@@ -1,0 +1,793 @@
+{
+  "saved_at": "2026-04-01T11:59:23.826Z",
+  "source": "orders_dashboard",
+  "clusters": [
+    {
+      "cluster": "Москва, МО и Дальние регионы",
+      "pallets": [
+        {
+          "pallet_number": 1,
+          "total_height": 1.785,
+          "total_weight": 346.43,
+          "items": [
+            {
+              "product_id": 1388649379,
+              "sku": "1860180682",
+              "offer_id": "215 адидас с полками",
+              "name": "Дровница для камина с полками металлическая Лофт",
+              "quantity": 30,
+              "height": 1.125,
+              "weight": 252.9,
+              "layers": 15,
+              "crossdock_liters": 1080,
+              "crossdock_billed_liters": 1197.4789915966387,
+              "crossdock_cost": 1856.09243697479,
+              "crossdock_rate_per_liter": 1.55,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1878416774,
+              "sku": "2219042136",
+              "offer_id": "125П",
+              "name": "Подстолье для стола металлическое Лофт столешница от 130х70см",
+              "quantity": 13,
+              "height": 0.63,
+              "weight": 84.89,
+              "layers": 7,
+              "crossdock_liters": 604.8,
+              "crossdock_billed_liters": 670.5882352941176,
+              "crossdock_cost": 1039.4117647058822,
+              "crossdock_rate_per_liter": 1.55,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1604365105,
+              "sku": "2021102960",
+              "offer_id": "403 цинк",
+              "name": "Держатель для садового инструмента для лопат и граблей на стену 4шт",
+              "quantity": 8,
+              "height": 0.03,
+              "weight": 8.64,
+              "layers": 1,
+              "crossdock_liters": 28.799999999999997,
+              "crossdock_billed_liters": 31.932773109243698,
+              "crossdock_cost": 49.49579831932773,
+              "crossdock_rate_per_liter": 1.55,
+              "cluster_markup_pct": 8
+            }
+          ]
+        },
+        {
+          "pallet_number": 2,
+          "total_height": 1.765,
+          "total_weight": 262.6,
+          "items": [
+            {
+              "product_id": 1396612883,
+              "sku": "1866252620",
+              "offer_id": "123 V центр",
+              "name": "Подстолье металлическое ножки для стола Лофт",
+              "quantity": 20,
+              "height": 0.9,
+              "weight": 108,
+              "layers": 10,
+              "crossdock_liters": 864,
+              "crossdock_billed_liters": 968.8385269121814,
+              "crossdock_cost": 1501.6997167138811,
+              "crossdock_rate_per_liter": 1.55,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1396615661,
+              "sku": "1866254980",
+              "offer_id": "124 раздвижной",
+              "name": "Подстолье металлическое раздвижное ножки для стола Лофт Монолит",
+              "quantity": 12,
+              "height": 0.54,
+              "weight": 117.6,
+              "layers": 6,
+              "crossdock_liters": 518.4000000000001,
+              "crossdock_billed_liters": 581.3031161473089,
+              "crossdock_cost": 901.0198300283287,
+              "crossdock_rate_per_liter": 1.55,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 3249467155,
+              "sku": "3250277120",
+              "offer_id": "114-3",
+              "name": "Подстолье для круглого стола металлическое ножки для стола Лофт",
+              "quantity": 10,
+              "height": 0.325,
+              "weight": 37,
+              "layers": 5,
+              "crossdock_liters": 312,
+              "crossdock_billed_liters": 349.8583569405099,
+              "crossdock_cost": 542.2804532577903,
+              "crossdock_rate_per_liter": 1.55,
+              "cluster_markup_pct": 8
+            }
+          ]
+        },
+        {
+          "pallet_number": 3,
+          "total_height": 0.485,
+          "total_weight": 92.71,
+          "items": [
+            {
+              "product_id": 1396618000,
+              "sku": "1866257461",
+              "offer_id": "122 V напольный",
+              "name": "Подстолье металлическое ножки для стола Лофт",
+              "quantity": 8,
+              "height": 0.42,
+              "weight": 52.24,
+              "layers": 4,
+              "crossdock_liters": 403.2,
+              "crossdock_billed_liters": 1645.3608247422678,
+              "crossdock_cost": 2550.3092783505153,
+              "crossdock_rate_per_liter": 1.55,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1396596620,
+              "sku": "1866237683",
+              "offer_id": "217 подвесной",
+              "name": "Дровница металлическая для бани камина дома дачи подвесная / напольная, дровник лофт",
+              "quantity": 6,
+              "height": 0.065,
+              "weight": 40.47,
+              "layers": 1,
+              "crossdock_liters": 62.400000000000006,
+              "crossdock_billed_liters": 254.63917525773195,
+              "crossdock_cost": 394.69072164948454,
+              "crossdock_rate_per_liter": 1.55,
+              "cluster_markup_pct": 8
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "missing_products": [],
+      "split_sku_count": 0,
+      "crossdock_estimate": {
+        "available": true,
+        "shipment_rate_pallet": 0.15,
+        "transport_rate_pallet": 1.4000000000000001,
+        "total_rate_pallet": 1.55,
+        "total_liters": 3873.6,
+        "total_billed_liters": 5700,
+        "min_pallet_liters": 1900,
+        "total_cost": 8835,
+        "cluster_markup_pct": 8,
+        "lead_time": "2 - 3 дней",
+        "rows_used": 382,
+        "pickup_matched": true
+      }
+    },
+    {
+      "cluster": "Санкт-Петербург и СЗО",
+      "pallets": [
+        {
+          "pallet_number": 1,
+          "total_height": 1.73,
+          "total_weight": 255.97,
+          "items": [
+            {
+              "product_id": 1396618000,
+              "sku": "1866257461",
+              "offer_id": "122 V напольный",
+              "name": "Подстолье металлическое ножки для стола Лофт",
+              "quantity": 30,
+              "height": 1.575,
+              "weight": 195.9,
+              "layers": 15,
+              "crossdock_liters": 1512,
+              "crossdock_billed_liters": 1729.7687861271675,
+              "crossdock_cost": 5448.771676300577,
+              "crossdock_rate_per_liter": 3.15,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1396615661,
+              "sku": "1866254980",
+              "offer_id": "124 раздвижной",
+              "name": "Подстолье металлическое раздвижное ножки для стола Лофт Монолит",
+              "quantity": 2,
+              "height": 0.09,
+              "weight": 19.6,
+              "layers": 1,
+              "crossdock_liters": 86.39999999999999,
+              "crossdock_billed_liters": 98.84393063583812,
+              "crossdock_cost": 311.35838150289004,
+              "crossdock_rate_per_liter": 3.15,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1396596620,
+              "sku": "1866237683",
+              "offer_id": "217 подвесной",
+              "name": "Дровница металлическая для бани камина дома дачи подвесная / напольная, дровник лофт",
+              "quantity": 6,
+              "height": 0.065,
+              "weight": 40.47,
+              "layers": 1,
+              "crossdock_liters": 62.400000000000006,
+              "crossdock_billed_liters": 71.38728323699422,
+              "crossdock_cost": 224.8699421965318,
+              "crossdock_rate_per_liter": 3.15,
+              "cluster_markup_pct": 8
+            }
+          ]
+        },
+        {
+          "pallet_number": 2,
+          "total_height": 1.755,
+          "total_weight": 315.56,
+          "items": [
+            {
+              "product_id": 1388649379,
+              "sku": "1860180682",
+              "offer_id": "215 адидас с полками",
+              "name": "Дровница для камина с полками металлическая Лофт",
+              "quantity": 22,
+              "height": 0.825,
+              "weight": 185.46,
+              "layers": 11,
+              "crossdock_liters": 792,
+              "crossdock_billed_liters": 893.1623931623932,
+              "crossdock_cost": 2813.4615384615386,
+              "crossdock_rate_per_liter": 3.15,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1396612883,
+              "sku": "1866252620",
+              "offer_id": "123 V центр",
+              "name": "Подстолье металлическое ножки для стола Лофт",
+              "quantity": 10,
+              "height": 0.45,
+              "weight": 54,
+              "layers": 5,
+              "crossdock_liters": 432,
+              "crossdock_billed_liters": 487.17948717948724,
+              "crossdock_cost": 1534.6153846153848,
+              "crossdock_rate_per_liter": 3.15,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1878416774,
+              "sku": "2219042136",
+              "offer_id": "125П",
+              "name": "Подстолье для стола металлическое Лофт столешница от 130х70см",
+              "quantity": 10,
+              "height": 0.45,
+              "weight": 65.3,
+              "layers": 5,
+              "crossdock_liters": 432,
+              "crossdock_billed_liters": 487.17948717948724,
+              "crossdock_cost": 1534.6153846153848,
+              "crossdock_rate_per_liter": 3.15,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1604365105,
+              "sku": "2021102960",
+              "offer_id": "403 цинк",
+              "name": "Держатель для садового инструмента для лопат и граблей на стену 4шт",
+              "quantity": 10,
+              "height": 0.03,
+              "weight": 10.8,
+              "layers": 1,
+              "crossdock_liters": 28.799999999999997,
+              "crossdock_billed_liters": 32.47863247863248,
+              "crossdock_cost": 102.30769230769229,
+              "crossdock_rate_per_liter": 3.15,
+              "cluster_markup_pct": 8
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "missing_products": [],
+      "split_sku_count": 0,
+      "crossdock_estimate": {
+        "available": true,
+        "shipment_rate_pallet": 0.15,
+        "transport_rate_pallet": 3,
+        "total_rate_pallet": 3.15,
+        "total_liters": 3345.6,
+        "total_billed_liters": 3800,
+        "min_pallet_liters": 1900,
+        "total_cost": 11970,
+        "cluster_markup_pct": 8,
+        "lead_time": "2 - 3 дней",
+        "rows_used": 162,
+        "pickup_matched": true
+      }
+    },
+    {
+      "cluster": "Казань",
+      "pallets": [
+        {
+          "pallet_number": 1,
+          "total_height": 1.77,
+          "total_weight": 277.6,
+          "items": [
+            {
+              "product_id": 1396618000,
+              "sku": "1866257461",
+              "offer_id": "122 V напольный",
+              "name": "Подстолье металлическое ножки для стола Лофт",
+              "quantity": 20,
+              "height": 1.05,
+              "weight": 130.6,
+              "layers": 10,
+              "crossdock_liters": 1008,
+              "crossdock_billed_liters": 1127.1186440677968,
+              "crossdock_cost": 4226.6949152542375,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1396615661,
+              "sku": "1866254980",
+              "offer_id": "124 раздвижной",
+              "name": "Подстолье металлическое раздвижное ножки для стола Лофт Монолит",
+              "quantity": 15,
+              "height": 0.72,
+              "weight": 147,
+              "layers": 8,
+              "crossdock_liters": 691.1999999999999,
+              "crossdock_billed_liters": 772.8813559322034,
+              "crossdock_cost": 2898.305084745763,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            }
+          ]
+        },
+        {
+          "pallet_number": 2,
+          "total_height": 1.74,
+          "total_weight": 270.22,
+          "items": [
+            {
+              "product_id": 1396612883,
+              "sku": "1866252620",
+              "offer_id": "123 V центр",
+              "name": "Подстолье металлическое ножки для стола Лофт",
+              "quantity": 14,
+              "height": 0.63,
+              "weight": 75.6,
+              "layers": 7,
+              "crossdock_liters": 604.8,
+              "crossdock_billed_liters": 687.9310344827586,
+              "crossdock_cost": 2579.7413793103447,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1388649379,
+              "sku": "1860180682",
+              "offer_id": "215 адидас с полками",
+              "name": "Дровница для камина с полками металлическая Лофт",
+              "quantity": 14,
+              "height": 0.525,
+              "weight": 118.02,
+              "layers": 7,
+              "crossdock_liters": 504,
+              "crossdock_billed_liters": 573.2758620689656,
+              "crossdock_cost": 2149.784482758621,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1878416774,
+              "sku": "2219042136",
+              "offer_id": "125П",
+              "name": "Подстолье для стола металлическое Лофт столешница от 130х70см",
+              "quantity": 8,
+              "height": 0.36,
+              "weight": 52.24,
+              "layers": 4,
+              "crossdock_liters": 345.59999999999997,
+              "crossdock_billed_liters": 393.10344827586204,
+              "crossdock_cost": 1474.1379310344826,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 3249467155,
+              "sku": "3250277120",
+              "offer_id": "114-3",
+              "name": "Подстолье для круглого стола металлическое ножки для стола Лофт",
+              "quantity": 6,
+              "height": 0.195,
+              "weight": 22.2,
+              "layers": 3,
+              "crossdock_liters": 187.20000000000002,
+              "crossdock_billed_liters": 212.93103448275866,
+              "crossdock_cost": 798.491379310345,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1604365105,
+              "sku": "2021102960",
+              "offer_id": "403 цинк",
+              "name": "Держатель для садового инструмента для лопат и граблей на стену 4шт",
+              "quantity": 2,
+              "height": 0.03,
+              "weight": 2.16,
+              "layers": 1,
+              "crossdock_liters": 28.799999999999997,
+              "crossdock_billed_liters": 32.758620689655174,
+              "crossdock_cost": 122.84482758620689,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "missing_products": [],
+      "split_sku_count": 0,
+      "crossdock_estimate": {
+        "available": true,
+        "shipment_rate_pallet": 0.15,
+        "transport_rate_pallet": 3.6,
+        "total_rate_pallet": 3.75,
+        "total_liters": 3369.6,
+        "total_billed_liters": 3800,
+        "min_pallet_liters": 1900,
+        "total_cost": 14250,
+        "cluster_markup_pct": 8,
+        "lead_time": "2 - 3 дней",
+        "rows_used": 108,
+        "pickup_matched": true
+      }
+    },
+    {
+      "cluster": "Екатеринбург",
+      "pallets": [
+        {
+          "pallet_number": 1,
+          "total_height": 1.725,
+          "total_weight": 307.78,
+          "items": [
+            {
+              "product_id": 1388649379,
+              "sku": "1860180682",
+              "offer_id": "215 адидас с полками",
+              "name": "Дровница для камина с полками металлическая Лофт",
+              "quantity": 12,
+              "height": 0.45,
+              "weight": 101.16,
+              "layers": 6,
+              "crossdock_liters": 432,
+              "crossdock_billed_liters": 495.65217391304344,
+              "crossdock_cost": 2056.9565217391305,
+              "crossdock_rate_per_liter": 4.15,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1396612883,
+              "sku": "1866252620",
+              "offer_id": "123 V центр",
+              "name": "Подстолье металлическое ножки для стола Лофт",
+              "quantity": 10,
+              "height": 0.45,
+              "weight": 54,
+              "layers": 5,
+              "crossdock_liters": 432,
+              "crossdock_billed_liters": 495.65217391304344,
+              "crossdock_cost": 2056.9565217391305,
+              "crossdock_rate_per_liter": 4.15,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1396615661,
+              "sku": "1866254980",
+              "offer_id": "124 раздвижной",
+              "name": "Подстолье металлическое раздвижное ножки для стола Лофт Монолит",
+              "quantity": 10,
+              "height": 0.45,
+              "weight": 98,
+              "layers": 5,
+              "crossdock_liters": 432,
+              "crossdock_billed_liters": 495.65217391304344,
+              "crossdock_cost": 2056.9565217391305,
+              "crossdock_rate_per_liter": 4.15,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1878416774,
+              "sku": "2219042136",
+              "offer_id": "125П",
+              "name": "Подстолье для стола металлическое Лофт столешница от 130х70см",
+              "quantity": 3,
+              "height": 0.18,
+              "weight": 19.59,
+              "layers": 2,
+              "crossdock_liters": 172.79999999999998,
+              "crossdock_billed_liters": 198.26086956521738,
+              "crossdock_cost": 822.7826086956522,
+              "crossdock_rate_per_liter": 4.15,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 3249467155,
+              "sku": "3250277120",
+              "offer_id": "114-3",
+              "name": "Подстолье для круглого стола металлическое ножки для стола Лофт",
+              "quantity": 4,
+              "height": 0.13,
+              "weight": 14.8,
+              "layers": 2,
+              "crossdock_liters": 124.80000000000001,
+              "crossdock_billed_liters": 143.18840579710147,
+              "crossdock_cost": 594.2318840579711,
+              "crossdock_rate_per_liter": 4.15,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1396596620,
+              "sku": "1866237683",
+              "offer_id": "217 подвесной",
+              "name": "Дровница металлическая для бани камина дома дачи подвесная / напольная, дровник лофт",
+              "quantity": 3,
+              "height": 0.065,
+              "weight": 20.23,
+              "layers": 1,
+              "crossdock_liters": 62.400000000000006,
+              "crossdock_billed_liters": 71.59420289855073,
+              "crossdock_cost": 297.11594202898556,
+              "crossdock_rate_per_liter": 4.15,
+              "cluster_markup_pct": 8
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "missing_products": [],
+      "split_sku_count": 0,
+      "crossdock_estimate": {
+        "available": true,
+        "shipment_rate_pallet": 0.15,
+        "transport_rate_pallet": 4,
+        "total_rate_pallet": 4.15,
+        "total_liters": 1656,
+        "total_billed_liters": 1900,
+        "min_pallet_liters": 1900,
+        "total_cost": 7885.000000000001,
+        "cluster_markup_pct": 8,
+        "lead_time": "10 - 11 дней",
+        "rows_used": 54,
+        "pickup_matched": true
+      }
+    },
+    {
+      "cluster": "Тюмень",
+      "pallets": [
+        {
+          "pallet_number": 1,
+          "total_height": 1.445,
+          "total_weight": 228.24,
+          "items": [
+            {
+              "product_id": 1396618000,
+              "sku": "1866257461",
+              "offer_id": "122 V напольный",
+              "name": "Подстолье металлическое ножки для стола Лофт",
+              "quantity": 10,
+              "height": 0.525,
+              "weight": 65.3,
+              "layers": 5,
+              "crossdock_liters": 504,
+              "crossdock_billed_liters": 690.3114186851209,
+              "crossdock_cost": 3762.197231833909,
+              "crossdock_rate_per_liter": 5.45,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1388649379,
+              "sku": "1860180682",
+              "offer_id": "215 адидас с полками",
+              "name": "Дровница для камина с полками металлическая Лофт",
+              "quantity": 8,
+              "height": 0.3,
+              "weight": 67.44,
+              "layers": 4,
+              "crossdock_liters": 288,
+              "crossdock_billed_liters": 394.46366782006913,
+              "crossdock_cost": 2149.826989619377,
+              "crossdock_rate_per_liter": 5.45,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1396615661,
+              "sku": "1866254980",
+              "offer_id": "124 раздвижной",
+              "name": "Подстолье металлическое раздвижное ножки для стола Лофт Монолит",
+              "quantity": 6,
+              "height": 0.27,
+              "weight": 58.8,
+              "layers": 3,
+              "crossdock_liters": 259.20000000000005,
+              "crossdock_billed_liters": 355.01730103806227,
+              "crossdock_cost": 1934.8442906574394,
+              "crossdock_rate_per_liter": 5.45,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 3249467155,
+              "sku": "3250277120",
+              "offer_id": "114-3",
+              "name": "Подстолье для круглого стола металлическое ножки для стола Лофт",
+              "quantity": 7,
+              "height": 0.26,
+              "weight": 25.9,
+              "layers": 4,
+              "crossdock_liters": 249.60000000000002,
+              "crossdock_billed_liters": 341.8685121107266,
+              "crossdock_cost": 1863.18339100346,
+              "crossdock_rate_per_liter": 5.45,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1396612883,
+              "sku": "1866252620",
+              "offer_id": "123 V центр",
+              "name": "Подстолье металлическое ножки для стола Лофт",
+              "quantity": 2,
+              "height": 0.09,
+              "weight": 10.8,
+              "layers": 1,
+              "crossdock_liters": 86.39999999999999,
+              "crossdock_billed_liters": 118.33910034602073,
+              "crossdock_cost": 644.948096885813,
+              "crossdock_rate_per_liter": 5.45,
+              "cluster_markup_pct": 8
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "missing_products": [],
+      "split_sku_count": 0,
+      "crossdock_estimate": {
+        "available": true,
+        "shipment_rate_pallet": 0.15,
+        "transport_rate_pallet": 5.3,
+        "total_rate_pallet": 5.45,
+        "total_liters": 1387.2,
+        "total_billed_liters": 1900,
+        "min_pallet_liters": 1900,
+        "total_cost": 10355,
+        "cluster_markup_pct": 8,
+        "lead_time": "10 - 11 дней",
+        "rows_used": 27,
+        "pickup_matched": true
+      }
+    },
+    {
+      "cluster": "Саратов",
+      "pallets": [
+        {
+          "pallet_number": 1,
+          "total_height": 1.145,
+          "total_weight": 153.01,
+          "items": [
+            {
+              "product_id": 1396618000,
+              "sku": "1866257461",
+              "offer_id": "122 V напольный",
+              "name": "Подстолье металлическое ножки для стола Лофт",
+              "quantity": 12,
+              "height": 0.63,
+              "weight": 78.36,
+              "layers": 6,
+              "crossdock_liters": 604.8,
+              "crossdock_billed_liters": 1045.4148471615722,
+              "crossdock_cost": 3920.305676855896,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1396612883,
+              "sku": "1866252620",
+              "offer_id": "123 V центр",
+              "name": "Подстолье металлическое ножки для стола Лофт",
+              "quantity": 4,
+              "height": 0.18,
+              "weight": 21.6,
+              "layers": 2,
+              "crossdock_liters": 172.79999999999998,
+              "crossdock_billed_liters": 298.68995633187774,
+              "crossdock_cost": 1120.0873362445416,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1388649379,
+              "sku": "1860180682",
+              "offer_id": "215 адидас с полками",
+              "name": "Дровница для камина с полками металлическая Лофт",
+              "quantity": 4,
+              "height": 0.15,
+              "weight": 33.72,
+              "layers": 2,
+              "crossdock_liters": 144,
+              "crossdock_billed_liters": 248.9082969432315,
+              "crossdock_cost": 933.4061135371181,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1878416774,
+              "sku": "2219042136",
+              "offer_id": "125П",
+              "name": "Подстолье для стола металлическое Лофт столешница от 130х70см",
+              "quantity": 1,
+              "height": 0.09,
+              "weight": 6.53,
+              "layers": 1,
+              "crossdock_liters": 86.39999999999999,
+              "crossdock_billed_liters": 149.34497816593887,
+              "crossdock_cost": 560.0436681222708,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 3249467155,
+              "sku": "3250277120",
+              "offer_id": "114-3",
+              "name": "Подстолье для круглого стола металлическое ножки для стола Лофт",
+              "quantity": 2,
+              "height": 0.065,
+              "weight": 7.4,
+              "layers": 1,
+              "crossdock_liters": 62.400000000000006,
+              "crossdock_billed_liters": 107.86026200873366,
+              "crossdock_cost": 404.4759825327512,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            },
+            {
+              "product_id": 1604365105,
+              "sku": "2021102960",
+              "offer_id": "403 цинк",
+              "name": "Держатель для садового инструмента для лопат и граблей на стену 4шт",
+              "quantity": 5,
+              "height": 0.03,
+              "weight": 5.4,
+              "layers": 1,
+              "crossdock_liters": 28.799999999999997,
+              "crossdock_billed_liters": 49.78165938864629,
+              "crossdock_cost": 186.6812227074236,
+              "crossdock_rate_per_liter": 3.75,
+              "cluster_markup_pct": 8
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "missing_products": [],
+      "split_sku_count": 0,
+      "crossdock_estimate": {
+        "available": true,
+        "shipment_rate_pallet": 0.15,
+        "transport_rate_pallet": 3.6,
+        "total_rate_pallet": 3.75,
+        "total_liters": 1099.1999999999998,
+        "total_billed_liters": 1900,
+        "min_pallet_liters": 1900,
+        "total_cost": 7125,
+        "cluster_markup_pct": 8,
+        "lead_time": "3 - 4 дней",
+        "rows_used": 54,
+        "pickup_matched": true
+      }
+    }
+  ]
+}

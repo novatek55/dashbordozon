@@ -1,0 +1,524 @@
+# Next Chat Context
+
+## Update 2026-03-13 22:23 +03:00
+
+### Current Active Goal
+
+We are no longer focused only on finance reconciliation.
+The current active work is the Ozon stock / supply dashboard in:
+- `orders_dashboard.py`
+- `web/orders_dashboard.html`
+
+Main goal now:
+- build internal reports similar to Ozon `Р”РѕСЃС‚СѓРїРЅРѕСЃС‚СЊ С‚РѕРІР°СЂРѕРІ`
+- show grouped stock and sales by article
+- support FBO + FBS stock logic
+- support supply planning
+- support quick filtering directly in the UI
+
+### Main Reports Implemented
+
+#### 1. `analytics_stocks`
+
+Purpose:
+- grouped stock report by article (`offer_id`)
+- similar in spirit to Ozon goods availability page
+
+Current behavior:
+- grouped by normalized `offer_id`
+- card title shows only article name, without `РђСЂС‚.`
+- card can expand to warehouse/cluster details
+- shows:
+  - `РћСЃС‚Р°С‚РѕРє FBO / FBS`
+  - `РџСЂРѕРґР°Р¶Рё / СЃСѓС‚РєРё`
+  - `РџРѕСЃС‚Р°РІРєР° РЅР° 28`
+  - `Р”РЅРµР№ Р±РµР· РїСЂРѕРґР°Р¶ / IDC`
+- includes mini stock-depletion chart for each article
+
+Data sources:
+- FBO stock and analytics:
+  - `analytics_stocks` table
+- FBS stock by warehouse:
+  - `fbs_warehouse_stocks`
+- sales for 28 days:
+  - `fact_orders`
+  - `fact_order_items`
+
+Sales logic:
+- `РџСЂРѕРґР°Р¶Рё / СЃСѓС‚РєРё` = quantity for last 28 days / 28
+- based on local fresh order facts, not on summed `ads`
+
+Supply logic:
+- current `recommended_supply_fbo` is based on our own formula
+- formula:
+  - `ceil(avg_daily_sales_total * 28 - fbo_stock)`
+- FBS supply is not used as a separate target right now
+
+Important caveat:
+- numbers do not fully match Ozon web internal page because Ozon uses internal web endpoints, not only public Seller API
+- but current report is intentionally based on our own data and logic
+
+#### 2. `supply_plan`
+
+Purpose:
+- separate page/tab for planning supply
+- same article list format as grouped report
+- focused on:
+  - required supply
+  - manual input stock for shipment
+  - allocation across FBO warehouses
+
+Current behavior:
+- grouped by article
+- expandable details
+- card title shows only article name, without `РђСЂС‚.`
+- shows:
+  - `РџРѕСЃС‚Р°РІРєР° РЅР° 28`
+  - `РћСЃС‚Р°С‚РѕРє РґР»СЏ РїРѕСЃС‚Р°РІРєРё` (manual input)
+  - `РќРµ СЂР°СЃРїСЂРµРґРµР»РёР»РѕСЃСЊ`
+- input stock is distributed across FBO rows only
+- allocation order:
+  - warehouses with higher `avg_daily_sales` first
+- hidden articles:
+  - article can be hidden with `Г—`
+  - hidden state stored in DB
+  - all hidden items can now be restored with a single button
+
+Current restore behavior:
+- if there are hidden items, page shows:
+  - `РџРѕРєР°Р·Р°С‚СЊ СЃРєСЂС‹С‚С‹Рµ (N)`
+- button resets hidden state for all supply-plan items
+
+### FBS Stock Loading
+
+Working endpoint confirmed:
+- `POST /v1/product/info/stocks-by-warehouse/fbs`
+
+Important:
+- `/v1/...` works in this cabinet
+- `/v2/...` with the same payload did not work correctly here
+
+Implemented result:
+- FBS stock sync now saves to:
+  - `fbs_warehouse_stocks`
+- dashboard uses it in grouped reports
+
+Fields used from API:
+- `present`
+- `reserved`
+- `warehouse_id`
+- `warehouse_name`
+- `sku`
+- `offer_id`
+
+### Order / Sales Refresh
+
+Orders sync was fixed earlier in this work:
+- postings sync repaired
+- `fact_orders` and `fact_order_items` refreshed
+- 28-day sales now come from actual local order facts
+
+This is the basis for:
+- sales/day
+- stock depletion chart
+- supply recommendation
+
+### Graph Logic
+
+Mini chart in `analytics_stocks` currently shows stock depletion, not sales bars.
+
+Logic:
+- historical left side:
+  - starts from reconstructed stock level
+  - subtracts actual daily sales over the last 28 days
+- today:
+  - graph reaches current stock
+- future:
+  - projected line decreases by current average daily sales
+- if stock ends within horizon:
+  - endpoint marker with date `dd.mm`
+
+### UI / Visual Style
+
+Dashboard visual style was moved close to Ozon:
+- font:
+  - `Onest`
+- colors:
+  - cold light Ozon-like palette
+- grouped cards:
+  - white cards on light grey background
+- filters moved above columns
+
+Current key UI simplifications:
+- no product name, only article string
+- no `РђСЂС‚.` prefix before article label
+- compact warehouse tables
+
+### Filters
+
+Universal filters exist for:
+- `analytics_stocks`
+- `supply_plan`
+
+Implemented behavior:
+- filter buttons are above columns
+- popup menu supports:
+  - sort A->РЇ
+  - sort РЇ->A
+  - search
+  - checkbox values
+  - reset
+
+Persistence:
+- filter state is stored in `localStorage`
+- key:
+  - `ozon-dashboard-report-filters-v1`
+
+Saved state includes:
+- sort
+- selected values
+- quick tags
+
+### Quick Tags
+
+Quick tags were added for both:
+- `analytics_stocks`
+- `supply_plan`
+
+Current intended logic:
+- `#РїРѕРґСЃС‚РѕР»СЊРµ`
+  - all articles whose `offer_id` starts with `1`
+- `#РґСЂРѕРІРЅРёС†С‹`
+  - all articles whose `offer_id` starts with `2`
+
+Important:
+- tags must behave like fast mass selection filters
+- they are not cosmetic labels only
+
+Verified examples:
+- `#РґСЂРѕРІРЅРёС†С‹` should include articles like:
+  - `202 ...`
+  - `203 ...`
+  - `204 ...`
+  - `207 ...`
+  - `215 ...`
+- `#РїРѕРґСЃС‚РѕР»СЊРµ` should include articles like:
+  - `105 ...`
+  - `115 ...`
+  - `123 ...`
+  - `124 ...`
+
+### Reset Behavior
+
+`РЎР±СЂРѕСЃРёС‚СЊ` was reworked.
+
+Expected current behavior:
+- clear all regular column filters
+- clear sorting
+- clear quick tags
+- restore full visible set for the current report
+
+There are two reset paths:
+- quick tag reset button near hashtags
+- popup reset inside column filter menu
+
+### Hidden Supply Items
+
+DB table:
+- `supply_plan_state`
+
+Stores:
+- `offer_id`
+- `supply_stock`
+- `hidden`
+- `updated_at`
+
+API endpoints:
+- `POST /api/supply-plan/state`
+- `POST /api/supply-plan/reset-hidden`
+- `GET /api/supply-plan`
+
+### Browser / Manual Verification Status
+
+Browser access via local relay is working.
+We used OpenClaw / browser relay to verify real page behavior on:
+- `http://127.0.0.1:8088`
+
+Confirmed in browser:
+- filters open and apply
+- filter state persists
+- quick-tag reset works
+- hidden supply items can be restored with one button
+- article cards no longer show `РђСЂС‚.`
+
+### Files Most Recently Changed
+
+- `orders_dashboard.py`
+- `web/orders_dashboard.html`
+- `NEXT_CHAT_CONTEXT.md`
+
+### Recommended Next Step For Future Chat
+
+If next chat continues this dashboard work, start here:
+
+1. Re-check quick-tag semantics carefully against user expectation
+2. Improve quick-tag grouping if some article naming edge-cases remain
+3. Optionally add counters to quick tags
+4. Optionally add вЂњshow hidden onlyвЂќ mode in `supply_plan`
+5. If needed, continue bringing layout closer to Ozon web
+
+---
+
+## Current Goal
+
+We are reconciling the finance report against Ozon by building it from API data.
+The main focus was:
+- load all finance transaction ids from API,
+- restore missing item rows by `posting_number`,
+- understand why `ordered_units` did not match Ozon/exported files,
+- align month attribution to Ozon `operation_date` / accrual date.
+
+## Key Source Rules Agreed
+
+- Master registry of finance ids: `POST /v3/finance/transaction/list`
+- Main table for finance transactions: `public.transactions`
+- Month attribution for finance report must use `public.transactions.operation_date`
+- For sales use:
+  - `operation_type = 'OperationAgentDeliveredToCustomer'`
+- For returns use:
+  - `operation_type = 'ClientReturnAgentOperation'`
+- Do not assign month by delivery/order/fallback order dates for finance rows
+- For item enrichment:
+  - if `delivery_schema = FBS`, use `fbs/get`
+  - if `delivery_schema = FBO`, do not call `fbs/get`; use FBO path / fallback from transactions
+
+## What Was Loaded
+
+- `transaction/list` was loaded into:
+  - `public.transactions`
+- normalized child rows from transactions exist in:
+  - `public.transaction_items`
+  - `public.transaction_services`
+- item/order layer is stored in:
+  - `public.fact_orders`
+  - `public.fact_order_items`
+
+## Important Findings
+
+### 1. Missing ids were not missing from API
+
+- All ids from the user file `С„РµРІСЂР°Р»СЊ.xlsx` were present in `public.transactions`
+- Therefore loss was not in Ozon API and not in finance import
+- Loss happened later during item enrichment / report building
+
+### 2. `public.transactions` is enough for ids and money, but not enough alone for quantity/cost
+
+`public.transactions` gives:
+- `posting_number`
+- `operation_date`
+- `operation_type`
+- `description`
+- `amount`
+- `raw_data`
+
+But by itself it does not always give:
+- reliable `offer_id`
+- reliable `quantity`
+- reliable per-item price
+- cost of goods
+
+### 3. Why `ordered_units` did not match
+
+The report was counting units only when item rows could be restored.
+Some ids existed in `transactions`, but had no rows in `fact_order_items`.
+
+### 4. Boundary-month issue
+
+We confirmed on Ozon UI that some postings we were treating as February are actually accruals dated `2026-03-01`.
+Examples seen on UI:
+- `0100173641-0149-1`
+- `0134284658-0669-1`
+- `36554058-0687-1`
+- `77853735-0118-1`
+
+Conclusion:
+- finance month must be based on Ozon accrual date / `operation_date`
+- not by sale date, not by delivery date, not by fallback fact order date
+
+## Code Changes Made
+
+### `orders_dashboard.py`
+
+1. Added `price` loading into posting context from `fact_order_items`
+2. Changed sales/returns logic:
+- sales quantity uses item quantities
+- sales revenue uses `quantity * price` when items are available
+- return quantity subtracts from `ordered_units`
+- return revenue uses item price fallback where available
+3. Delivered postings filter now accepts both:
+- Russian status `Р”РѕСЃС‚Р°РІР»РµРЅ`
+- API status `delivered`
+
+### `src/backfill_missing_posting_items.py`
+
+New script added to backfill missing item rows from API/fallback sources.
+
+What it does:
+- finds missing sales postings from `transactions`
+- reads `delivery_schema` from `transactions.raw_data.posting.delivery_schema`
+- routes requests by schema:
+  - `FBS` -> `fbs/get`
+  - `FBO` -> skip `fbs/get`, use FBO path / fallback from transactions
+- for FBO fallback:
+  - uses `transactions.raw_data.items`
+  - maps `sku -> offer_id` via `report_products_items`
+  - creates `fact_orders` / `fact_order_items`
+
+Additional important fix:
+- if API returns an `order_id` that is already used by another `posting_number`,
+  the backfill now uses `posting_number` as the `fact_orders.order_id` key
+- this fixed multi-posting cases where one order had several postings
+
+## Major Bug Found and Fixed
+
+### Multi-posting conflict on `order_id`
+
+Case:
+- `0165147239-0032-15` was missing in `fact_order_items`
+- Ozon API actually returned its item correctly:
+  - schema: `FBS`
+  - `offer_id = '123 V С†РµРЅС‚СЂ'`
+  - `quantity = 1`
+- it was lost because another posting from the same order already occupied the same `order_id` in `fact_orders`
+
+Fix:
+- backfill now detects that collision
+- if `order_id` belongs to another posting, it stores the row using `posting_number` as key
+
+Result:
+- February missing item count dropped to zero
+
+## Current February State
+
+After all fixes and backfills:
+- February sales postings from transactions: `518`
+- February missing sales postings without item rows: `0`
+
+Important:
+- this means all February sales postings inside the February `operation_date` window now have item rows
+- it does **not** automatically mean February should equal earlier rough totals based on mixed month attribution
+
+## March Reload Performed
+
+User requested to rewrite data from March 1 through yesterday.
+
+Done:
+- reloaded transactions with:
+  - `python -m src.main --mode transactions --days-back 11`
+- backfilled March window:
+  - `python -m src.backfill_missing_posting_items --start-date 2026-03-01 --end-date 2026-03-12`
+
+March backfill result at that time:
+- transactions reloaded: `716`
+- sales postings in the March window: `232`
+- almost all missing item rows were restored
+
+## Files Added / Updated During This Work
+
+- `NEXT_CHAT_CONTEXT.md` (this file)
+- `src/backfill_missing_posting_items.py`
+- `REPORT_ROW_SOURCES.md`
+- `REPORT_ROW_SOURCES.xlsx`
+- `export_report_row_sources_xlsx.py`
+- `orders_dashboard.py`
+
+## Streamlit Status
+
+Streamlit was fully removed earlier.
+Project runs as the normal web dashboard only.
+
+## Web App Status
+
+- Web dashboard runs on:
+  - `http://127.0.0.1:8088`
+
+## Best Next Step
+
+The next chat should continue from here:
+
+1. Rebuild/report-check February strictly by `operation_date`
+2. Compare February and March boundary postings against Ozon UI
+3. Verify whether `518` February sales postings by `operation_date` is the correct finance-month set
+4. If needed, produce a list of February-vs-March boundary postings for manual validation
+
+## Update 2026-03-21 00:xx +03:00 (Current Session)
+
+### Что сделано сегодня
+
+1) Исправлена логика принятия складов в отчете `Рассчитать паллеты` (`orders_dashboard.py`):
+- склады считаются принимающими, если:
+  - есть таймслоты (`slots_count > 0`),
+  - или статус `FULL_AVAILABLE/AVAILABLE`.
+- это убирает ложное `недоступно`, когда у склада есть слоты/доступность.
+
+2) Убрано ограничение `только первые 8 складов`:
+- теперь таймслоты запрашиваются для всех кандидатных складов кластера (или по лимиту из env `SUPPLY_TIMESLOT_WAREHOUSE_LIMIT`, где `0` = все).
+- добавлен настраиваемый параллелизм `SUPPLY_TIMESLOT_PARALLEL` (по умолчанию 2).
+
+3) Добавлен поллинг статуса черновика:
+- после `/v2/draft/create/info` выполняется ожидание `IN_PROGRESS/PENDING/PROCESSING` до финального статуса.
+- параметры: `SUPPLY_CREATE_INFO_POLL_ATTEMPTS`, `SUPPLY_CREATE_INFO_POLL_DELAY_SEC`.
+
+4) Введено разделение DIRECT/CROSS_DOCK:
+- Москва-кластеры (`имя содержит "моск"`) -> `/v1/draft/direct/create`, `supply_type=DIRECT`.
+- остальные кластеры -> `/v1/draft/crossdock/create`, `supply_type=CROSS_DOCK`.
+- для crossdock добавлен `delivery_info` с источником из env:
+  - `OZON_CROSSDOCK_SELLER_WAREHOUSE_ID`
+  - `OZON_CROSSDOCK_DROPOFF_WAREHOUSE_ID`
+  - fallback: IDs из ранее рабочего probe.
+
+5) Формат запроса таймслотов теперь зависит от типа поставки:
+- DIRECT: `storage_warehouse_id`
+- CROSS_DOCK: `warehouse_ids: [id]`
+
+6) Учет лимитов создания черновиков Ozon:
+- добавлено локальное ограничение `не более 2 draft create в минуту` внутри одного расчета,
+- плюс retry для draft create с более длинной паузой для 429.
+
+7) Диагностика ошибок улучшена:
+- если `create/info` вернул `status=FAILED`, это явно попадает в отчет с `info_response`.
+- уже зафиксирован кейс по СПб: `DROP_OFF_POINT_HAS_NO_TIMESLOTS` для текущего `delivery_info`.
+
+8) Добавлен in-memory кэш отчета по складам/слотам:
+- повторный расчет по тем же данным берется из кэша.
+- env: `SUPPLY_ACCEPTANCE_CACHE_TTL_SEC` (по умолчанию 900 сек).
+- в ответе есть флаг `warehouse_acceptance.from_cache`.
+
+9) Фронтенд уже показывает блок складов/слотов в `web/orders_dashboard.html`:
+- список складов,
+- первый слот,
+- слоты по дням,
+- ошибки получения таймслотов.
+
+### На чем остановились
+
+- Пользователь подтвердил вручную слоты по Москве (Гривно/Софино на 21-е).
+- После правок по Москве удавалось получать `DIRECT` + склады/слоты, но периодически упирается в 429 (нужно еще снизить burst и/или добавить мягкий backoff на timeslot-уровне).
+- По СПб (crossdock) сейчас видим `status=FAILED` c `DROP_OFF_POINT_HAS_NO_TIMESLOTS`.
+  Это означает, что текущая `drop_off` точка в `delivery_info` не подходит для нужного маршрута (например, Щербинка -> Колпино).
+
+### Что сделать в следующей сессии (приоритет)
+
+1) Подобрать корректные `seller_warehouse_id/drop_off_warehouse_id` для crossdock (Щербинка) и сохранить в `.env`.
+2) Для CROSS_DOCK проверить/при необходимости использовать `supply_type` в формате enum (если API будет требовать числовой тип в конкретных вызовах).
+3) Усилить анти-429 для `/v2/draft/timeslot/info`:
+- динамический backoff при 429,
+- возможно последовательный режим только для московского кластера с большим числом складов.
+4) Сделать быстрый smoke-test двух сценариев:
+- Москва (DIRECT) -> Гривно/Софино со слотами на 7 дней,
+- СПб (CROSS_DOCK) -> Колпино при корректной drop-off точке.
+
+### Измененные файлы
+
+- `orders_dashboard.py`
+- `web/orders_dashboard.html`

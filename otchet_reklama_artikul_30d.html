@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Отчёт по рекламе артикула · 30 дней</title>
+<style>
+  :root {
+    --bg: #fafaf7;
+    --surface: #ffffff;
+    --surface-2: #f1efe8;
+    --text: #1a1a1a;
+    --text-2: #5f5e5a;
+    --text-3: #888780;
+    --border: rgba(0,0,0,0.1);
+    --border-2: rgba(0,0,0,0.18);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
+  h1 { font-size: 22px; font-weight: 500; margin: 0 0 4px; }
+  h2 { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); margin: 32px 0 10px; }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  .header {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 8px;
+  }
+  .filter {
+    font-size: 13px; padding: 6px 12px;
+    border: 0.5px solid var(--border-2);
+    border-radius: 8px; background: var(--surface);
+  }
+  .sub { font-size: 13px; color: var(--text-2); }
+
+  .grid5 { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 12px; margin-bottom: 10px; }
+  .tile {
+    background: var(--surface-2); border-radius: 8px; padding: 12px;
+  }
+  .tile-label { font-size: 12px; color: var(--text-2); }
+  .tile-value { font-size: 20px; font-weight: 500; margin-top: 2px; }
+  .tile-delta { font-size: 11px; margin-top: 2px; }
+  .delta-up { color: #0F6E56; }
+  .delta-down { color: #A32D2D; }
+  .tile.accent-blue { background: #E6F1FB; }
+  .tile.accent-blue .tile-label, .tile.accent-blue .tile-delta { color: #0C447C; }
+  .tile.accent-blue .tile-value { color: #042C53; }
+  .tile.accent-purple { background: #EEEDFE; }
+  .tile.accent-purple .tile-label, .tile.accent-purple .tile-delta { color: #3C3489; }
+  .tile.accent-purple .tile-value { color: #26215C; }
+  .tile.accent-teal { background: #E1F5EE; }
+  .tile.accent-teal .tile-label, .tile.accent-teal .tile-delta { color: #085041; }
+  .tile.accent-teal .tile-value { color: #04342C; }
+
+  .card {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: 12px; padding: 16px;
+  }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-2); margin-bottom: 12px; }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  .funnel { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; }
+  .funnel-cell { background: #E6F1FB; padding: 12px; border-radius: 8px; }
+  .funnel-cell .fl { font-size: 11px; color: #0C447C; }
+  .funnel-cell .fv { font-size: 16px; font-weight: 500; color: #042C53; margin-top: 2px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead tr { background: var(--surface-2); }
+  th { text-align: right; padding: 10px 8px; font-weight: 400; font-size: 11px; color: var(--text-2); }
+  th:first-child { text-align: left; }
+  td { padding: 8px; border-top: 0.5px solid var(--border); }
+  td.l { text-align: left; }
+  td.r { text-align: right; font-variant-numeric: tabular-nums; }
+  tfoot td { font-weight: 500; background: var(--surface-2); border-top: 1px solid var(--border-2); padding: 10px 8px; }
+
+  .table-scroll { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; overflow-x: auto; }
+  .daily-table { min-width: 1600px; }
+  .daily-table th.g-green { background: #E1F5EE; color: #04342C; }
+  .daily-table th.g-blue  { background: #E6F1FB; color: #042C53; }
+  .daily-table th.g-amber { background: #FAEEDA; color: #412402; }
+  .daily-table th.g-pink  { background: #FBEAF0; color: #4B1528; }
+  .daily-table .sticky {
+    position: sticky; left: 0; z-index: 2;
+    background: var(--surface); border-right: 0.5px solid var(--border);
+  }
+  .daily-table thead .sticky { background: var(--surface-2); }
+  .daily-table tfoot .sticky { background: var(--surface-2); }
+  .drr-good { color: #0F6E56; font-weight: 500; }
+  .drr-bad { color: #A32D2D; font-weight: 500; }
+
+  .scenario-base td { background: #FAEEDA33; font-weight: 500; }
+
+  .hint { font-size: 11px; color: var(--text-3); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="sub">Артикул · WB / Ozon</div>
+      <h1>SKU 1429-AB · Худи оверсайз</h1>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <span class="filter">Период: 30 дней ▾</span>
+      <span class="filter">Кампания: все ▾</span>
+    </div>
+  </div>
+
+  <!-- BLOCK 1: SUMMARY -->
+  <h2>1 · Сводка за 30 дней</h2>
+
+  <div class="grid5">
+    <div class="tile"><div class="tile-label">Расход на рекламу</div><div class="tile-value tnum">84 200 ₽</div><div class="tile-delta delta-up">▲ 12% vs пред.</div></div>
+    <div class="tile"><div class="tile-label">Рекламные заказы</div><div class="tile-value tnum">142 шт · 412 900 ₽</div><div class="tile-delta delta-up">▲ 18%</div></div>
+    <div class="tile"><div class="tile-label">Себестоимость рекл. заказов</div><div class="tile-value tnum">156 200 ₽</div><div class="tile-delta">1 100 ₽ / шт</div></div>
+    <div class="tile accent-blue"><div class="tile-label">ДРР реклама</div><div class="tile-value tnum">20,4%</div><div class="tile-delta">▼ 2,1 п.п.</div></div>
+    <div class="tile"><div class="tile-label">Прибыль от рекламы</div><div class="tile-value tnum">172 500 ₽</div><div class="tile-delta delta-up">маржа 41,8%</div></div>
+  </div>
+
+  <div class="grid5">
+    <div class="tile"><div class="tile-label">Всего заказов по артикулу</div><div class="tile-value tnum">389 шт · 1 128 100 ₽</div><div class="tile-delta">из них 36% из рекламы</div></div>
+    <div class="tile"><div class="tile-label">Органические заказы</div><div class="tile-value tnum">247 шт · 715 200 ₽</div><div class="tile-delta">64%</div></div>
+    <div class="tile"><div class="tile-label">Себестоимость всего</div><div class="tile-value tnum">427 900 ₽</div><div class="tile-delta">1 100 ₽ / шт</div></div>
+    <div class="tile accent-purple"><div class="tile-label">ДРР общий</div><div class="tile-value tnum">7,5%</div><div class="tile-delta">▼ 0,8 п.п.</div></div>
+    <div class="tile accent-teal"><div class="tile-label">Прибыль итого</div><div class="tile-value tnum">616 000 ₽</div><div class="tile-delta">маржа 54,6%</div></div>
+  </div>
+
+  <!-- BLOCK 2: DYNAMICS -->
+  <h2>2 · Динамика по дням</h2>
+  <div class="card">
+    <div class="legend">
+      <span><span class="sw" style="background:#378ADD"></span>Расход</span>
+      <span><span class="sw" style="background:#1D9E75"></span>Рекл. заказы ₽</span>
+      <span><span class="sw" style="background:#BA7517"></span>Всего заказов ₽</span>
+      <span><span class="sw" style="background:#D4537E"></span>ДРР %</span>
+    </div>
+    <div style="position: relative; height: 240px;">
+      <canvas id="dynChart" role="img" aria-label="Динамика расхода, заказов и ДРР по дням"></canvas>
+    </div>
+    <div class="hint">Переключатели: показы · клики · CTR · CPC · CR · заказы · выручка · ДРР</div>
+  </div>
+
+  <!-- BLOCK 3: FUNNEL -->
+  <h2>3 · Воронка рекламы</h2>
+  <div class="funnel">
+    <div class="funnel-cell"><div class="fl">Показы</div><div class="fv tnum">312 400</div></div>
+    <div class="funnel-cell"><div class="fl">Клики · CTR</div><div class="fv tnum">8 420 · 2,7%</div></div>
+    <div class="funnel-cell"><div class="fl">В корзину · CR</div><div class="fv tnum">612 · 7,3%</div></div>
+    <div class="funnel-cell"><div class="fl">Заказы · CR</div><div class="fv tnum">142 · 23,2%</div></div>
+    <div class="funnel-cell"><div class="fl">CPO · CPC</div><div class="fv tnum">593 ₽ · 10 ₽</div></div>
+  </div>
+
+  <!-- BLOCK 4: DAILY TABLE -->
+  <h2>4 · Таблица по дням</h2>
+  <div class="legend">
+    <span><span class="sw" style="background:#E1F5EE;border:0.5px solid #1D9E75"></span>цена/товар</span>
+    <span><span class="sw" style="background:#E6F1FB;border:0.5px solid #378ADD"></span>воронка рекламы</span>
+    <span><span class="sw" style="background:#FAEEDA;border:0.5px solid #BA7517"></span>деньги</span>
+    <span><span class="sw" style="background:#FBEAF0;border:0.5px solid #D4537E"></span>эффективность</span>
+  </div>
+  <div class="table-scroll">
+    <table class="daily-table">
+      <thead>
+        <tr>
+          <th class="sticky" style="text-align:left;">Дата</th>
+          <th class="g-green">Цена</th>
+          <th class="g-green">Цена для покуп.</th>
+          <th class="g-green">СПП %</th>
+          <th class="g-blue">Показы</th>
+          <th class="g-blue">Клики</th>
+          <th class="g-blue">CTR %</th>
+          <th class="g-blue">Корзины</th>
+          <th class="g-blue">CR в корз. %</th>
+          <th class="g-blue">Заказы шт</th>
+          <th class="g-amber">Расход ₽</th>
+          <th class="g-amber">CPC ₽</th>
+          <th class="g-amber">CPO корз. ₽</th>
+          <th class="g-amber">Продажи РК ₽</th>
+          <th class="g-pink">ДРР день %</th>
+          <th class="g-pink">ДРР 5д %</th>
+        </tr>
+      </thead>
+      <tbody id="tb"></tbody>
+      <tfoot><tr id="totalsRow"></tr></tfoot>
+    </table>
+  </div>
+  <div class="hint">Скролл по горизонтали. Колонка «Дата» залипает слева. Красным — ДРР выше 25%, зелёным — ниже 18%.</div>
+
+  <!-- BLOCK 5: FORECAST -->
+  <h2>5 · Финансовый прогноз на следующие 30 дней</h2>
+  <div class="card" style="padding: 4px 16px;">
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left;">Сценарий</th>
+          <th>Расход</th><th>Рекл. заказы</th><th>Выручка реклама</th><th>Себест-ть</th>
+          <th>ДРР</th><th>Заказы всего</th><th>ДРР общий</th><th>Прибыль</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="l">Пессимистичный −20%</td><td class="r">67 400</td><td class="r">114</td><td class="r">330 300</td><td class="r">125 400</td><td class="r">20,4%</td><td class="r">312</td><td class="r">7,5%</td><td class="r">493 000</td></tr>
+        <tr class="scenario-base"><td class="l">Базовый (текущий темп)</td><td class="r">84 200</td><td class="r">142</td><td class="r">412 900</td><td class="r">156 200</td><td class="r">20,4%</td><td class="r">389</td><td class="r">7,5%</td><td class="r">616 000</td></tr>
+        <tr><td class="l">Оптимистичный +30%</td><td class="r">109 500</td><td class="r">185</td><td class="r">536 800</td><td class="r">203 100</td><td class="r">20,4%</td><td class="r">505</td><td class="r">7,5%</td><td class="r">800 800</td></tr>
+        <tr><td class="l" style="color: var(--text-2);">Точка безубыточности ДРР</td><td class="r" colspan="8" style="text-align:left; color: var(--text-2);">= маржа до рекламы ≈ <b>38%</b>. Выше этого значения рекламные заказы убыточны.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- BLOCK 6: CAMPAIGNS -->
+  <h2>6 · Разрез по кампаниям</h2>
+  <div class="card" style="padding: 4px 16px;">
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left;">Кампания</th>
+          <th>Показы</th><th>CTR</th><th>CPC</th><th>Заказы</th><th>Расход</th><th>Выручка</th><th>ДРР</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="l">Поиск · бренд</td><td class="r">94 200</td><td class="r">4,1%</td><td class="r">7 ₽</td><td class="r">58</td><td class="r">27 000</td><td class="r">168 700</td><td class="r drr-good">16,0%</td></tr>
+        <tr><td class="l">Поиск · категория</td><td class="r">128 600</td><td class="r">2,2%</td><td class="r">11 ₽</td><td class="r">52</td><td class="r">31 200</td><td class="r">151 200</td><td class="r">20,6%</td></tr>
+        <tr><td class="l">Автокампания</td><td class="r">89 600</td><td class="r">2,0%</td><td class="r">15 ₽</td><td class="r">32</td><td class="r">26 000</td><td class="r">93 000</td><td class="r drr-bad">28,0%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top: 40px; font-size: 11px; color: var(--text-3);">Макет для передачи в работу. Все цифры — пример. Формулы и структура данных — в сопутствующем ТЗ.</p>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ============ CHART ============
+const days = Array.from({length: 30}, (_, i) => i + 1);
+const spend = [2100,2400,2800,3100,2900,2600,3200,3400,3600,3300,2800,2500,2900,3100,3400,3600,3800,3500,3200,2900,2700,3000,3300,3500,3800,4000,3700,3400,3100,2900];
+const adRev = [9200,11000,12800,14100,13000,11500,14500,15800,16500,14800,12500,11000,13200,14100,15500,16500,17500,16000,14500,13200,12200,13800,15000,16000,17500,18500,17000,15500,14000,13000];
+const totalRev = [28000,31000,35000,38000,36000,32000,40000,42000,45000,40000,34000,30000,36000,38000,42000,45000,48000,43000,40000,36000,33000,37000,41000,44000,48000,51000,46000,42000,38000,35000];
+const drr = spend.map((s,i) => +(s/adRev[i]*100).toFixed(1));
+
+new Chart(document.getElementById('dynChart'), {
+  data: {
+    labels: days,
+    datasets: [
+      {type:'bar', label:'Расход', data: spend, backgroundColor:'#378ADD', yAxisID:'y', order: 3},
+      {type:'line', label:'Рекл. заказы ₽', data: adRev, borderColor:'#1D9E75', tension:0.3, yAxisID:'y', pointRadius:0, borderWidth:2, order: 2},
+      {type:'line', label:'Всего заказов ₽', data: totalRev, borderColor:'#BA7517', tension:0.3, yAxisID:'y', pointRadius:0, borderWidth:2, borderDash:[4,3], order: 1},
+      {type:'line', label:'ДРР %', data: drr, borderColor:'#D4537E', tension:0.3, yAxisID:'y1', pointRadius:0, borderWidth:2, order: 0}
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {legend: {display: false}},
+    scales: {
+      y: {position:'left', ticks:{callback:v=>(v/1000)+'k', font:{size:10}}},
+      y1: {position:'right', grid:{display:false}, ticks:{callback:v=>v+'%', font:{size:10}}},
+      x: {ticks:{font:{size:10}, maxRotation:0}}
+    }
+  }
+});
+
+// ============ DAILY TABLE ============
+const rows = [];
+const priceBase = 3200;
+const spp = [22,22,22,24,24,24,24,25,25,25,23,23,23,23,25,25,25,27,27,27,27,25,25,25,25,28,28,28,28,28];
+let win = [];
+for (let i = 0; i < 30; i++) {
+  const d = new Date(2026, 2, 16 + i);
+  const dateStr = d.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit'});
+  const price = priceBase + (i % 4 === 0 ? 100 : 0);
+  const sppVal = spp[i];
+  const priceBuyer = Math.round(price * (1 - sppVal/100));
+  const impressions = 8000 + Math.round(spend[i] * 3.2) + (i*50);
+  const ctr = +(2 + ((i*7)%10)/10*1.5).toFixed(2);
+  const clicks = Math.round(impressions * ctr / 100);
+  const crCart = +(6 + ((i*3)%10)/10*3).toFixed(1);
+  const carts = Math.round(clicks * crCart / 100);
+  const orders = Math.round(carts * (0.35 + ((i*5)%10)/10*0.15));
+  const sp = spend[i];
+  const cpc = +(sp/clicks).toFixed(1);
+  const cpoCart = Math.round(sp/carts);
+  const salesRK = orders * priceBuyer;
+  const drrDay = +(sp/salesRK*100).toFixed(1);
+  win.push({sp, salesRK});
+  if (win.length > 5) win.shift();
+  const drr5 = +(win.reduce((a,b)=>a+b.sp,0)/win.reduce((a,b)=>a+b.salesRK,0)*100).toFixed(1);
+  rows.push({dateStr, price, priceBuyer, sppVal, impressions, clicks, ctr, carts, crCart, orders, sp, cpc, cpoCart, salesRK, drrDay, drr5});
+}
+const fmt = n => n.toLocaleString('ru-RU');
+const cls = v => v < 18 ? 'drr-good' : v > 25 ? 'drr-bad' : '';
+document.getElementById('tb').innerHTML = rows.map(r => `
+  <tr>
+    <td class="sticky l tnum">${r.dateStr}</td>
+    <td class="r">${fmt(r.price)}</td>
+    <td class="r">${fmt(r.priceBuyer)}</td>
+    <td class="r" style="color:var(--text-2)">${r.sppVal}%</td>
+    <td class="r">${fmt(r.impressions)}</td>
+    <td class="r">${fmt(r.clicks)}</td>
+    <td class="r">${r.ctr}</td>
+    <td class="r">${r.carts}</td>
+    <td class="r" style="color:var(--text-2)">${r.crCart}</td>
+    <td class="r" style="font-weight:500">${r.orders}</td>
+    <td class="r">${fmt(r.sp)}</td>
+    <td class="r">${r.cpc}</td>
+    <td class="r">${fmt(r.cpoCart)}</td>
+    <td class="r">${fmt(r.salesRK)}</td>
+    <td class="r ${cls(r.drrDay)}">${r.drrDay}</td>
+    <td class="r ${cls(r.drr5)}">${r.drr5}</td>
+  </tr>`).join('');
+const T = rows.reduce((a,r) => ({
+  impressions: a.impressions+r.impressions, clicks: a.clicks+r.clicks,
+  carts: a.carts+r.carts, orders: a.orders+r.orders,
+  sp: a.sp+r.sp, salesRK: a.salesRK+r.salesRK
+}), {impressions:0,clicks:0,carts:0,orders:0,sp:0,salesRK:0});
+document.getElementById('totalsRow').innerHTML = `
+  <td class="sticky l">Итого / среднее</td>
+  <td class="r">${fmt(Math.round(rows.reduce((a,r)=>a+r.price,0)/30))}</td>
+  <td class="r">${fmt(Math.round(rows.reduce((a,r)=>a+r.priceBuyer,0)/30))}</td>
+  <td class="r">${Math.round(rows.reduce((a,r)=>a+r.sppVal,0)/30)}%</td>
+  <td class="r">${fmt(T.impressions)}</td>
+  <td class="r">${fmt(T.clicks)}</td>
+  <td class="r">${(T.clicks/T.impressions*100).toFixed(2)}</td>
+  <td class="r">${fmt(T.carts)}</td>
+  <td class="r">${(T.carts/T.clicks*100).toFixed(1)}</td>
+  <td class="r">${T.orders}</td>
+  <td class="r">${fmt(T.sp)}</td>
+  <td class="r">${(T.sp/T.clicks).toFixed(1)}</td>
+  <td class="r">${fmt(Math.round(T.sp/T.carts))}</td>
+  <td class="r">${fmt(T.salesRK)}</td>
+  <td class="r">${(T.sp/T.salesRK*100).toFixed(1)}</td>
+  <td class="r">—</td>`;
+</script>
+</body>
+</html>

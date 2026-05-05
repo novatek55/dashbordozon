@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Себестоимость</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 16px; background: #f7f2ea; color: #2b2117; }
+    .card { background: #fffaf2; border: 1px solid #d8c9b2; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+    h2 { margin-top: 0; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    input[type="file"] { padding: 7px; border: 1px solid #d8c9b2; border-radius: 8px; background: #fff; }
+    button { padding: 8px 12px; border: 1px solid #8c5c2a; border-radius: 8px; background: #8c5c2a; color: #fffaf2; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+    th, td { border: 1px solid #d8c9b2; padding: 6px; text-align: left; }
+    th { background: #f1e3cf; }
+    .meta { font-size: 13px; color: #6d5e4c; margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+    <a href="/orders_dashboard.html" style="text-decoration: none;">
+      <button type="button" style="background: #6c757d;">📊 Дашборд</button>
+    </a>
+    <a href="/palletization/" target="_blank" style="text-decoration: none;">
+      <button type="button" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📦 Паллетизация</button>
+    </a>
+  </div>
+  <h2>Справочник себестоимости</h2>
+  <div class="card">
+    <div class="row">
+      <input id="file" type="file" accept=".xlsx,.xls" />
+      <button id="upload_btn" type="button">Загрузить Excel</button>
+    </div>
+    <div id="status" class="meta">Готово</div>
+  </div>
+
+  <div class="card">
+    <table id="costs_table">
+      <thead><tr><th>SKU</th><th>Артикул</th><th>Себестоимость на ед.</th><th>Обновлено</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("file");
+    const uploadBtn = document.getElementById("upload_btn");
+
+    const statusEl = document.getElementById("status");
+    const tableBody = document.querySelector("#costs_table tbody");
+
+    function fmtNumber(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "";
+      return new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(n);
+    }
+
+    function parsePossiblyPrefixedJson(text) {
+      const trimmed = String(text || "").trim();
+      if (!trimmed) throw new Error("Пустой ответ сервера");
+      try {
+        return JSON.parse(trimmed);
+      } catch (_) {
+        const objectStart = trimmed.indexOf("{");
+        const arrayStart = trimmed.indexOf("[");
+        let start = -1;
+        if (objectStart >= 0 && arrayStart >= 0) start = Math.min(objectStart, arrayStart);
+        else if (objectStart >= 0) start = objectStart;
+        else if (arrayStart >= 0) start = arrayStart;
+        if (start < 0) throw new Error(trimmed.slice(0, 300));
+        return JSON.parse(trimmed.slice(start));
+      }
+    }
+
+    async function fetchJson(url, options) {
+      const res = await fetch(url, options);
+      const text = await res.text();
+      let data;
+      try {
+        data = parsePossiblyPrefixedJson(text);
+      } catch (e) {
+        throw new Error(`Некорректный JSON от сервера: ${e.message}`);
+      }
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      return data;
+    }
+
+    async function loadCosts() {
+      statusEl.textContent = "Загрузка...";
+      const data = await fetchJson("/api/finance-costs");
+      tableBody.innerHTML = "";
+      for (const item of data.items || []) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${item.sku || ""}</td><td>${item.article || ""}</td><td>${fmtNumber(item.unit_cost)}</td><td>${item.updated_at || ""}</td>`;
+        tableBody.appendChild(tr);
+      }
+      statusEl.textContent = `Загружено строк: ${data.count || 0}`;
+    }
+
+    async function uploadCosts() {
+      if (!fileInput.files || !fileInput.files[0]) {
+        statusEl.textContent = "Выберите Excel файл";
+        return;
+      }
+      const form = new FormData();
+      form.append("file", fileInput.files[0]);
+      statusEl.textContent = "Загрузка файла...";
+      uploadBtn.disabled = true;
+      try {
+        const data = await fetchJson("/api/finance-costs/upload", { method: "POST", body: form });
+        statusEl.textContent = `Загружено строк: ${data.loaded || 0}`;
+        await loadCosts();
+      } catch (e) {
+        statusEl.textContent = `Ошибка: ${e.message}`;
+      } finally {
+        uploadBtn.disabled = false;
+      }
+    }
+
+    uploadBtn.addEventListener("click", () => { uploadCosts().catch((e) => { statusEl.textContent = `Ошибка: ${e.message}`; }); });
+
+    loadCosts().catch((e) => { statusEl.textContent = `Ошибка: ${e.message}`; });
+  </script>
+</body>
+</html>

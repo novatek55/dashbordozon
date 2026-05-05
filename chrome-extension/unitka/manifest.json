@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Ozon Unitka Helper",
+  "version": "0.1.0",
+  "description": "Парсит данные калькулятора и bestsellers Ozon → отправляет в Юнитку.",
+  "permissions": ["storage", "cookies", "scripting", "tabs"],
+  "host_permissions": [
+    "https://calculator.ozon.ru/*",
+    "https://seller.ozon.ru/*",
+    "https://www.ozon.ru/*",
+    "http://127.0.0.1:8088/*",
+    "http://localhost:8088/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Ozon Unitka Helper"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1:8088/*",
+        "http://localhost:8088/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://www.ozon.ru/*"
+      ],
+      "js": ["ozon-overlay.js"],
+      "css": ["ozon-overlay.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  }
+}

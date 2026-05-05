@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Юнитка — компакт</title>
+<style>
+  body {
+    margin: 0;
+    padding: 32px 16px;
+    background: #f5f7fa;
+    font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #1b2433;
+  }
+  h2 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+  .subtitle { color: #6b7688; font-size: 12px; margin-bottom: 22px; }
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(20,30,50,0.06);
+    padding: 18px 20px 14px;
+    min-width: 560px;
+    max-width: 620px;
+  }
+  .header-row {
+    display: flex;
+    align-items: baseline;
+    padding-bottom: 10px;
+    margin-bottom: 4px;
+  }
+  .header-row .title {
+    font-weight: 700;
+    font-size: 14px;
+    color: #1b2433;
+  }
+  .header-row .sub {
+    font-size: 11px;
+    color: #9aa3b2;
+    margin-left: 8px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+  th {
+    text-align: right;
+    font-weight: 500;
+    font-size: 10px;
+    color: #9aa3b2;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 6px 10px 10px;
+    border-bottom: 1px solid #edf1f6;
+  }
+  th.label { text-align: left; }
+  td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #f3f5f8;
+  }
+  td.label {
+    color: #2c3749;
+    font-size: 12.5px;
+  }
+  td.num {
+    text-align: right;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+  td.num-muted { color: #6b7688; }
+  td.num-pos { color: #1f7a4c; font-weight: 500; }
+  td.num-neg { color: #6b7688; }
+  .caret { color: #9aa3b2; display: inline-block; width: 10px; }
+  tr.section-start td { padding-top: 8px; }
+  tr.total td {
+    font-weight: 700;
+    color: #1b2433;
+    background: #fbfcfd;
+    border-top: 1px solid #edf1f6;
+  }
+  tr.accrued td { font-weight: 600; color: #1b2433; }
+  tr.gross td {
+    font-weight: 700;
+    background: #f3faf6;
+    border-top: 1px solid #d4ebde;
+    border-bottom: none;
+  }
+  tr.gross td.num-pos { color: #1f7a4c; font-size: 13px; }
+  .input-inline {
+    width: 72px;
+    border: 1px solid #e5ebf3;
+    background: #fff;
+    border-radius: 5px;
+    padding: 3px 6px;
+    text-align: right;
+    font-family: inherit;
+    font-size: 11.5px;
+    color: #1b2433;
+    font-variant-numeric: tabular-nums;
+  }
+  .input-inline:focus { outline: none; border-color: #3a7de6; background: #f6faff; }
+  .input-inline.pct { width: 48px; }
+  .delta-up { color: #1f7a4c; font-size: 10.5px; margin-left: 4px; }
+  .delta-down { color: #b84141; font-size: 10.5px; margin-left: 4px; }
+  .col-head-было { color: #9aa3b2; }
+  .col-head-стало { color: #3a7de6; }
+  .totals-right { color: #1b2433; font-weight: 700; }
+  .pct-cell { color: #9aa3b2; font-size: 11px; }
+  .article-pill {
+    display: inline-block;
+    background: #eaf2fd;
+    color: #2c5ea8;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 8px;
+  }
+</style>
+</head>
+<body>
+
+<h2>Юнитка · В1 · на 1 ед.</h2>
+<p class="subtitle">«Было» (факт 30д) слева · «Стало» (редактируемое) справа · всё пересчитывается на лету</p>
+
+<div class="card">
+  <div class="header-row">
+    <span class="article-pill">215 адидас с полками</span>
+    <span class="title">Начислено</span>
+    <span class="sub">на 1 ед. · база: 30 дн / 98 шт</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="label" style="width: 44%;"></th>
+        <th class="col-head-было" style="width: 18%;">Было</th>
+        <th style="width: 11%;">%</th>
+        <th class="col-head-стало" style="width: 18%;">Стало</th>
+        <th style="width: 9%;">%</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <tr class="section-start">
+        <td class="label"><span class="caret">▸</span> Продажи</td>
+        <td class="num">10 520</td>
+        <td class="num pct-cell">100.0</td>
+        <td class="num"><input class="input-inline" value="11 200"></td>
+        <td class="num pct-cell">100.0</td>
+      </tr>
+
+      <tr>
+        <td class="label"><span class="caret">▸</span> Вознаграждение Ozon</td>
+        <td class="num num-muted">−4 495</td>
+        <td class="num pct-cell">42.7</td>
+        <td class="num num-muted">−4 782</td>
+        <td class="num pct-cell"><input class="input-inline pct" value="42.7"></td>
+      </tr>
+
+      <tr>
+        <td class="label"><span class="caret">▸</span> Услуги доставки</td>
+        <td class="num num-muted">−631</td>
+        <td class="num pct-cell">6.0</td>
+        <td class="num num-muted"><input class="input-inline" value="631"></td>
+        <td class="num pct-cell">5.6</td>
+      </tr>
+
+      <tr>
+        <td class="label"><span class="caret">▸</span> Услуги партнёров</td>
+        <td class="num num-muted">−83</td>
+        <td class="num pct-cell">0.8</td>
+        <td class="num num-muted"><input class="input-inline" value="83"></td>
+        <td class="num pct-cell">0.7</td>
+      </tr>
+
+      <tr>
+        <td class="label"><span class="caret">▸</span> Услуги FBO</td>
+        <td class="num num-muted">−260</td>
+        <td class="num pct-cell">2.5</td>
+        <td class="num num-muted"><input class="input-inline" value="260"></td>
+        <td class="num pct-cell">2.3</td>
+      </tr>
+
+      <tr>
+        <td class="label"><span class="caret">▸</span> Продвижение и реклама</td>
+        <td class="num num-muted">−943</td>
+        <td class="num pct-cell">9.0</td>
+        <td class="num num-muted"><input class="input-inline" value="800"></td>
+        <td class="num pct-cell">7.1</td>
+      </tr>
+
+      <tr class="accrued">
+        <td class="label">Начислено</td>
+        <td class="num">4 108</td>
+        <td class="num pct-cell">39.0</td>
+        <td class="num">4 644 <span class="delta-up">+536</span></td>
+        <td class="num pct-cell">41.5</td>
+      </tr>
+
+      <tr>
+        <td class="label">Себестоимость</td>
+        <td class="num num-muted">−1 150</td>
+        <td class="num pct-cell">−10.9</td>
+        <td class="num num-muted">−<input class="input-inline" value="1 150"></td>
+        <td class="num pct-cell">−10.3</td>
+      </tr>
+
+      <tr>
+        <td class="label">Налог (<input class="input-inline pct" value="10">%)</td>
+        <td class="num num-muted">−1 052</td>
+        <td class="num pct-cell">−10.0</td>
+        <td class="num num-muted">−1 120</td>
+        <td class="num pct-cell">−10.0</td>
+      </tr>
+
+      <tr class="gross">
+        <td class="label">Валовая прибыль</td>
+        <td class="num num-pos">2 376</td>
+        <td class="num pct-cell" style="color:#1f7a4c;">22.6</td>
+        <td class="num num-pos">2 374 <span class="delta-down">−2</span></td>
+        <td class="num pct-cell" style="color:#1f7a4c;">21.2</td>
+      </tr>
+
+    </tbody>
+  </table>
+</div>
+
+<p class="subtitle" style="margin-top: 24px; max-width: 620px; text-align: center;">
+  Все правые ячейки «Стало» либо редактируемые (input), либо пересчитываются от них.<br>
+  В1 имеет фактическую «Было», в В2/В3 «Было» пустая или заполнена шаблоном.
+</p>
+
+</body>
+</html>

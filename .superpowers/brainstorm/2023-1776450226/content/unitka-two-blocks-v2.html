@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Юнитка — 2 блока v2</title>
+<style>
+  body {
+    margin: 0;
+    padding: 28px 16px;
+    background: #f5f7fa;
+    font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+    color: #1b2433;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h2 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+  .subtitle { color: #6b7688; font-size: 12px; margin-bottom: 22px; text-align: center; }
+  .blocks { display: flex; gap: 14px; align-items: flex-start; }
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(20,30,50,0.06);
+    padding: 14px 16px 12px;
+    width: 350px;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #edf1f6;
+    margin-bottom: 6px;
+  }
+  .src-select {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 5px;
+    border: 1px solid #e5ebf3;
+    background: #fff;
+    color: #1b2433;
+  }
+  .src-select.fact { background: #eef5ef; color: #1f6f46; border-color: #d0e5d7; }
+  .src-select.calc { background: #eaf2fd; color: #2c5ea8; border-color: #cfdfef; }
+  .article-line {
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 11px;
+    color: #6b7688;
+  }
+  .article-line input {
+    border: none;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1b2433;
+    width: 100%;
+    padding: 2px 0;
+  }
+  .article-line input:focus { outline: none; background: #f6faff; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+  td { padding: 5px 4px; border-bottom: 1px solid #f3f5f8; }
+  td.label { color: #2c3749; font-size: 12px; }
+  td.num {
+    text-align: right;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    white-space: nowrap;
+  }
+  td.pct-cell { color: #9aa3b2; font-size: 10.5px; width: 42px; text-align: right; padding-right: 2px; }
+  .input-inline {
+    width: 72px;
+    border: 1px solid #e5ebf3;
+    background: #fff;
+    border-radius: 5px;
+    padding: 3px 6px;
+    text-align: right;
+    font-family: inherit;
+    font-size: 11.5px;
+    color: #1b2433;
+    font-variant-numeric: tabular-nums;
+  }
+  .input-inline:focus { outline: none; border-color: #3a7de6; background: #f6faff; }
+  .input-inline.pct { width: 44px; }
+  .caret { color: #c8cfda; display: inline-block; width: 10px; font-size: 10px; }
+
+  tr.buyer-price td { background: #f5f0fa; }
+  tr.buyer-price td.label { font-weight: 600; color: #5a2e7a; }
+  tr.seller-price td { background: #fafcfe; }
+  tr.seller-price td.label { font-weight: 600; }
+  tr.accrued td { font-weight: 600; color: #1b2433; background: #fafcfe; }
+  tr.gross td {
+    font-weight: 700;
+    background: #f3faf6;
+    border-top: 1px solid #d4ebde;
+    border-bottom: none;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    color: #1f7a4c;
+  }
+  tr.gross td.num { font-size: 13px; }
+  tr.logistics-row td { background: #fffaf0; }
+
+  .delta {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 6px;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .delta-up { background: #e6f4ec; color: #1f7a4c; }
+  .delta-down { background: #faeae6; color: #b84141; }
+
+  .tools {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 10.5px;
+    color: #6b7688;
+  }
+  .tools .chips { display: flex; gap: 4px; }
+  .chip { padding: 2px 7px; border-radius: 4px; background: #f4f5f7; color: #4a5568; font-weight: 500; cursor: pointer; }
+  .chip.active { background: #eaf2fd; color: #2c5ea8; }
+
+  .hint {
+    margin-top: 18px;
+    font-size: 11px;
+    color: #8790a2;
+    max-width: 740px;
+    text-align: center;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<h2>Юнитка · 2 блока · + Цена для покупателя</h2>
+<p class="subtitle">Фиолетовая строка — то, что видит покупатель · серая «Цена продажи» — то, что получает продавец</p>
+
+<div class="blocks">
+
+  <!-- БЛОК A -->
+  <div class="card">
+    <div class="card-header">
+      <select class="src-select fact">
+        <option>📊 Факт · 30д</option>
+        <option>🧮 Расчёт</option>
+        <option>🎯 Конкурент</option>
+        <option>➕ Пусто</option>
+      </select>
+      <div class="article-line">
+        <span>арт.</span>
+        <input value="215 адидас с полками">
+      </div>
+    </div>
+
+    <div class="tools">
+      <span>на 1 ед. · 98 шт за 30д</span>
+      <div class="chips">
+        <span class="chip active">Мск→Мск</span>
+        <span class="chip">Мск→Нск</span>
+      </div>
+    </div>
+
+    <table style="margin-top: 8px;">
+      <tbody>
+        <tr class="buyer-price">
+          <td class="label">Цена для покупателя</td>
+          <td class="num"><input class="input-inline" value="9 990"></td>
+          <td class="pct-cell">—</td>
+        </tr>
+        <tr class="seller-price">
+          <td class="label">Цена продажи (продавцу)</td>
+          <td class="num"><input class="input-inline" value="10 520"></td>
+          <td class="pct-cell">100%</td>
+        </tr>
+        <tr>
+          <td class="label"><span class="caret">▸</span> Комиссия Ozon</td>
+          <td class="num"><input class="input-inline" value="4 495"></td>
+          <td class="pct-cell"><input class="input-inline pct" value="42.7"></td>
+        </tr>
+        <tr class="logistics-row">
+          <td class="label"><span class="caret">▸</span> Логистика</td>
+          <td class="num"><input class="input-inline" value="631"></td>
+          <td class="pct-cell">6.0%</td>
+        </tr>
+        <tr>
+          <td class="label"><span class="caret">▸</span> Партнёры</td>
+          <td class="num"><input class="input-inline" value="83"></td>
+          <td class="pct-cell">0.8%</td>
+        </tr>
+        <tr>
+          <td class="label"><span class="caret">▸</span> FBO</td>
+          <td class="num"><input class="input-inline" value="260"></td>
+          <td class="pct-cell">2.5%</td>
+        </tr>
+        <tr>
+          <td class="label"><span class="caret">▸</span> Реклама</td>
+          <td class="num"><input class="input-inline" value="943"></td>
+          <td class="pct-cell">9.0%</td>
+        </tr>
+        <tr class="accrued">
+          <td class="label">Начислено</td>
+          <td class="num">4 108</td>
+          <td class="pct-cell">39.0%</td>
+        </tr>
+        <tr>
+          <td class="label">Себестоимость</td>
+          <td class="num"><input class="input-inline" value="1 150"></td>
+          <td class="pct-cell">10.9%</td>
+        </tr>
+        <tr>
+          <td class="label">Налог <input class="input-inline pct" value="10">%</td>
+          <td class="num"><input class="input-inline" value="1 052"></td>
+          <td class="pct-cell">10.0%</td>
+        </tr>
+        <tr class="gross">
+          <td class="label">Валовая прибыль</td>
+          <td class="num">2 376</td>
+          <td class="pct-cell" style="color:#1f7a4c;">22.6%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- БЛОК B -->
+  <div class="card">
+    <div class="card-header">
+      <select class="src-select calc">
+        <option>🧮 Расчёт</option>
+        <option>📊 Факт · 30д</option>
+        <option>🎯 Конкурент</option>
+        <option>➕ Пусто</option>
+      </select>
+      <div class="article-line">
+        <span>арт.</span>
+        <input value="215 (тест цены +7%)">
+      </div>
+    </div>
+
+    <div class="tools">
+      <span>на 1 ед.</span>
+      <div class="chips">
+        <span class="chip active">Мск→Мск</span>
+        <span class="chip">Мск→Нск</span>
+      </div>
+    </div>
+
+    <table style="margin-top: 8px;">
+      <tbody>
+        <tr class="buyer-price">
+          <td class="label">Цена для покупателя</td>
+          <td class="num"><input class="input-inline" value="10 690"></td>
+          <td class="pct-cell">—</td>
+        </tr>
+        <tr class="seller-price">
+          <td class="label">Цена продажи (продавцу)</td>
+          <td class="num"><input class="input-inline" value="11 250"></td>
+          <td class="pct-cell">100%</td>
+        </tr>
+        <tr>
+          <td class="label"><span class="caret">▸</span> Комиссия Ozon</td>
+          <td class="num"><input class="input-inline" value="4 804"></td>
+          <td class="pct-cell"><input class="input-inline pct" value="42.7"></td>
+        </tr>
+        <tr class="logistics-row">
+          <td class="label"><span class="caret">▸</span> Логистика</td>
+          <td class="num"><input class="input-inline" value="631"></td>
+          <td class="pct-cell">5.6%</td>
+        </tr>
+        <tr>
+          <td class="label"><span class="caret">▸</span> Партнёры</td>
+          <td class="num"><input class="input-inline" value="83"></td>
+          <td class="pct-cell">0.7%</td>
+        </tr>
+        <tr>
+          <td class="label"><span class="caret">▸</span> FBO</td>
+          <td class="num"><input class="input-inline" value="260"></td>
+          <td class="pct-cell">2.3%</td>
+        </tr>
+        <tr>
+          <td class="label"><span class="caret">▸</span> Реклама</td>
+          <td class="num"><input class="input-inline" value="800"></td>
+          <td class="pct-cell">7.1%</td>
+        </tr>
+        <tr class="accrued">
+          <td class="label">Начислено <span class="delta delta-up">+565</span></td>
+          <td class="num">4 672</td>
+          <td class="pct-cell">41.5%</td>
+        </tr>
+        <tr>
+          <td class="label">Себестоимость</td>
+          <td class="num"><input class="input-inline" value="1 150"></td>
+          <td class="pct-cell">10.2%</td>
+        </tr>
+        <tr>
+          <td class="label">Налог <input class="input-inline pct" value="10">%</td>
+          <td class="num"><input class="input-inline" value="1 125"></td>
+          <td class="pct-cell">10.0%</td>
+        </tr>
+        <tr class="gross">
+          <td class="label">Валовая прибыль <span class="delta delta-up">+21</span></td>
+          <td class="num">2 397</td>
+          <td class="pct-cell" style="color:#1f7a4c;">21.3%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<p class="hint">
+  <b>Цена для покупателя</b> (фиолетовая) — то, что клиент видит на витрине (уже со скидками/промо).
+  <b>Цена продажи</b> — то, что приходит продавцу в выручку (до комиссии). Разница — Ozon-кофинансируемые скидки/промо/баллы.
+  Обе редактируемые; если меняешь одну — вторая остаётся независимой (коэффициент-связь опциональный).
+</p>
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+<h2>Как считать: «на 1 ед.» или «1 ед. + за период»?</h2>
+<p class="subtitle">Что меняете → что пересчитывается. Кликните вариант.</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Только «на 1 ед.»</h3>
+      <p>Одна колонка чисел per unit. Объём (шт) — параметр сверху, по умолчанию 1. Классическая юнит-экономика, одинаковая структура для В1/В2/В3.</p>
+      <div class="mockup" style="margin-top: 12px;">
+        <div class="mockup-body" style="padding: 12px; font-size: 13px;">
+          <table style="width:100%; border-collapse: collapse;">
+            <tr><td style="padding: 4px 8px;">Цена продажи</td><td style="text-align:right; padding: 4px 8px;"><input class="mock-input" style="width:90px" value="10 520"></td></tr>
+            <tr><td style="padding: 4px 8px;">Комиссия 42.7%</td><td style="text-align:right; padding: 4px 8px; color:#666;">−4 495</td></tr>
+            <tr><td style="padding: 4px 8px;">Логистика</td><td style="text-align:right; padding: 4px 8px; color:#666;">−631</td></tr>
+            <tr><td style="padding: 4px 8px;">Себестоимость</td><td style="text-align:right; padding: 4px 8px;"><input class="mock-input" style="width:90px" value="1 150"></td></tr>
+            <tr style="font-weight:600; border-top: 1px solid #ddd;"><td style="padding: 4px 8px;">Валовая</td><td style="text-align:right; padding: 4px 8px; color:#1f5f51;">2 376 (22.6%)</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Две колонки: «на 1 ед.» + «× N»</h3>
+      <p>Как на вашем скрине: редактируешь значение на 1 ед., справа сразу видно сколько это за период. В1 по умолчанию N=98 (факт), для В2/В3 — N=1 или вручную.</p>
+      <div class="mockup" style="margin-top: 12px;">
+        <div class="mockup-body" style="padding: 12px; font-size: 13px;">
+          <table style="width:100%; border-collapse: collapse;">
+            <tr><th style="text-align:right; padding: 4px 8px; font-size:11px; color:#888;">на 1 ед.</th><th style="text-align:right; padding: 4px 8px; font-size:11px; color:#888;">× 98 шт</th></tr>
+            <tr><td style="text-align:right; padding: 4px 8px;"><input class="mock-input" style="width:80px" value="10 520"></td><td style="text-align:right; padding: 4px 8px; color:#666;">1 031 000</td></tr>
+            <tr><td style="text-align:right; padding: 4px 8px; color:#666;">−4 495</td><td style="text-align:right; padding: 4px 8px; color:#666;">−440 506</td></tr>
+            <tr style="font-weight:600; border-top: 1px solid #ddd;"><td style="text-align:right; padding: 4px 8px; color:#1f5f51;">2 376</td><td style="text-align:right; padding: 4px 8px; color:#1f5f51;">232 896</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Переключатель режима</h3>
+      <p>Одна таблица, сверху тоггл «на 1 ед. / за период». Для сравнения всегда «на 1 ед.», для анализа «что будет с прибылью за месяц» — «за период».</p>
+    </div>
+  </div>
+</div>

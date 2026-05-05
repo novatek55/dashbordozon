@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Паллетизация поставок</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f6fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            color: #666;
+        }
+        
+        .tab:hover {
+            background: #f0f0f0;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #444;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #ff5252;
+        }
+        
+        .btn-success {
+            background: #51cf66;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #40c057;
+        }
+        
+        .btn-warning {
+            background: #ffd43b;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            white-space: nowrap;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .action-btn.edit {
+            background: #4dabf7;
+            color: white;
+        }
+        
+        .action-btn.delete {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .cluster-section {
+            margin-bottom: 30px;
+        }
+        
+        .cluster-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .pallet-card {
+            background: white;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .pallet-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .pallet-header:hover {
+            background: #f0f0f0;
+        }
+        
+        .pallet-info {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .pallet-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .pallet-info-label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .pallet-info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .pallet-items {
+            display: none;
+            padding: 20px;
+        }
+        
+        .pallet-items.expanded {
+            display: block;
+        }
+        
+        .pallet-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+        }
+        
+        .pallet-item:last-child {
+            border-bottom: none;
+        }
+        
+        .expand-icon {
+            transition: transform 0.3s;
+        }
+        
+        .expand-icon.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box input {
+            padding: 10px 15px 10px 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            width: 300px;
+            font-size: 14px;
+        }
+        
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📦 Система паллетизации поставок</h1>
+    </div>
+    
+    <div class="container">
+        <!-- Вкладки -->
+        <div class="tabs">
+            <button class="tab active" data-tab="pallets">📊 Расчёт паллетов</button>
+            <button class="tab" data-tab="shipment">🚚 Данные поставки</button>
+            <button class="tab" data-tab="products">📋 Справочник товаров</button>
+        </div>
+        
+        <!-- Вкладка: Расчёт паллетов -->
+        <div id="tab-pallets" class="tab-content active">
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="calculatePallets()">
+                    🔄 Рассчитать паллетизацию
+                </button>
+                <div id="pallet-alerts"></div>
+            </div>
+            <div id="pallets-result"></div>
+        </div>
+        
+        <!-- Вкладка: Данные поставки -->
+        <div id="tab-shipment" class="tab-content">
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="showAddShipmentModal()">
+                    ➕ Добавить позицию
+                </button>
+                <button class="btn btn-secondary" onclick="clearShipment()">
+                    🗑️ Очистить все
+                </button>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">📦 Позиции поставки по кластерам</div>
+                <div id="shipment-list" class="table-container">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>Нет данных о поставке</p>
+                        <p style="font-size: 14px; margin-top: 10px;">Добавьте позиции вручную или загрузите из отчёта Ozon</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Вкладка: Справочник товаров -->
+        <div id="tab-products" class="tab-content">
+            <div class="toolbar">
+                <div>
+                    <button class="btn btn-primary" onclick="showAddProductModal()">
+                        ➕ Добавить товар
+                    </button>
+                    <button class="btn btn-secondary" onclick="showImportModal()">
+                        📁 Импорт из Excel
+                    </button>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="product-search" placeholder="Поиск по артикулу..." onkeyup="searchProducts()">
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">📋 Справочник характеристик товаров</div>
+                <div id="products-list" class="table-container">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>Справочник пуст</p>
+                        <p style="font-size: 14px; margin-top: 10px;">Загрузите данные из файла объём.xlsx</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно: Добавить/Редактировать товар -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="product-modal-title">Добавить товар</div>
+                <button class="modal-close" onclick="closeModal('product-modal')">&times;</button>
+            </div>
+            <form id="product-form" onsubmit="saveProduct(event)">
+                <div class="form-group">
+                    <label>Артикул (SKU) *</label>
+                    <input type="text" class="form-control" id="product-sku" required>
+                </div>
+                <div class="form-group">
+                    <label>Название товара</label>
+                    <input type="text" class="form-control" id="product-name">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Высота слоя (м) *</label>
+                        <input type="number" step="0.001" class="form-control" id="product-layer-height" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Штук в слое *</label>
+                        <input type="number" class="form-control" id="product-items-per-layer" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Вес 1 шт (кг)</label>
+                        <input type="number" step="0.001" class="form-control" id="product-weight">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('product-modal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Модальное окно: Импорт из Excel -->
+    <div id="import-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Импорт из Excel</div>
+                <button class="modal-close" onclick="closeModal('import-modal')">&times;</button>
+            </div>
+            <div class="upload-area" id="upload-area" onclick="document.getElementById('import-file').click()">
+                <div style="font-size: 48px; margin-bottom: 15px;">📁</div>
+                <p>Перетащите файл сюда или нажмите для выбора</p>
+                <p style="font-size: 12px; color: #888; margin-top: 10px;">Поддерживаются файлы .xlsx</p>
+                <input type="file" id="import-file" accept=".xlsx" style="display: none;" onchange="handleFileSelect(event)">
+            </div>
+            <div id="import-result" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно: Добавить позицию поставки -->
+    <div id="shipment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Добавить позицию в поставку</div>
+                <button class="modal-close" onclick="closeModal('shipment-modal')">&times;</button>
+            </div>
+            <form id="shipment-form" onsubmit="saveShipmentItem(event)">
+                <div class="form-group">
+                    <label>Артикул (SKU) *</label>
+                    <input type="text" class="form-control" id="shipment-sku" required list="sku-list">
+                    <datalist id="sku-list"></datalist>
+                </div>
+                <div class="form-group">
+                    <label>Кластер *</label>
+                    <input type="text" class="form-control" id="shipment-cluster" required placeholder="Например: Москва">
+                </div>
+                <div class="form-group">
+                    <label>Количество *</label>
+                    <input type="number" class="form-control" id="shipment-quantity" required min="1">
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('shipment-modal')">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

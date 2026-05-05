@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "codex_browser_relay": {
+      "command": "node",
+      "args": ["--experimental-strip-types", "server.ts"],
+      "cwd": "E:/codex-browser-relay",
+      "env": {
+        "CODEX_BROWSER_RELAY_TOKEN": "codex-browser-relay-dev-token",
+        "CODEX_BROWSER_RELAY_PORT": "19000"
+      }
+    }
+  }
+}
