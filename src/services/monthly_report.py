@@ -536,7 +536,7 @@ async def _build_ads_summary(
         date_to_excl,
     )
 
-    lines = ["## Реклама — сводка\n"]
+    lines = ["## Реклама — сводка\n", ""]
     lines.append("### По кампаниям")
     lines.append("| Кампания | Тип | Расход ₽ | Показы | Клики | Заказы | ДРР % |")
     lines.append("|---|---|---|---|---|---|---|")
