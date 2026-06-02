@@ -2,7 +2,7 @@
 from aiohttp import web
 
 from src.dashboard.routes.pages import (
-    index, finance_costs_page, palletization_page, palletization_asset,
+    index, finance_costs_page, palletization_page, palletization_asset, shared_theme_css,
 )
 from src.dashboard.routes.system import (
     health, restart_server, create_pool, close_pool,
@@ -11,13 +11,14 @@ from src.dashboard.routes.system import (
 from src.dashboard.routes.orders import get_orders, get_sales, get_articles
 from src.dashboard.routes.returns import get_returns
 from src.dashboard.routes.finance import (
-    get_cash_flow, get_finance_report, get_finance_report_v2,
+    get_cash_flow, get_finance_report,
     get_finance_report_accrual,
     get_accruals_comp_by_article, get_accruals_comp_by_article_accrual,
     get_returns_analytics,
     ensure_finance_report_tables,
     get_finance_costs, upload_finance_costs, save_finance_plan,
-    analyze_finance_data, get_realization_v2,
+    get_settings_costs, save_settings_cost,
+    analyze_finance_data, get_realization_v2, get_wb_finance_report_daily,
 )
 from src.dashboard.routes.stocks import (
     get_warehouse_stock, get_analytics_stocks, get_stock_balances,
@@ -31,7 +32,10 @@ from src.dashboard.routes.actions import (
     get_actions, get_action_products, get_actions_report,
     activate_action_products, deactivate_action_products,
 )
-from src.dashboard.routes.advertising import get_advertising_summary, get_advertising_report, toggle_campaign
+from src.dashboard.routes.advertising import (
+    get_advertising_summary, get_advertising_report, toggle_campaign,
+    disable_ad_for_sku, remove_sku_from_all_promos,
+)
 from src.dashboard.routes.reviews import (
     get_reviews_report, get_reviews_report_detail,
     get_reviews_service_status, post_review_reply,
@@ -40,6 +44,10 @@ from src.dashboard.routes.questions import (
     get_questions_service_status, get_questions_report,
     get_question_answers, post_question_answer,
     post_questions_change_status,
+)
+from src.dashboard.routes.chats import (
+    get_chats_service_status, get_chats_report,
+    get_chat_history, post_chat_send_message,
 )
 from src.dashboard.routes.unitka import (
     get_unitka_clusters, get_unitka_offer_search, get_unitka_logistics_tariff,
@@ -70,6 +78,7 @@ from src.dashboard.routes.palletization_routes import (
     palletization_shipment_clear, palletization_shipment_missing,
     palletization_pallets_calculate,
 )
+from src.dashboard.routes.report import get_monthly_report
 
 
 @web.middleware
@@ -90,8 +99,10 @@ async def _cors_middleware(request: web.Request, handler):
 def create_app() -> web.Application:
     app = web.Application(middlewares=[_cors_middleware])
     app.router.add_get("/", index)
+    app.router.add_get("/shared-report-theme.css", shared_theme_css)
     app.router.add_get("/finance-costs", finance_costs_page)
     app.router.add_get("/api/health", health)
+    app.router.add_get("/api/monthly-report", get_monthly_report)
     app.router.add_get("/api/orders", get_orders)
     app.router.add_get("/api/sales", get_sales)
     app.router.add_get("/api/actions", get_actions)
@@ -99,8 +110,8 @@ def create_app() -> web.Application:
     app.router.add_get("/api/returns", get_returns)
     app.router.add_get("/api/cash-flow", get_cash_flow)
     app.router.add_get("/api/finance-report", get_finance_report)
-    app.router.add_get("/api/finance-report-v2", get_finance_report_v2)
     app.router.add_get("/api/finance-report-accrual", get_finance_report_accrual)
+    app.router.add_get("/api/wb/finance-report-daily", get_wb_finance_report_daily)
     app.router.add_get("/api/accruals-comp-by-article", get_accruals_comp_by_article)
     app.router.add_get("/api/accruals-comp-by-article-accrual", get_accruals_comp_by_article_accrual)
     app.router.add_get("/api/returns-analytics", get_returns_analytics)
@@ -115,8 +126,14 @@ def create_app() -> web.Application:
     app.router.add_get("/api/questions-report/{question_id}/answers", get_question_answers)
     app.router.add_post("/api/questions/answer", post_question_answer)
     app.router.add_post("/api/questions/change-status", post_questions_change_status)
+    app.router.add_get("/api/chats/service-status", get_chats_service_status)
+    app.router.add_get("/api/chats-report", get_chats_report)
+    app.router.add_get("/api/chats-report/{chat_id}/history", get_chat_history)
+    app.router.add_post("/api/chats/send", post_chat_send_message)
     app.router.add_get("/api/advertising-summary", get_advertising_summary)
     app.router.add_post("/api/advertising/campaign/toggle", toggle_campaign)
+    app.router.add_post("/api/rnp/sku/disable-ad", disable_ad_for_sku)
+    app.router.add_post("/api/rnp/sku/remove-promos", remove_sku_from_all_promos)
     app.router.add_get("/api/unitka/clusters", get_unitka_clusters)
     app.router.add_get("/api/unitka/offer-search", get_unitka_offer_search)
     app.router.add_get("/api/unitka/logistics-tariff", get_unitka_logistics_tariff)
@@ -137,6 +154,8 @@ def create_app() -> web.Application:
     app.router.add_get("/api/sync-status", get_sync_status)
     app.router.add_get("/api/finance-costs", get_finance_costs)
     app.router.add_post("/api/finance-costs/upload", upload_finance_costs)
+    app.router.add_get("/api/settings/costs", get_settings_costs)
+    app.router.add_post("/api/settings/costs", save_settings_cost)
     app.router.add_post("/api/supply-plan/upload-supply-file", upload_supply_file)
     app.router.add_get("/api/warehouse-stock", get_warehouse_stock)
     app.router.add_get("/api/analytics-stocks", get_analytics_stocks)
