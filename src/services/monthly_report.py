@@ -93,7 +93,7 @@ async def _build_shop_summary(conn: asyncpg.Connection, month_value: str) -> str
         """
         SELECT count(*) AS cnt
         FROM returns
-        WHERE accepted_at >= $1 AND accepted_at < $2
+        WHERE returned_at >= $1 AND returned_at < $2
         """,
         first_utc, end_utc,
     )
@@ -104,7 +104,7 @@ async def _build_shop_summary(conn: asyncpg.Connection, month_value: str) -> str
         """
         SELECT rating
         FROM seller_rating_history
-        ORDER BY recorded_at DESC
+        ORDER BY date DESC
         LIMIT 1
         """
     )
@@ -390,7 +390,7 @@ async def _build_products_section(
         """
         SELECT
             regexp_replace(lower(trim(both '''' from coalesce(offer_id,''))), '\\s+', ' ', 'g') AS offer_id,
-            max(name) AS name
+            max(product_name) AS name
         FROM report_products_items
         WHERE coalesce(offer_id, '') <> ''
         GROUP BY 1
@@ -487,8 +487,8 @@ async def _build_ads_summary(
     campaign_rows = await conn.fetch(
         """
         SELECT
-            c.campaign_name,
-            c.campaign_type,
+            c.title AS campaign_name,
+            c.adv_object_type AS campaign_type,
             sum(cs.spent::float8) AS spent,
             sum(cs.views)::int AS views,
             sum(cs.clicks)::int AS clicks,
@@ -498,7 +498,7 @@ async def _build_ads_summary(
         JOIN campaigns c ON c.campaign_id = cs.campaign_id
         WHERE (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date >= $1
           AND (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date < $2
-        GROUP BY c.campaign_name, c.campaign_type
+        GROUP BY c.title, c.adv_object_type
         HAVING sum(cs.spent::float8) > 0
         ORDER BY sum(cs.spent::float8) DESC
         """,
