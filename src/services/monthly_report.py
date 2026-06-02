@@ -476,3 +476,258 @@ async def _build_products_section(
             lines.append("")
 
     return "\n".join(lines) + "\n"
+
+
+async def _build_ads_summary(
+    conn: asyncpg.Connection, month_value: str
+) -> str:
+    first, last = _month_dates(month_value)
+    date_to_excl = last + timedelta(days=1)
+
+    campaign_rows = await conn.fetch(
+        """
+        SELECT
+            c.campaign_name,
+            c.campaign_type,
+            sum(cs.spent::float8) AS spent,
+            sum(cs.views)::int AS views,
+            sum(cs.clicks)::int AS clicks,
+            sum(cs.orders)::int AS orders,
+            sum(cs.revenue::float8) AS ad_revenue
+        FROM campaign_statistics cs
+        JOIN campaigns c ON c.campaign_id = cs.campaign_id
+        WHERE (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date >= $1
+          AND (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date < $2
+        GROUP BY c.campaign_name, c.campaign_type
+        HAVING sum(cs.spent::float8) > 0
+        ORDER BY sum(cs.spent::float8) DESC
+        """,
+        first,
+        date_to_excl,
+    )
+
+    sku_rows = await conn.fetch(
+        """
+        SELECT
+            p.offer_id,
+            sum(cs.spent::float8) AS spent,
+            sum(cs.orders)::int AS orders,
+            sum(cs.revenue::float8) AS ad_revenue
+        FROM campaign_statistics cs
+        JOIN (
+            SELECT DISTINCT
+                regexp_replace(lower(trim(both '''' from coalesce(offer_id,''))), '\\s+', ' ', 'g') AS offer_id,
+                fbo_sku_id AS sku
+            FROM report_products_items WHERE fbo_sku_id IS NOT NULL
+            UNION
+            SELECT DISTINCT
+                regexp_replace(lower(trim(both '''' from coalesce(offer_id,''))), '\\s+', ' ', 'g') AS offer_id,
+                fbs_sku_id AS sku
+            FROM report_products_items WHERE fbs_sku_id IS NOT NULL
+        ) p ON p.sku = cs.sku
+        WHERE (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date >= $1
+          AND (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date < $2
+          AND coalesce(p.offer_id, '') <> ''
+        GROUP BY p.offer_id
+        HAVING sum(cs.spent::float8) > 0
+        ORDER BY sum(cs.spent::float8) DESC
+        """,
+        first,
+        date_to_excl,
+    )
+
+    lines = ["## Реклама — сводка\n"]
+    lines.append("### По кампаниям")
+    lines.append("| Кампания | Тип | Расход ₽ | Показы | Клики | Заказы | ДРР % |")
+    lines.append("|---|---|---|---|---|---|---|")
+    for r in campaign_rows:
+        spent = float(r["spent"] or 0)
+        ad_rev = float(r["ad_revenue"] or 0)
+        drr = safe_divide(spent, ad_rev) * 100 if ad_rev else 0.0
+        lines.append(
+            f"| {r['campaign_name']} | {r['campaign_type']} | {_fmt_rub(spent)} | "
+            f"{int(r['views'] or 0)} | {int(r['clicks'] or 0)} | "
+            f"{int(r['orders'] or 0)} | {drr:.1f}% |"
+        )
+    if not campaign_rows:
+        lines.append("| — | — | — | — | — | — | — |")
+    lines.append("")
+
+    lines.append("### Топ-5 по расходу")
+    lines.append("| Товар | Расход ₽ | Заказы | ДРР % |")
+    lines.append("|---|---|---|---|")
+    for r in list(sku_rows)[:5]:
+        spent = float(r["spent"] or 0)
+        ad_rev = float(r["ad_revenue"] or 0)
+        drr = safe_divide(spent, ad_rev) * 100 if ad_rev else 0.0
+        lines.append(f"| {r['offer_id']} | {_fmt_rub(spent)} | {int(r['orders'] or 0)} | {drr:.1f}% |")
+    if not sku_rows:
+        lines.append("| — | — | — | — |")
+    lines.append("")
+
+    with_orders = [r for r in sku_rows if int(r["orders"] or 0) > 0 and float(r["ad_revenue"] or 0) > 0]
+    worst_drr = sorted(
+        with_orders,
+        key=lambda r: safe_divide(float(r["spent"] or 0), float(r["ad_revenue"] or 0)),
+        reverse=True,
+    )[:5]
+
+    lines.append("### Топ-5 по ДРР (худшие)")
+    lines.append("| Товар | ДРР % | Расход ₽ | Заказы |")
+    lines.append("|---|---|---|---|")
+    for r in worst_drr:
+        spent = float(r["spent"] or 0)
+        ad_rev = float(r["ad_revenue"] or 0)
+        drr = safe_divide(spent, ad_rev) * 100
+        lines.append(f"| {r['offer_id']} | {drr:.1f}% | {_fmt_rub(spent)} | {int(r['orders'] or 0)} |")
+    if not worst_drr:
+        lines.append("| — | — | — | — |")
+    lines.append("")
+
+    return "\n".join(lines) + "\n"
+
+
+async def _build_stock_section(conn: asyncpg.Connection) -> str:
+    from src.services.report_services import load_stock_forecast_inputs
+
+    stock_map = await load_stock_forecast_inputs(conn)
+
+    ending: List[tuple] = []
+    overstocked: List[tuple] = []
+
+    for offer_id, info in stock_map.items():
+        stock = float(info.get("stock") or 0)
+        avg_daily = float(info.get("avg_daily_sales") or 0)
+        if stock <= 0 and avg_daily <= 0:
+            continue
+        days = round(safe_divide(stock, avg_daily)) if avg_daily > 0 else 999
+        sales_month = round(avg_daily * 30, 1)
+        entry = (offer_id, stock, days, sales_month)
+        if days < 30:
+            ending.append(entry)
+        elif days > 120:
+            overstocked.append(entry)
+
+    ending.sort(key=lambda x: x[2])
+    overstocked.sort(key=lambda x: x[2], reverse=True)
+
+    lines = ["## Остатки и оборачиваемость\n"]
+
+    lines.append("### ⚠ Заканчиваются (< 30 дней)")
+    lines.append("| Товар | Остаток шт. | Дней запаса | Продаж/мес |")
+    lines.append("|---|---|---|---|")
+    for offer_id, stock, days, sales_month in ending:
+        lines.append(f"| {offer_id} | {int(stock)} | {days} | {sales_month} |")
+    if not ending:
+        lines.append("| — | — | — | — |")
+    lines.append("")
+
+    lines.append("### ❄ Залёживаются (> 120 дней)")
+    lines.append("| Товар | Остаток шт. | Дней запаса | Продаж/мес |")
+    lines.append("|---|---|---|---|")
+    for offer_id, stock, days, sales_month in overstocked:
+        d = "∞" if days >= 999 else str(days)
+        lines.append(f"| {offer_id} | {int(stock)} | {d} | {sales_month} |")
+    if not overstocked:
+        lines.append("| — | — | — | — |")
+    lines.append("")
+
+    return "\n".join(lines) + "\n"
+
+
+async def _build_promos_section(
+    conn: asyncpg.Connection, month_value: str
+) -> str:
+    first, last = _month_dates(month_value)
+    if last.month == 12:
+        end_utc = datetime(last.year + 1, 1, 1, tzinfo=MSK).astimezone(timezone.utc)
+    else:
+        end_utc = datetime(last.year, last.month + 1, 1, tzinfo=MSK).astimezone(timezone.utc)
+    first_utc = datetime(first.year, first.month, 1, tzinfo=MSK).astimezone(timezone.utc)
+
+    action_rows = await conn.fetch(
+        """
+        SELECT
+            pa.title,
+            pa.date_start,
+            pa.date_end,
+            count(pp.id) AS product_count
+        FROM promo_actions pa
+        LEFT JOIN promo_products pp ON pp.action_id = pa.action_id AND pp.is_participating = true
+        WHERE pa.date_start <= $2
+          AND (pa.date_end IS NULL OR pa.date_end >= $1)
+        GROUP BY pa.action_id, pa.title, pa.date_start, pa.date_end
+        ORDER BY pa.date_start DESC
+        """,
+        first_utc,
+        end_utc,
+    )
+
+    candidate_rows = await conn.fetch(
+        """
+        SELECT
+            regexp_replace(lower(trim(both '''' from coalesce(pp.offer_id,''))), '\\s+', ' ', 'g') AS offer_id,
+            pp.max_action_price,
+            coalesce(rp.price_current, 0) AS current_price
+        FROM promo_products pp
+        JOIN promo_actions pa ON pa.action_id = pp.action_id
+        LEFT JOIN (
+            SELECT
+                regexp_replace(lower(trim(both '''' from coalesce(offer_id,''))), '\\s+', ' ', 'g') AS offer_id,
+                max(price_current) AS price_current
+            FROM report_products_items
+            GROUP BY 1
+        ) rp ON rp.offer_id = regexp_replace(lower(trim(both '''' from coalesce(pp.offer_id,''))), '\\s+', ' ', 'g')
+        WHERE pp.is_candidate = true
+          AND pp.is_participating = false
+          AND pa.date_start <= $2
+          AND (pa.date_end IS NULL OR pa.date_end >= $1)
+          AND coalesce(pp.offer_id, '') <> ''
+        ORDER BY (coalesce(rp.price_current, 0) - pp.max_action_price) / NULLIF(rp.price_current, 0) ASC
+        """,
+        first_utc,
+        end_utc,
+    )
+
+    lines = ["## Акции\n"]
+
+    lines.append("### Активные акции периода")
+    lines.append("| Акция | Дата начала | Дата конца | Товаров в акции |")
+    lines.append("|---|---|---|---|")
+    for r in action_rows:
+        date_end = str(r["date_end"])[:10] if r["date_end"] else "—"
+        lines.append(
+            f"| {r['title']} | {str(r['date_start'])[:10]} | {date_end} | {int(r['product_count'] or 0)} |"
+        )
+    if not action_rows:
+        lines.append("| — | — | — | — |")
+    lines.append("")
+
+    lines.append("### Товары-кандидаты (не вошли в акцию)")
+    lines.append("| Товар | Тек. цена ₽ | Макс. цена акц. ₽ | Разница % |")
+    lines.append("|---|---|---|---|")
+    for r in list(candidate_rows)[:20]:
+        cur = float(r["current_price"] or 0)
+        max_p = float(r["max_action_price"] or 0)
+        diff_pct = safe_divide(cur - max_p, cur) * 100 if cur > 0 else 0.0
+        lines.append(
+            f"| {r['offer_id']} | {_fmt_rub(cur)} | {_fmt_rub(max_p)} | {diff_pct:.1f}% |"
+        )
+    if not candidate_rows:
+        lines.append("| — | — | — | — |")
+    lines.append("")
+
+    return "\n".join(lines) + "\n"
+
+
+async def build_monthly_report(conn: asyncpg.Connection, month_value: str) -> str:
+    """Собирает полный MD-отчёт за месяц. month_value формат: YYYY-MM."""
+    parts = [
+        _build_header(month_value),
+        await _build_shop_summary(conn, month_value),
+        await _build_products_section(conn, month_value),
+        await _build_ads_summary(conn, month_value),
+        await _build_stock_section(conn),
+        await _build_promos_section(conn, month_value),
+    ]
+    return "\n".join(parts)
