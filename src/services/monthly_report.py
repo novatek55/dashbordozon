@@ -2,17 +2,14 @@
 """Сборщик ежемесячного MD-отчёта для ИИ-анализа."""
 from __future__ import annotations
 
-import asyncio
 from datetime import date, datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Tuple
 
 import asyncpg
 
 from src.dashboard.constants import MSK
-from src.dashboard.helpers import month_bounds, safe_divide, to_asyncpg_dsn
+from src.dashboard.helpers import safe_divide
 from src.dashboard.routes.finance import build_rows_map_for_month
-from src.services.report_services import load_stock_forecast_inputs
-from src.config import settings
 
 
 def _fmt_rub(value: Any) -> str:
