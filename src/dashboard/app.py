@@ -79,6 +79,14 @@ from src.dashboard.routes.palletization_routes import (
     palletization_pallets_calculate,
 )
 from src.dashboard.routes.report import get_monthly_report
+from src.dashboard.routes.serp import (
+    plugin_poll, plugin_result,
+    post_serp_scrape, post_serp_scrape_by_sku,
+    get_serp_snapshot, post_serp_competitor, get_serp_competitors,
+    get_serp_primary_query, put_serp_primary_query,
+    get_serp_article_report, post_serp_recalculate_primary,
+    post_serp_save_from_overlay,
+)
 
 
 @web.middleware
@@ -205,6 +213,20 @@ def create_app() -> web.Application:
     app.router.add_delete("/api/palletization/shipment", palletization_shipment_clear)
     app.router.add_get("/api/palletization/shipment/missing", palletization_shipment_missing)
     app.router.add_get("/api/palletization/pallets/calculate", palletization_pallets_calculate)
+    # SERP module
+    app.router.add_get("/api/plugin/poll", plugin_poll)
+    app.router.add_post("/api/plugin/result", plugin_result)
+    app.router.add_post("/api/serp/scrape", post_serp_scrape)
+    app.router.add_post("/api/serp/scrape-by-sku", post_serp_scrape_by_sku)
+    app.router.add_get("/api/serp/snapshot", get_serp_snapshot)
+    app.router.add_post("/api/serp/competitor", post_serp_competitor)
+    app.router.add_get("/api/serp/competitors", get_serp_competitors)
+    app.router.add_get("/api/serp/primary-query", get_serp_primary_query)
+    app.router.add_put("/api/serp/primary-query", put_serp_primary_query)
+    app.router.add_get("/api/serp/article-report", get_serp_article_report)
+    app.router.add_post("/api/serp/recalculate-primary", post_serp_recalculate_primary)
+    app.router.add_post("/api/serp/save-from-overlay", post_serp_save_from_overlay)
+
     app.on_startup.append(create_pool)
     app.on_cleanup.append(close_pool)
     return app
