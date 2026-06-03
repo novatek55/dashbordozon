@@ -763,7 +763,7 @@ class AnalyticsTurnover(Base):
 
 
 class AnalyticsAverageDeliveryTime(Base):
-    """Svodka po srednemu vremeni dostavki (/v1/analytics/average-delivery-time)."""
+    """Legacy table for average delivery time; source endpoints are obsolete for many accounts."""
     __tablename__ = "analytics_average_delivery_time"
 
     id = Column(Integer, primary_key=True)

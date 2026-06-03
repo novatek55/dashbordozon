@@ -88,6 +88,14 @@ async def get_unitka_offer_search(request: web.Request) -> web.Response:
                    (raw_data::jsonb)->'product_info_v3'->>'sku' AS sku
             FROM products
             WHERE offer_id IS NOT NULL AND offer_id <> ''
+              AND COALESCE(is_visible, TRUE) = TRUE
+              AND NOT (
+                COALESCE(lower(status), '') LIKE '%archiv%'
+                OR COALESCE(lower(status), '') LIKE '%delete%'
+                OR COALESCE(lower(status), '') LIKE '%не прода%'
+                OR COALESCE(lower(status), '') LIKE '%not for sale%'
+                OR COALESCE(lower(status), '') LIKE '%removed%'
+              )
               AND (
                 lower(offer_id) LIKE $1
                 OR lower(name) LIKE $2

@@ -287,6 +287,76 @@ async def get_finance_costs(request: web.Request) -> web.Response:
     return web.json_response(data)
 
 
+async def get_settings_costs(request: web.Request) -> web.Response:
+    pool: asyncpg.Pool = request.app["pool"]
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT
+                p.offer_id AS article,
+                p.product_id AS sku,
+                p.name,
+                fac.unit_cost,
+                fac.updated_at
+            FROM products p
+            LEFT JOIN LATERAL (
+                SELECT f.unit_cost, f.updated_at
+                FROM finance_article_costs f
+                WHERE lower(trim(f.article)) = lower(trim(p.offer_id))
+                   OR (f.sku IS NOT NULL AND f.sku = p.product_id)
+                ORDER BY CASE WHEN lower(trim(f.article)) = lower(trim(p.offer_id)) THEN 0 ELSE 1 END, f.updated_at DESC
+                LIMIT 1
+            ) fac ON true
+            ORDER BY p.name NULLS LAST, p.offer_id
+            """
+        )
+    items = [
+        {
+            "article": row["article"],
+            "sku": row["sku"],
+            "name": row["name"],
+            "unit_cost": as_float(row["unit_cost"]),
+            "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+        }
+        for row in rows
+    ]
+    return web.json_response(clean_nan_values({"count": len(items), "items": items}))
+
+
+async def save_settings_cost(request: web.Request) -> web.Response:
+    try:
+        payload = await request.json()
+    except Exception:
+        return web.json_response({"error": "Ожидается JSON body."}, status=400)
+
+    article = str(payload.get("article") or "").strip()
+    if not article:
+        return web.json_response({"error": "Поле 'article' обязательно."}, status=400)
+
+    sku = normalize_sku_value(payload.get("sku"))
+    unit_cost = as_float(payload.get("unit_cost"), default=-1.0)
+    if unit_cost < 0:
+        return web.json_response({"error": "Поле 'unit_cost' должно быть >= 0."}, status=400)
+
+    pool: asyncpg.Pool = request.app["pool"]
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """
+            INSERT INTO finance_article_costs (article, sku, unit_cost, source_file, updated_at)
+            VALUES ($1, $2, $3, 'dashboard_manual_edit', now())
+            ON CONFLICT (article) DO UPDATE
+            SET sku = COALESCE(EXCLUDED.sku, finance_article_costs.sku),
+                unit_cost = EXCLUDED.unit_cost,
+                source_file = EXCLUDED.source_file,
+                updated_at = now()
+            """,
+            article,
+            sku,
+            unit_cost,
+        )
+    return web.json_response({"status": "ok", "article": article, "sku": sku, "unit_cost": unit_cost})
+
+
 async def upload_finance_costs(request: web.Request) -> web.Response:
     reader = await request.multipart()
     file_part = await reader.next()
@@ -610,6 +680,8 @@ async def build_rows_map_for_month(
     }
 
     finance_postings: List[Dict[str, Any]] = []
+    delivered_postings_by_day: Dict[str, set[str]] = defaultdict(set)
+    returned_postings_by_day: Dict[str, set[str]] = defaultdict(set)
     has_transaction_items = False
 
     for record in transaction_rows:
@@ -638,6 +710,7 @@ async def build_rows_map_for_month(
         if operation_type == "OperationAgentDeliveredToCustomer":
             if not posting_number:
                 continue
+            delivered_postings_by_day[day].add(posting_number)
 
             items_source = posting_items_map.get(posting_number, [])
             if not items_source:
@@ -692,6 +765,8 @@ async def build_rows_map_for_month(
             continue
 
         if operation_type == "ClientReturnAgentOperation":
+            if posting_number:
+                returned_postings_by_day[day].add(posting_number)
             return_items_source = posting_items_map.get(posting_number, [])
             if not return_items_source:
                 return_items_source = [item for item in items if isinstance(item, dict)]
@@ -775,6 +850,7 @@ async def build_rows_map_for_month(
             append_finance_posting(finance_postings, day, "Р—Р°РєСЂРµРїР»РµРЅРёРµ РѕС‚Р·С‹РІР°", abs(amount))
             continue
         if description == "РџСЂРѕРґРІРёР¶РµРЅРёРµ СЃ РѕРїР»Р°С‚РѕР№ Р·Р° Р·Р°РєР°Р·":
+            # В агрегированном Finance Report учитываем как отдельную рекламную статью.
             append_finance_posting(finance_postings, day, "РџСЂРѕРґРІРёР¶РµРЅРёРµ СЃ РѕРїР»Р°С‚РѕР№ Р·Р° Р·Р°РєР°Р·", abs(amount))
             continue
         if description == "РЈСЃРєРѕСЂРµРЅРЅС‹Р№ СЃР±РѕСЂ РѕС‚Р·С‹РІРѕРІ":
@@ -909,6 +985,36 @@ async def build_rows_map_for_month(
             if description in filters and day in rows_map[row_key]["daily"]:
                 rows_map[row_key]["daily"][day] += amount
 
+    client_revenue_days = sorted(set(delivered_postings_by_day.keys()) | set(returned_postings_by_day.keys()))
+    posting_day_pairs: List[Tuple[str, str, int]] = []
+    for day in client_revenue_days:
+        for posting_number in sorted(delivered_postings_by_day.get(day, set())):
+            posting_day_pairs.append((day, posting_number, 1))
+        for posting_number in sorted(returned_postings_by_day.get(day, set())):
+            posting_day_pairs.append((day, posting_number, -1))
+    if posting_day_pairs:
+        client_revenue_rows = await conn.fetch(
+            """
+            WITH posting_days(day_key, posting_number, sign) AS (
+                SELECT x.day_key::text, x.posting_number::text, x.sign::int
+                FROM unnest($1::text[], $2::text[], $3::int[]) AS x(day_key, posting_number, sign)
+            )
+            SELECT
+                pd.day_key,
+                sum(pd.sign * coalesce(oi.buyer_paid, oi.price, 0) * abs(coalesce(oi.quantity, 0)))::float8 AS client_revenue
+            FROM posting_days pd
+            JOIN fact_order_items oi ON oi.posting_number = pd.posting_number
+            GROUP BY pd.day_key
+            """,
+            [row[0] for row in posting_day_pairs],
+            [row[1] for row in posting_day_pairs],
+            [row[2] for row in posting_day_pairs],
+        )
+        for record in client_revenue_rows:
+            day = str(record["day_key"] or "").strip()
+            if day in rows_map["client_revenue"]["daily"]:
+                rows_map["client_revenue"]["daily"][day] += float(record["client_revenue"] or 0.0)
+
     for row_key in rows_map:
         recalculate_row_total(rows_map[row_key], days)
 
@@ -987,9 +1093,10 @@ async def build_rows_map_for_month(
         - rows_map["compensations"]["daily"][day]
         - rows_map["other_accrual_adjustments"]["daily"][day],
     )
-    set_row_from_formula(rows_map, "gross_profit", days, lambda day: rows_map["accrued"]["daily"][day] - rows_map["material_cost"]["daily"][day])
+    set_row_from_formula(rows_map, "vat_5", days, lambda day: rows_map["client_revenue"]["daily"][day] * 0.05)
+    set_row_from_formula(rows_map, "gross_profit", days, lambda day: rows_map["accrued"]["daily"][day] - rows_map["material_cost"]["daily"][day] - rows_map["vat_5"]["daily"][day])
     set_row_from_formula(rows_map, "gross_profit_pct_oz", days, lambda day: safe_divide(rows_map["gross_profit"]["daily"][day], rows_map["revenue_sales"]["daily"][day]))
-    set_row_from_formula(rows_map, "gross_profit_pct_accrued", days, lambda day: safe_divide(rows_map["gross_profit"]["daily"][day], rows_map["accrued"]["daily"][day]))
+    set_row_from_formula(rows_map, "gross_profit_pct_accrued", days, lambda day: 0.0 if rows_map["gross_profit"]["daily"][day] < 0 else safe_divide(rows_map["gross_profit"]["daily"][day], rows_map["accrued"]["daily"][day]))
 
     cumulative_revenue = 0.0
     cumulative_gross = 0.0
@@ -1003,7 +1110,7 @@ async def build_rows_map_for_month(
     rows_map["marketplace_expenses_pct"]["total"] = safe_divide(rows_map["marketplace_expenses"]["total"], rows_map["revenue_sales"]["total"])
     rows_map["marketing_pct"]["total"] = safe_divide(sum(marketing_daily[day] for day in days), rows_map["revenue_sales"]["total"])
     rows_map["gross_profit_pct_oz"]["total"] = safe_divide(rows_map["gross_profit"]["total"], rows_map["revenue_sales"]["total"])
-    rows_map["gross_profit_pct_accrued"]["total"] = safe_divide(rows_map["gross_profit"]["total"], rows_map["accrued"]["total"])
+    rows_map["gross_profit_pct_accrued"]["total"] = 0.0 if float(rows_map["gross_profit"]["total"] or 0.0) < 0 else safe_divide(rows_map["gross_profit"]["total"], rows_map["accrued"]["total"])
 
     gross_profit_plan_total = scale_plan_value(PLAN_BASE_VALUES["gross_profit"], revenue_plan_total)
     daily_gross_plan = gross_profit_plan_total / len(days)
@@ -1031,24 +1138,6 @@ async def get_finance_report(request: web.Request) -> web.Response:
     pool: asyncpg.Pool = request.app["pool"]
     async with pool.acquire() as conn:
         data = await get_finance_report_data(conn, month_value)
-    return web.json_response(data)
-
-
-async def get_finance_report_v2(request: web.Request) -> web.Response:
-    month_value = (request.query.get("month") or "").strip()
-    if not month_value:
-        month_value = datetime.now(timezone.utc).strftime("%Y-%m")
-
-    try:
-        month_bounds(month_value)
-    except ValueError:
-        return web.json_response({"error": "Invalid month format, expected YYYY-MM"}, status=400)
-
-    from src.services.report_services import get_finance_report_v2_data
-
-    pool: asyncpg.Pool = request.app["pool"]
-    async with pool.acquire() as conn:
-        data = await get_finance_report_v2_data(conn, month_value)
     return web.json_response(data)
 
 
@@ -1106,6 +1195,14 @@ async def get_accruals_comp_by_article_accrual(request: web.Request) -> web.Resp
     date_from_raw = (request.query.get("date_from") or "").strip()
     date_to_raw = (request.query.get("date_to") or "").strip()
     month_raw = (request.query.get("month") or "").strip()
+    offer_id_raw = (request.query.get("offer_id") or "").strip()
+    offer_id_filter = re.sub(r"\s+", " ", normalize_offer_id(offer_id_raw)).strip().lower()
+    limit_raw = (request.query.get("limit") or "1000").strip()
+
+    try:
+        limit = max(1, min(5000, int(limit_raw)))
+    except ValueError:
+        return web.json_response({"error": "Invalid limit"}, status=400)
 
     try:
         if month_raw and not date_from_raw and not date_to_raw:
@@ -1140,6 +1237,28 @@ async def get_accruals_comp_by_article_accrual(request: web.Request) -> web.Resp
     pool: asyncpg.Pool = request.app["pool"]
     async with pool.acquire() as conn:
         data = await get_accruals_by_article_accrual_data(conn, date_from, date_to_exclusive)
+
+    if isinstance(data, dict):
+        items = data.get("items")
+        if isinstance(items, list):
+            if offer_id_filter:
+                filtered_items: List[Dict[str, Any]] = []
+                for item in items:
+                    if not isinstance(item, dict):
+                        continue
+                    display_offer = re.sub(r"\s+", " ", normalize_offer_id(item.get("offer_id"))).strip().lower()
+                    normalized_offer = re.sub(
+                        r"\s+",
+                        " ",
+                        normalize_offer_id(item.get("offer_id_normalized") or item.get("offer_id")),
+                    ).strip().lower()
+                    if offer_id_filter in display_offer or offer_id_filter in normalized_offer:
+                        filtered_items.append(item)
+                items = filtered_items
+            if limit > 0:
+                items = items[:limit]
+            data["items"] = items
+            data["count"] = len(items)
     return web.json_response(data)
 
 
@@ -1148,6 +1267,7 @@ async def get_accruals_comp_by_article(request: web.Request) -> web.Response:
     date_to_raw = (request.query.get("date_to") or "").strip()
     month_raw = (request.query.get("month") or "").strip()
     offer_id_raw = normalize_offer_id((request.query.get("offer_id") or "").strip())
+    offer_id_filter = re.sub(r"\s+", " ", offer_id_raw).strip().lower()
     distribute_raw = (request.query.get("distribute_no_article") or "").strip().lower()
     distribute_no_article = distribute_raw in {"", "1", "true", "yes", "on"}
     limit_raw = (request.query.get("limit") or "1000").strip()
@@ -1295,8 +1415,28 @@ async def get_accruals_comp_by_article(request: web.Request) -> web.Response:
             normalized = normalize_offer_id(value)
             if not normalized:
                 return ""
+            if normalized.lower().startswith("sku:"):
+                raw_sku = normalized.split(":", 1)[1].strip()
+                if raw_sku.isdigit():
+                    # Short numeric markers like "sku:202" usually come from
+                    # noisy transaction payloads and should be treated as article codes.
+                    if len(raw_sku) <= 6:
+                        mapped_short = offer_to_sku.get(raw_sku)
+                        if mapped_short:
+                            return f"sku:{mapped_short}"
+                        return raw_sku
+                    if raw_sku in sku_to_offer:
+                        return f"sku:{raw_sku}"
+                return normalized
             if normalized.isdigit():
-                return f"sku:{normalized}"
+                # Legacy short numeric article codes ("202", "403") should stay article-like.
+                if len(normalized) <= 6:
+                    mapped_short = offer_to_sku.get(normalized)
+                    if mapped_short:
+                        return f"sku:{mapped_short}"
+                    return normalized
+                if normalized in sku_to_offer:
+                    return f"sku:{normalized}"
             mapped_sku = offer_to_sku.get(normalized)
             if mapped_sku:
                 return f"sku:{mapped_sku}"
@@ -1314,6 +1454,20 @@ async def get_accruals_comp_by_article(request: web.Request) -> web.Response:
             date_to_exclusive,
         )
         posting_numbers = sorted({str(r["posting_number"]).strip() for r in tx_rows if r["posting_number"]})
+        delivered_posting_numbers = sorted(
+            {
+                str(r["posting_number"]).strip()
+                for r in tx_rows
+                if r["posting_number"] and str(r["operation_type"] or "").strip() == "OperationAgentDeliveredToCustomer"
+            }
+        )
+        returned_posting_numbers = sorted(
+            {
+                str(r["posting_number"]).strip()
+                for r in tx_rows
+                if r["posting_number"] and str(r["operation_type"] or "").strip() == "ClientReturnAgentOperation"
+            }
+        )
         posting_items_ctx_map: Dict[str, List[Dict[str, Any]]] = {}
         posting_snapshot_ctx_map: Dict[str, List[Dict[str, Any]]] = {}
         if posting_numbers:
@@ -1389,22 +1543,46 @@ async def get_accruals_comp_by_article(request: web.Request) -> web.Response:
             if local_qty and posting not in posting_qty_map:
                 posting_qty_map[posting] = [(offer, value) for offer, value in local_qty.items()]
 
-        ad_spent_rows = await conn.fetch(
+        cpc_spent_rows = await conn.fetch(
             """
             SELECT
-                sku::bigint AS sku,
-                sum(coalesce(spent, 0))::float8 AS ad_spent
-            FROM campaign_statistics
-            WHERE date >= $1
-              AND date < $2
-              AND sku IS NOT NULL
-            GROUP BY sku
+                cs.sku::bigint AS sku,
+                sum(coalesce(cs.spent, 0))::float8 AS ad_spent
+            FROM campaign_statistics cs
+            JOIN campaigns c ON c.id = cs.campaign_id
+            WHERE cs.date >= $1
+              AND cs.date < $2
+              AND cs.sku IS NOT NULL
+              AND (
+                c.adv_object_type IS NULL
+                OR upper(c.adv_object_type) NOT LIKE '%SEARCH_PROMO%'
+              )
+            GROUP BY cs.sku
             """,
             date_from,
             date_to_exclusive,
         )
-        ad_rows: List[Dict[str, Any]] = []
-        for row in ad_spent_rows:
+        cpo_spent_rows: List[asyncpg.Record] = []
+        try:
+            cpo_spent_rows = await conn.fetch(
+                """
+                SELECT
+                    coalesce(promoted_sku, sku)::bigint AS sku,
+                    sum(coalesce(expense, 0))::float8 AS ad_spent
+                FROM campaign_cpo_orders
+                WHERE report_date >= $1::date
+                  AND report_date < $2::date
+                  AND coalesce(promoted_sku, sku) IS NOT NULL
+                GROUP BY coalesce(promoted_sku, sku)
+                """,
+                date_from.astimezone(MSK).date(),
+                date_to_exclusive.astimezone(MSK).date(),
+            )
+        except Exception:
+            cpo_spent_rows = []
+
+        ad_by_offer: Dict[str, float] = {}
+        for row in list(cpc_spent_rows) + list(cpo_spent_rows):
             sku_val = normalize_sku_value(row["sku"])
             if sku_val is None:
                 continue
@@ -1412,7 +1590,12 @@ async def get_accruals_comp_by_article(request: web.Request) -> web.Response:
             offer_norm = normalize_offer_id(offer_id)
             if not offer_norm:
                 continue
-            ad_rows.append({"offer_id": offer_norm, "ad_spent": float(row["ad_spent"] or 0.0)})
+            ad_by_offer[offer_norm] = float(ad_by_offer.get(offer_norm, 0.0) + float(row["ad_spent"] or 0.0))
+        ad_rows: List[Dict[str, Any]] = [
+            {"offer_id": offer, "ad_spent": amount}
+            for offer, amount in ad_by_offer.items()
+            if abs(amount) > 1e-9
+        ]
         comp_rows = await conn.fetch(
             """
             SELECT offer_id, article_name, amount
@@ -1478,12 +1661,20 @@ async def get_accruals_comp_by_article(request: web.Request) -> web.Response:
             """
             SELECT
                 trim(both '''' from trim(coalesce(oi.offer_id, ''))) AS offer_id,
-                sum(coalesce(oi.buyer_paid, oi.price, 0) * abs(coalesce(oi.quantity, 0)))::float8 AS client_revenue
+                sum(
+                    CASE
+                        WHEN oi.posting_number = ANY($1::text[]) THEN coalesce(oi.buyer_paid, oi.price, 0) * abs(coalesce(oi.quantity, 0))
+                        WHEN oi.posting_number = ANY($2::text[]) THEN -coalesce(oi.buyer_paid, oi.price, 0) * abs(coalesce(oi.quantity, 0))
+                        ELSE 0
+                    END
+                )::float8 AS client_revenue
             FROM fact_order_items oi
-            WHERE oi.posting_number = ANY($1::text[])
+            WHERE oi.posting_number = ANY($3::text[])
               AND coalesce(trim(oi.offer_id), '') <> ''
             GROUP BY trim(both '''' from trim(coalesce(oi.offer_id, '')))
             """,
+            delivered_posting_numbers,
+            returned_posting_numbers,
             posting_numbers,
         ) if posting_numbers else []
         article_cost_rows = await conn.fetch(
@@ -1509,7 +1700,7 @@ async def get_accruals_comp_by_article(request: web.Request) -> web.Response:
     client_revenue_by_article: Dict[str, float] = {
         normalize_article(row["offer_id"]): float(row["client_revenue"] or 0.0)
         for row in client_revenue_rows
-        if normalize_article(row["offer_id"]) and float(row["client_revenue"] or 0.0) > 0
+        if normalize_article(row["offer_id"]) and abs(float(row["client_revenue"] or 0.0)) > 1e-9
     }
     fbo_only_distribution_keys = {"piece_acceptance", "zone_sorting", "excess_processing", "fbo_booking_slot_staff", "cross_docking", "warehouse_placement", "valid_preparation", "ozon_delivery_to_pvz"}
 
@@ -1748,7 +1939,9 @@ async def get_accruals_comp_by_article(request: web.Request) -> web.Response:
             distribute_amount("review_pin", abs(amount), offers_with_weights)
             continue
         if description == "РџСЂРѕРґРІРёР¶РµРЅРёРµ СЃ РѕРїР»Р°С‚РѕР№ Р·Р° Р·Р°РєР°Р·":
-            distribute_amount("review_pin", abs(amount), offers_with_weights)
+            # Не используем начисления этого типа как источник:
+            # корректно разложить их по артикулам нельзя.
+            # Рекламу берём из campaign_statistics.
             continue
         if description == "РЈСЃРєРѕСЂРµРЅРЅС‹Р№ СЃР±РѕСЂ РѕС‚Р·С‹РІРѕРІ":
             distribute_amount("accelerated_reviews", abs(amount), offers_with_weights)
@@ -1975,7 +2168,7 @@ async def get_accruals_comp_by_article(request: web.Request) -> web.Response:
         "fbo_storage_services", "valid_preparation", "ozon_delivery_to_pvz", "warehouse_placement", "piece_acceptance", "zone_sorting",
         "excess_processing", "promotion_total", "ad_spend", "premium_plus_subscription", "pay_per_click", "review_points", "review_pin", "accelerated_reviews", "other_services",
         "pickup_collection_total", "other_grouped", "marketplace_expenses_pct", "marketing_pct",
-        "accrued", "material_cost", "gross_profit", "gross_profit_pct_oz", "gross_profit_pct_accrued",
+        "accrued", "material_cost", "vat_5", "gross_profit", "gross_profit_pct_oz", "gross_profit_pct_accrued",
     ]
     label_overrides = {
         "revenue_sales": "−Выручка / продажи - возвраты",
@@ -2049,25 +2242,28 @@ async def get_accruals_comp_by_article(request: web.Request) -> web.Response:
             - v.get("compensations", 0.0)
             - v.get("other_accrual_adjustments", 0.0)
         )
-        v["gross_profit"] = float(v["accrued"] - v.get("material_cost", 0.0))
+        v["vat_5"] = float(v.get("client_revenue", 0.0) * 0.05)
+        v["gross_profit"] = float(v["accrued"] - v.get("material_cost", 0.0) - v["vat_5"])
         v["gross_profit_pct_oz"] = float(safe_divide(v["gross_profit"], v["revenue_sales"]) or 0.0)
-        v["gross_profit_pct_accrued"] = float(safe_divide(v["gross_profit"], v["accrued"]) or 0.0)
+        v["gross_profit_pct_accrued"] = 0.0 if v["gross_profit"] < 0 else float(safe_divide(v["gross_profit"], v["accrued"]) or 0.0)
         return v
 
     all_value_keys = set(column_keys) | set(FINANCE_ROW_META.keys())
     all_offers = set(row_values_by_article.keys()) | set(sold_units_by_article.keys()) | set(returned_units_by_article.keys()) | set(client_revenue_by_article.keys())
     def resolve_display_offer(offer_key: str) -> str:
         text = str(offer_key or "").strip()
-        mapped = display_offer_by_key.get(text)
-        if mapped:
-            return str(mapped)
         if text.lower().startswith("sku:"):
             sku_raw = text.split(":", 1)[1].strip()
+            if sku_raw.isdigit() and len(sku_raw) <= 6:
+                return sku_raw
             sku_val = normalize_sku_value(sku_raw)
             if sku_val is not None:
                 identity_offer = normalize_offer_id((identity_map.get(int(sku_val)) or {}).get("offer_id"))
                 if identity_offer:
                     return identity_offer
+        mapped = display_offer_by_key.get(text)
+        if mapped:
+            return str(mapped)
         return canonical_offer_by_norm.get(text, text)
 
     items_transposed: List[Dict[str, Any]] = []
@@ -2094,12 +2290,14 @@ async def get_accruals_comp_by_article(request: web.Request) -> web.Response:
         )
 
     items_transposed.sort(key=lambda x: (-abs(float(x["values"].get("accrued", 0.0))), str(x["offer_id"] or "")))
-    if offer_id_raw:
-        items_transposed = [
-            item
-            for item in items_transposed
-            if offer_id_raw in str(item.get("offer_id_normalized") or normalize_offer_id(item.get("offer_id")))
-        ]
+    if offer_id_filter:
+        filtered_items: List[Dict[str, Any]] = []
+        for item in items_transposed:
+            normalized_key = re.sub(r"\s+", " ", normalize_offer_id(item.get("offer_id_normalized"))).strip().lower()
+            display_offer = re.sub(r"\s+", " ", normalize_offer_id(item.get("offer_id"))).strip().lower()
+            if offer_id_filter in normalized_key or offer_id_filter in display_offer:
+                filtered_items.append(item)
+        items_transposed = filtered_items
     if limit > 0:
         items_transposed = items_transposed[:limit]
     total_values["ordered_units"] = float(total_values.get("ordered_units", 0.0) + no_article_ordered_units)
@@ -2235,6 +2433,155 @@ async def get_realization_v2(request: web.Request) -> web.Response:
             }
         )
     return web.json_response({"count": len(items), "items": items})
+
+
+async def get_wb_finance_report_daily(request: web.Request) -> web.Response:
+    """WB finance daily report from wb_finance_daily vitrine."""
+    date_from_raw = (request.query.get("date_from") or "").strip()
+    date_to_raw = (request.query.get("date_to") or "").strip()
+    final_only_raw = (request.query.get("final_only") or "1").strip().lower()
+
+    try:
+        date_from = datetime.strptime(date_from_raw, "%Y-%m-%d").date() if date_from_raw else None
+        date_to = datetime.strptime(date_to_raw, "%Y-%m-%d").date() if date_to_raw else None
+    except ValueError:
+        return web.json_response({"error": "Invalid date format, expected YYYY-MM-DD"}, status=400)
+
+    final_only = final_only_raw not in {"0", "false", "no"}
+
+    params: List[Any] = []
+    conditions: List[str] = []
+    idx = 1
+    if date_from is not None:
+        conditions.append(f"report_date >= ${idx}")
+        params.append(date_from)
+        idx += 1
+    if date_to is not None:
+        conditions.append(f"report_date <= ${idx}")
+        params.append(date_to)
+        idx += 1
+    if final_only:
+        conditions.append("is_final_day = true")
+
+    where_sql = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    sql = f"""
+        WITH src AS (
+            SELECT
+                (f.sale_dt AT TIME ZONE 'Europe/Moscow')::date AS report_date,
+                COALESCE(NULLIF(trim((CASE
+                    WHEN jsonb_typeof(r.row_json)='string'
+                        THEN (trim(both '"' from r.row_json::text))::jsonb
+                    ELSE r.row_json
+                END)->>'sellerOperName'), ''), '<пусто>') AS seller_oper_name,
+                COALESCE(f.retail_amount, 0) AS retail_amount,
+                COALESCE(f.for_pay, 0) AS for_pay,
+                COALESCE(f.vw, 0) AS vw,
+                COALESCE(f.delivery_service, 0) AS delivery_service,
+                COALESCE(f.rebill_logistic_cost, 0) AS rebill_logistic_cost,
+                COALESCE(f.return_amount, 0) AS return_amount,
+                COALESCE(f.acquiring_fee, 0) AS acquiring_fee,
+                COALESCE(f.penalty, 0) AS penalty,
+                COALESCE(f.deduction, 0) AS deduction,
+                COALESCE(f.additional_payment, 0) AS additional_payment,
+                COALESCE(f.paid_storage, 0) AS paid_storage,
+                COALESCE(f.paid_acceptance, 0) AS paid_acceptance
+            FROM wb_fact_finance f
+            JOIN wb_raw_sales_report_details r ON r.id = f.raw_id
+            WHERE f.sale_dt IS NOT NULL
+        ),
+        agg AS (
+            SELECT
+                report_date,
+                seller_oper_name,
+                SUM(retail_amount) AS gross_revenue,
+                SUM(vw) AS marketplace_commission,
+                SUM(delivery_service) AS logistics_direct,
+                SUM(rebill_logistic_cost + return_amount) AS logistics_reverse,
+                SUM(acquiring_fee) AS acquiring,
+                SUM(penalty) AS penalties,
+                SUM(deduction + additional_payment + paid_storage + paid_acceptance) AS other_deductions,
+                SUM(for_pay) AS to_pay,
+                COUNT(*)::int AS rows_count
+            FROM src
+            GROUP BY report_date, seller_oper_name
+        )
+        SELECT
+            report_date,
+            seller_oper_name,
+            gross_revenue,
+            marketplace_commission,
+            logistics_direct,
+            logistics_reverse,
+            acquiring,
+            penalties,
+            other_deductions,
+            (marketplace_commission + logistics_direct + logistics_reverse + acquiring + penalties + other_deductions) AS marketplace_expenses_total,
+            to_pay,
+            rows_count,
+            NOW() >= ((report_date + INTERVAL '1 day') + TIME '12:00') AT TIME ZONE 'Europe/Moscow' AS is_final_day,
+            (((report_date + INTERVAL '1 day') + TIME '12:00') AT TIME ZONE 'Europe/Moscow') AS finalized_after,
+            NOW() AS updated_at
+        FROM agg
+        {where_sql}
+        ORDER BY report_date, seller_oper_name
+    """
+
+    pool: asyncpg.Pool = request.app["pool"]
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(sql, *params)
+
+    items: List[Dict[str, Any]] = []
+    totals = {
+        "gross_revenue": 0.0,
+        "marketplace_commission": 0.0,
+        "logistics_direct": 0.0,
+        "logistics_reverse": 0.0,
+        "acquiring": 0.0,
+        "penalties": 0.0,
+        "other_deductions": 0.0,
+        "marketplace_expenses_total": 0.0,
+        "to_pay": 0.0,
+        "rows_count": 0,
+    }
+    for r in rows:
+        item = {
+            "report_date": r["report_date"].isoformat() if r["report_date"] else None,
+            "seller_oper_name": r["seller_oper_name"],
+            "gross_revenue": as_float(r["gross_revenue"]),
+            "marketplace_commission": as_float(r["marketplace_commission"]),
+            "logistics_direct": as_float(r["logistics_direct"]),
+            "logistics_reverse": as_float(r["logistics_reverse"]),
+            "acquiring": as_float(r["acquiring"]),
+            "penalties": as_float(r["penalties"]),
+            "other_deductions": as_float(r["other_deductions"]),
+            "marketplace_expenses_total": as_float(r["marketplace_expenses_total"]),
+            "to_pay": as_float(r["to_pay"]),
+            "rows_count": int(r["rows_count"] or 0),
+            "is_final_day": bool(r["is_final_day"]),
+            "finalized_after": r["finalized_after"].isoformat() if r["finalized_after"] else None,
+            "updated_at": r["updated_at"].isoformat() if r["updated_at"] else None,
+        }
+        items.append(item)
+        totals["gross_revenue"] += float(item["gross_revenue"] or 0.0)
+        totals["marketplace_commission"] += float(item["marketplace_commission"] or 0.0)
+        totals["logistics_direct"] += float(item["logistics_direct"] or 0.0)
+        totals["logistics_reverse"] += float(item["logistics_reverse"] or 0.0)
+        totals["acquiring"] += float(item["acquiring"] or 0.0)
+        totals["penalties"] += float(item["penalties"] or 0.0)
+        totals["other_deductions"] += float(item["other_deductions"] or 0.0)
+        totals["marketplace_expenses_total"] += float(item["marketplace_expenses_total"] or 0.0)
+        totals["to_pay"] += float(item["to_pay"] or 0.0)
+        totals["rows_count"] += int(item["rows_count"] or 0)
+
+    data = clean_nan_values(
+        {
+            "count": len(items),
+            "final_only": final_only,
+            "items": items,
+            "totals": totals,
+        }
+    )
+    return web.json_response(data)
 
 
 async def analyze_finance_data(request: web.Request) -> web.Response:

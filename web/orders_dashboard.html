@@ -16366,6 +16366,7 @@
         }
         if (report === "serp") {
           meta.textContent = "Выдача: введите запрос и нажмите «Обновить выдачу»";
+          serpLoadPrimaryQueries();
           return;
         }
         reportTable.classList.toggle("accrual-report", report === "accruals_comp_by_article");
@@ -17412,6 +17413,37 @@
     // ═══════════════════════════════════════════════════════════════════════
     let _serpCurrentFilter = "all";
     let _serpPositions = [];
+
+    async function serpLoadPrimaryQueries() {
+      // Подгружает список артикулов с их главными запросами для быстрого выбора
+      const status = document.getElementById('serp-status');
+      try {
+        const res = await fetch('/api/serp/all-primary-queries').then(r => r.json());
+        const items = res.items || [];
+        if (!items.length) return;
+        // Показываем быстрые кнопки-чипы под полем ввода
+        let container = document.getElementById('serp-quick-queries');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'serp-quick-queries';
+          container.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;';
+          const statusEl = document.getElementById('serp-status');
+          statusEl?.parentNode?.insertBefore(container, statusEl);
+        }
+        container.innerHTML = '<span style="font-size:12px;color:#888;width:100%;">Быстрый выбор из статистики:</span>'
+          + items.slice(0, 30).map(it =>
+            `<button onclick="serpQuickSelect('${it.query_text.replace(/'/g,"\\'")}', '${(it.offer_id||'').replace(/'/g,"\\'")}' )"
+                     style="padding:3px 10px;background:#f0f4ff;border:1px solid #c0d0ff;border-radius:12px;cursor:pointer;font-size:12px;color:#005bff;">
+               ${it.offer_id ? it.offer_id + ': ' : ''}${it.query_text}
+             </button>`
+          ).join('');
+      } catch(e) { /* не критично */ }
+    }
+
+    function serpQuickSelect(queryText, offerId) {
+      const input = document.getElementById('serp-query-input');
+      if (input) { input.value = queryText; input.focus(); }
+    }
 
     async function serpScrape() {
       const query = (document.getElementById("serp-query-input")?.value || "").trim();

@@ -69,13 +69,6 @@ FINANCE_RENDER_SKIP = {
     "returns_partner_programs",
 }
 
-FORECAST_EXPENSE_KEYS = [
-    row["key"]
-    for row in FINANCE_REPORT_ROWS
-    if row["kind"] == "value"
-    and row["key"] not in {"revenue_plan", "ordered_units", "returned_units", "revenue", "returns_revenue"}
-]
-
 
 def finance_report_notes() -> List[str]:
     return [
@@ -87,14 +80,6 @@ def finance_report_notes() -> List[str]:
         "Compensation rows also use report_compensation_items loaded from /v1/finance/compensation and /v1/finance/decompensation.",
     ]
 
-
-def finance_report_v2_notes() -> List[str]:
-    return [
-        "V2: будущая выручка строится от текущих остатков и средней скорости продаж из отчёта по остаткам.",
-        "Для прогноза берётся средняя цена продажи по артикулу за последние 30 дней; если продаж не было, выручка по артикулу не прогнозируется.",
-        "Расходные строки раскладываются по средним долям последних 30 дней относительно чистой выручки.",
-        "Будущие дни в таблице помечены тёмно-серым.",
-    ]
 
 
 def render_finance_rows(
@@ -171,16 +156,6 @@ def visible_report_days(month_value: str, days: List[str]) -> List[str]:
     today_str = today.strftime("%Y-%m-%d")
     return [day for day in days if day < today_str]
 
-
-def visible_report_days_v2(month_value: str, days: List[str]) -> List[str]:
-    if not days:
-        return []
-    month_date = month_start_msk(month_value).date()
-    today = datetime.now(MSK).date()
-    if (month_date.year, month_date.month) != (today.year, today.month):
-        return list(days)
-    today_str = today.strftime("%Y-%m-%d")
-    return [day for day in days if day != today_str]
 
 
 def trim_rows_map_to_days(
@@ -611,9 +586,10 @@ def rebuild_finance_derived_rows(rows_map: Dict[str, Dict[str, Any]], days: List
         - rows_map["compensations"]["daily"][day]
         - rows_map["other_accrual_adjustments"]["daily"][day],
     )
-    set_row_from_formula(rows_map, "gross_profit", days, lambda day: rows_map["accrued"]["daily"][day] - rows_map["material_cost"]["daily"][day])
+    set_row_from_formula(rows_map, "vat_5", days, lambda day: rows_map["client_revenue"]["daily"][day] * 0.05)
+    set_row_from_formula(rows_map, "gross_profit", days, lambda day: rows_map["accrued"]["daily"][day] - rows_map["material_cost"]["daily"][day] - rows_map["vat_5"]["daily"][day])
     set_row_from_formula(rows_map, "gross_profit_pct_oz", days, lambda day: safe_divide(rows_map["gross_profit"]["daily"][day], rows_map["revenue_sales"]["daily"][day]))
-    set_row_from_formula(rows_map, "gross_profit_pct_accrued", days, lambda day: safe_divide(rows_map["gross_profit"]["daily"][day], rows_map["accrued"]["daily"][day]))
+    set_row_from_formula(rows_map, "gross_profit_pct_accrued", days, lambda day: 0.0 if rows_map["gross_profit"]["daily"][day] < 0 else safe_divide(rows_map["gross_profit"]["daily"][day], rows_map["accrued"]["daily"][day]))
 
     cumulative_revenue = 0.0
     cumulative_gross = 0.0
@@ -627,7 +603,7 @@ def rebuild_finance_derived_rows(rows_map: Dict[str, Dict[str, Any]], days: List
     rows_map["marketplace_expenses_pct"]["total"] = safe_divide(rows_map["marketplace_expenses"]["total"], rows_map["revenue_sales"]["total"])
     rows_map["marketing_pct"]["total"] = safe_divide(sum(marketing_daily[day] for day in days), rows_map["revenue_sales"]["total"])
     rows_map["gross_profit_pct_oz"]["total"] = safe_divide(rows_map["gross_profit"]["total"], rows_map["revenue_sales"]["total"])
-    rows_map["gross_profit_pct_accrued"]["total"] = safe_divide(rows_map["gross_profit"]["total"], rows_map["accrued"]["total"])
+    rows_map["gross_profit_pct_accrued"]["total"] = 0.0 if float(rows_map["gross_profit"]["total"] or 0.0) < 0 else safe_divide(rows_map["gross_profit"]["total"], rows_map["accrued"]["total"])
 
     revenue_plan_total = float(rows_map["revenue_plan"]["daily"][days[-1]]) if days else 0.0
     gross_profit_plan_total = scale_plan_value(PLAN_BASE_VALUES["gross_profit"], revenue_plan_total)
@@ -645,43 +621,6 @@ def build_rows_map_skeleton(days: List[str]) -> Dict[str, Dict[str, Any]]:
         for row_meta in FINANCE_REPORT_ROWS
         if row_meta["kind"] not in {"section", "spacer"}
     }
-
-
-def apply_finance_report_v2_forecast(
-    rows_map: Dict[str, Dict[str, Any]],
-    days: List[str],
-    forecast_days: List[str],
-    recent_totals: Dict[str, float],
-    forecast_daily: Dict[str, Dict[str, float]],
-) -> Dict[str, Dict[str, Any]]:
-    forecast_rows_map = copy.deepcopy(rows_map)
-    if not forecast_days:
-        return forecast_rows_map
-
-    ordered_total_30d = max(0.0, float(recent_totals.get("ordered_units", 0.0) or 0.0))
-    revenue_total_30d = max(0.0, float(recent_totals.get("revenue", 0.0) or 0.0))
-    net_revenue_total_30d = max(0.0, float(recent_totals.get("revenue_sales", 0.0) or 0.0))
-    returned_units_ratio = (float(recent_totals.get("returned_units", 0.0) or 0.0) / ordered_total_30d) if ordered_total_30d > 0 else 0.0
-    returns_revenue_ratio = (float(recent_totals.get("returns_revenue", 0.0) or 0.0) / revenue_total_30d) if revenue_total_30d > 0 else 0.0
-    expense_ratios = {
-        key: (float(recent_totals.get(key, 0.0) or 0.0) / net_revenue_total_30d) if net_revenue_total_30d > 0 else 0.0
-        for key in FORECAST_EXPENSE_KEYS
-    }
-
-    for day in forecast_days:
-        gross_revenue = float(forecast_daily["revenue"].get(day, 0.0) or 0.0)
-        ordered_units = float(forecast_daily["units"].get(day, 0.0) or 0.0)
-        returns_revenue = gross_revenue * returns_revenue_ratio
-        net_revenue = max(0.0, gross_revenue - returns_revenue)
-        forecast_rows_map["ordered_units"]["daily"][day] = ordered_units
-        forecast_rows_map["returned_units"]["daily"][day] = ordered_units * returned_units_ratio
-        forecast_rows_map["revenue"]["daily"][day] = gross_revenue
-        forecast_rows_map["returns_revenue"]["daily"][day] = returns_revenue
-        for row_key in FORECAST_EXPENSE_KEYS:
-            forecast_rows_map[row_key]["daily"][day] = net_revenue * expense_ratios.get(row_key, 0.0)
-
-    rebuild_finance_derived_rows(forecast_rows_map, days)
-    return forecast_rows_map
 
 
 async def load_prev_month_pcts(
@@ -720,87 +659,6 @@ async def load_prev_month_pcts(
         prev_month_pcts = None
     return prev_month_pcts
 
-
-def build_kpi_summary_v2(
-    fact_rows_map: Dict[str, Dict[str, Any]],
-    forecast_rows_map: Dict[str, Dict[str, Any]],
-    revenue_plan_total: float,
-    plan_editable: bool,
-    prev_month_pcts: Optional[Dict[str, float]] = None,
-) -> List[Dict[str, Any]]:
-    fact_revenue = as_float(fact_rows_map["revenue_sales"]["total"])
-    fact_expenses_mp = as_float(fact_rows_map["marketplace_expenses"]["total"])
-    fact_marketing = as_float(fact_rows_map["promotion_total"]["total"])
-    fact_expenses_total = as_float(fact_rows_map["all_expenses"]["total"])
-    fact_money_on_account = as_float(fact_rows_map["accrued"]["total"])
-    fact_material_cost = as_float(fact_rows_map["material_cost"]["total"])
-    fact_gross_profit = as_float(fact_rows_map["gross_profit"]["total"])
-
-    forecast_revenue = as_float(forecast_rows_map["revenue_sales"]["total"])
-    forecast_expenses_mp = as_float(forecast_rows_map["marketplace_expenses"]["total"])
-    forecast_marketing = as_float(forecast_rows_map["promotion_total"]["total"])
-    forecast_expenses_total = as_float(forecast_rows_map["all_expenses"]["total"])
-    forecast_money_on_account = as_float(forecast_rows_map["accrued"]["total"])
-    forecast_material_cost = as_float(forecast_rows_map["material_cost"]["total"])
-    forecast_gross_profit = as_float(forecast_rows_map["gross_profit"]["total"])
-
-    plan_revenue = revenue_plan_total
-    if prev_month_pcts:
-        plan_expenses_mp = plan_revenue * prev_month_pcts.get("expenses_mp", 0.60)
-        plan_marketing = plan_revenue * prev_month_pcts.get("ads", 0.15)
-        plan_expenses_total = plan_expenses_mp + plan_marketing
-        plan_money_on_account = plan_revenue * prev_month_pcts.get("money_on_account", 0.40)
-        plan_material_cost = plan_revenue * prev_month_pcts.get("material_cost", 0.15)
-        plan_gross_profit = plan_revenue * prev_month_pcts.get("gross_profit", 0.25)
-        plan_expenses_mp_pct = prev_month_pcts.get("expenses_mp", 0.60)
-        plan_marketing_pct = prev_month_pcts.get("ads", 0.15)
-        plan_total_expenses_pct = prev_month_pcts.get("total_expenses", 0.60)
-        plan_material_cost_pct = prev_month_pcts.get("material_cost", 0.15)
-        plan_gross_to_money_pct = prev_month_pcts.get("gross_to_money_pct")
-        plan_gross_to_revenue_pct = prev_month_pcts.get("gross_to_revenue_pct")
-    else:
-        plan_expenses_mp = None
-        plan_marketing = None
-        plan_expenses_total = None
-        plan_money_on_account = None
-        plan_material_cost = None
-        plan_gross_profit = None
-        plan_expenses_mp_pct = None
-        plan_marketing_pct = None
-        plan_total_expenses_pct = None
-        plan_material_cost_pct = None
-        plan_gross_to_money_pct = None
-        plan_gross_to_revenue_pct = None
-
-    fact_marketing_pct = as_float(fact_rows_map["marketing_pct"]["total"])
-    fact_expenses_mp_pct = as_float(fact_rows_map["marketplace_expenses_pct"]["total"])
-    fact_expenses_total_pct = safe_divide(as_float(fact_rows_map["all_expenses"]["total"]), fact_revenue)
-    fact_material_cost_pct = safe_divide(fact_material_cost, fact_revenue)
-    fact_gross_to_money_pct = safe_divide(fact_gross_profit, fact_money_on_account)
-    fact_gross_to_revenue_pct = safe_divide(fact_gross_profit, fact_revenue)
-
-    forecast_marketing_pct = as_float(forecast_rows_map["marketing_pct"]["total"])
-    forecast_expenses_mp_pct = as_float(forecast_rows_map["marketplace_expenses_pct"]["total"])
-    forecast_expenses_total_pct = safe_divide(as_float(forecast_rows_map["all_expenses"]["total"]), forecast_revenue)
-    forecast_material_cost_pct = safe_divide(forecast_material_cost, forecast_revenue)
-    forecast_gross_to_money_pct = safe_divide(forecast_gross_profit, forecast_money_on_account)
-    forecast_gross_to_revenue_pct = safe_divide(forecast_gross_profit, forecast_revenue)
-
-    return [
-        {"key": "revenue_mp", "label": "Выручка МП", "format": "number", "fact": fact_revenue, "forecast": forecast_revenue, "plan": plan_revenue, "plan_editable": plan_editable},
-        {"key": "expenses_mp", "label": "Расходы МП", "format": "number", "fact": fact_expenses_mp, "forecast": forecast_expenses_mp, "plan": plan_expenses_mp},
-        {"key": "expenses_mp_pct", "label": "Расходы МП %", "format": "percent", "fact": fact_expenses_mp_pct, "forecast": forecast_expenses_mp_pct, "plan": plan_expenses_mp_pct},
-        {"key": "marketing", "label": "Маркетинг", "format": "number", "fact": fact_marketing, "forecast": forecast_marketing, "plan": plan_marketing},
-        {"key": "marketing_pct", "label": "Маркетинг %", "format": "percent", "fact": fact_marketing_pct, "forecast": forecast_marketing_pct, "plan": plan_marketing_pct},
-        {"key": "expenses_total", "label": "ИТОГО расходы МП", "format": "number", "fact": fact_expenses_total, "forecast": forecast_expenses_total, "plan": plan_expenses_total},
-        {"key": "expenses_total_pct", "label": "ИТОГО расходы МП %", "format": "percent", "fact": fact_expenses_total_pct, "forecast": forecast_expenses_total_pct, "plan": plan_total_expenses_pct},
-        {"key": "money_on_account", "label": "Деньги на счет", "format": "number", "fact": fact_money_on_account, "forecast": forecast_money_on_account, "plan": plan_money_on_account},
-        {"key": "material_cost", "label": "Себестоимость", "format": "number", "fact": fact_material_cost, "forecast": forecast_material_cost, "plan": plan_material_cost},
-        {"key": "material_cost_pct", "label": "Себестоимость %", "format": "percent", "fact": fact_material_cost_pct, "forecast": forecast_material_cost_pct, "plan": plan_material_cost_pct},
-        {"key": "gross_profit", "label": "Валовая прибыль", "format": "number", "fact": fact_gross_profit, "forecast": forecast_gross_profit, "plan": plan_gross_profit},
-        {"key": "gross_to_money_pct", "label": "Валовая к деньгам на счет", "format": "percent", "fact": fact_gross_to_money_pct, "forecast": forecast_gross_to_money_pct, "plan": plan_gross_to_money_pct},
-        {"key": "gross_to_revenue_pct", "label": "Валовая к выручке МП", "format": "percent", "fact": fact_gross_to_revenue_pct, "forecast": forecast_gross_to_revenue_pct, "plan": plan_gross_to_revenue_pct},
-    ]
 
 
 async def get_finance_report_data(
@@ -860,72 +718,6 @@ async def get_finance_report_data(
         },
     }
 
-
-async def get_finance_report_v2_data(
-    conn: asyncpg.Connection,
-    month_value: str,
-) -> Dict[str, Any]:
-    try:
-        month_bounds(month_value)
-    except ValueError as exc:
-        raise ValueError("Invalid month format, expected YYYY-MM") from exc
-
-    year_str, month_str = month_value.split("-", 1)
-    year = int(year_str)
-    month = int(month_str)
-    rows_map, days = await build_rows_map_for_month(conn, month_value)
-    report_days = visible_report_days_v2(month_value, days)
-    rows_map = trim_rows_map_to_days(rows_map, days, report_days)
-    forecast_days = current_forecast_days(month_value, report_days)
-    recent_totals = await aggregate_recent_30d_totals(conn, datetime.now(MSK).date())
-    forecast_daily = await build_stock_based_daily_forecast(conn, forecast_days)
-    fact_by_article = await load_fact_revenue_by_article_day(conn, month_value)
-    revenue_breakdown = build_revenue_breakdown(
-        forecast_daily=forecast_daily,
-        report_days=report_days,
-        recent_totals=recent_totals,
-        fact_by_article=fact_by_article,
-        forecast_days=forecast_days,
-    )
-    forecast_rows_map = apply_finance_report_v2_forecast(
-        rows_map=rows_map,
-        days=report_days,
-        forecast_days=forecast_days,
-        recent_totals=recent_totals,
-        forecast_daily=forecast_daily,
-    )
-    prev_month_pcts = await load_prev_month_pcts(conn, year, month)
-    revenue_plan_total = float(rows_map["revenue_plan"]["daily"][report_days[-1]]) if report_days else 0.0
-    now_msk = datetime.now(MSK)
-    month_msk = month_start_msk(month_value)
-    plan_editable = month_msk.year == now_msk.year and month_msk.month == now_msk.month
-
-    notes = finance_report_notes() + finance_report_v2_notes()
-    if report_days != days:
-        notes.append("Текущий день по МСК исключён из отчёта, пока он не завершён.")
-    if not forecast_days:
-        notes.append("Для прошедших месяцев V2 показывает факт без будущего прогноза.")
-
-    return {
-        "month": month_value,
-        "days": report_days,
-        "rows": render_finance_rows(forecast_rows_map, report_days),
-        "notes": notes,
-        "forecast_days": forecast_days,
-        "variant": "v2",
-        "revenue_breakdown": revenue_breakdown,
-        "kpi_summary": build_kpi_summary_v2(
-            fact_rows_map=rows_map,
-            forecast_rows_map=forecast_rows_map,
-            revenue_plan_total=revenue_plan_total,
-            plan_editable=plan_editable,
-            prev_month_pcts=prev_month_pcts,
-        ),
-        "plan": {
-            "revenue_mp": revenue_plan_total,
-            "editable": plan_editable,
-        },
-    }
 
 
 async def create_report_pool() -> asyncpg.Pool:

@@ -163,6 +163,7 @@ FINANCE_REPORT_ROWS = [
     {"key": "marketing_pct", "label": "Маркетинг, %", "kind": "derived", "format": "percent"},
     {"key": "accrued", "label": "Начислено", "kind": "derived"},
     {"key": "material_cost", "label": "Себестоимость - возвраты", "kind": "value"},
+    {"key": "vat_5", "label": "НДС 5%", "kind": "derived"},
     {"key": "gross_profit", "label": "Валовая прибыль", "kind": "derived"},
     {"key": "gross_profit_pct_oz", "label": "Валовая прибыль, % к OZ", "kind": "derived", "format": "percent"},
     {"key": "gross_profit_pct_accrued", "label": "Валовая прибыль, % к РС", "kind": "derived", "format": "percent"},

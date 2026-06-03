@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Паллетизация поставок</title>
+    <link rel="stylesheet" href="/shared-report-theme.css" />
     <style>
         * {
             box-sizing: border-box;
@@ -486,6 +487,123 @@
         
         .hidden {
             display: none !important;
+        }
+    
+
+        /* Unification overrides */
+        body {
+            font-family: "Onest", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.45;
+        }
+
+        .header {
+            background: var(--panel);
+            color: var(--text);
+            border-bottom: 1px solid var(--line);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .tabs,
+        .card,
+        .pallet-card,
+        .modal-content {
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-soft);
+            border-radius: 16px;
+        }
+
+        .tab {
+            min-height: 40px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            color: var(--text);
+        }
+
+        .tab:hover { background: var(--accent-soft); }
+        .tab.active { background: var(--accent); color: #fff; }
+
+        .btn,
+        .action-btn {
+            min-height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--accent);
+            background: var(--accent);
+            color: #fff;
+            font-family: "Onest", Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            transform: none !important;
+        }
+
+        .btn:hover,
+        .action-btn:hover {
+            box-shadow: 0 8px 18px rgba(0, 91, 255, 0.18);
+        }
+
+        .btn-secondary {
+            border-color: var(--line-strong);
+            background: var(--panel-soft);
+            color: var(--text);
+        }
+
+        .btn-danger,
+        .action-btn.delete {
+            border-color: var(--danger);
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-success {
+            border-color: var(--success);
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-warning {
+            border-color: var(--warning);
+            background: var(--warning);
+            color: #1f2b40;
+        }
+
+        .form-control,
+        .search-box input {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            min-height: 40px;
+            font-family: "Onest", Arial, sans-serif;
+        }
+
+        .form-control:focus,
+        .search-box input:focus {
+            border-color: rgba(0, 91, 255, 0.4);
+            box-shadow: 0 0 0 4px rgba(0, 91, 255, 0.08);
+        }
+
+        table { font-size: 12px; }
+
+        th, td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        th {
+            background: #f7f9fc;
+            color: #6b7688;
+            font-weight: 600;
+        }
+
+        tr:hover { background: #f8fafd; }
+
+        @media (max-width: 640px) {
+            .btn,
+            .action-btn,
+            .tab {
+                min-height: 40px;
+                padding-top: 8px;
+                padding-bottom: 8px;
+            }
         }
     </style>
 </head>

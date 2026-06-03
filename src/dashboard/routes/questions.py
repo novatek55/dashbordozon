@@ -14,6 +14,14 @@ from aiohttp import web
 from src.dashboard.helpers import _get_ozon_credentials, load_sku_identity_map
 
 
+def _extract_result(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Ozon mozhet vozvrashhat' dannye kak v korne, tak i v payload.result."""
+    result = payload.get("result")
+    if isinstance(result, dict):
+        return result
+    return {}
+
+
 async def _ozon_request(endpoint: str, body: Dict[str, Any]) -> tuple:
     """Vyzov endpoint'a Ozon Seller API. Vozvrashhaet (status, payload)."""
     client_id, api_key = _get_ozon_credentials()
@@ -111,7 +119,12 @@ async def get_questions_report(request: web.Request) -> web.Response:
             status=list_status if list_status >= 400 else 500,
         )
 
-    questions = list_payload.get("questions") or []
+    result_payload = _extract_result(list_payload)
+    questions = (
+        list_payload.get("questions")
+        or result_payload.get("questions")
+        or []
+    )
     skus = list({int(q["sku"]) for q in questions if q.get("sku") is not None})
     product_map = await _lookup_products_by_sku(pool, skus)
 
@@ -138,8 +151,12 @@ async def get_questions_report(request: web.Request) -> web.Response:
 
     return web.json_response({
         "items": items,
-        "last_id": list_payload.get("last_id") or "",
-        "has_next": bool(list_payload.get("has_next")),
+        "last_id": list_payload.get("last_id") or result_payload.get("last_id") or "",
+        "has_next": bool(
+            list_payload.get("has_next")
+            if "has_next" in list_payload
+            else result_payload.get("has_next")
+        ),
         "counts": count_payload if isinstance(count_payload, dict) else {},
     })
 
@@ -165,9 +182,10 @@ async def get_question_answers(request: web.Request) -> web.Response:
             status=status if status >= 400 else 500,
         )
 
+    result_payload = _extract_result(payload)
     return web.json_response({
-        "answers": payload.get("answers") or [],
-        "last_id": payload.get("last_id") or "",
+        "answers": payload.get("answers") or result_payload.get("answers") or [],
+        "last_id": payload.get("last_id") or result_payload.get("last_id") or "",
     })
 
 

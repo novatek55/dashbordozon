@@ -278,6 +278,31 @@ async def post_serp_recalculate_primary(request: web.Request) -> web.Response:
     return web.json_response({"updated": count})
 
 
+async def get_serp_all_primary_queries(request: web.Request) -> web.Response:
+    """GET /api/serp/all-primary-queries — все артикулы с их главными запросами."""
+    pool: asyncpg.Pool = request.app["pool"]
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT s.sku, s.offer_id, s.query_text, s.set_manually
+            FROM sku_primary_query s
+            ORDER BY s.updated_at DESC
+            LIMIT 200
+            """
+        )
+    return web.json_response({
+        "items": [
+            {
+                "sku": r["sku"],
+                "offer_id": r["offer_id"],
+                "query_text": r["query_text"],
+                "set_manually": r["set_manually"],
+            }
+            for r in rows
+        ]
+    })
+
+
 async def post_serp_save_from_overlay(request: web.Request) -> web.Response:
     """POST /api/serp/save-from-overlay — сохранить данные собранные overlay."""
     body = await request.json()

@@ -58,6 +58,8 @@ USED_TABLES = {
     "reviews",
     "review_comments",
     "review_rating_snapshots",
+    "seller_ratings",
+    "seller_rating_history",
 }
 
 

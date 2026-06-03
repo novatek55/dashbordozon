@@ -1,0 +1,467 @@
+{
+  "used_total": 66,
+  "matched_total": 52,
+  "missing_total": 14,
+  "deprecated_total": 5,
+  "matched": [
+    {
+      "method": "GET",
+      "path": "/v1/actions",
+      "operationId": "Promos",
+      "deprecated": false,
+      "summary": "Список акций"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/candidates",
+      "operationId": "PromosCandidates",
+      "deprecated": false,
+      "summary": "Список доступных для акции товаров"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/products",
+      "operationId": "PromosProducts",
+      "deprecated": false,
+      "summary": "Список участвующих в акции товаров"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/products/activate",
+      "operationId": "PromosProductsActivate",
+      "deprecated": false,
+      "summary": "Добавить товар в акцию"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/products/deactivate",
+      "operationId": "PromosProductsDeactivate",
+      "deprecated": false,
+      "summary": "Удалить товары из акции"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/data",
+      "operationId": "AnalyticsAPI_AnalyticsGetData",
+      "deprecated": false,
+      "summary": "Данные аналитики"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/manage/stocks",
+      "operationId": "AnalyticsAPI_ManageStocks",
+      "deprecated": false,
+      "summary": "Управление остатками"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/product-queries",
+      "operationId": "AnalyticsAPI_AnalyticsProductQueries",
+      "deprecated": false,
+      "summary": "Получить информацию о запросах моих товаров"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/product-queries/details",
+      "operationId": "AnalyticsAPI_AnalyticsProductQueriesDetails",
+      "deprecated": false,
+      "summary": "Получить детализацию запросов по товару"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/stocks",
+      "operationId": "AnalyticsAPI_AnalyticsStocks",
+      "deprecated": false,
+      "summary": "Получить аналитику по остаткам"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/turnover/stocks",
+      "operationId": "AnalyticsAPI_StocksTurnover",
+      "deprecated": false,
+      "summary": "Оборачиваемость товара"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/cluster/list",
+      "operationId": "SupplyDraftAPI_DraftClusterList",
+      "deprecated": false,
+      "summary": "Информация о кластерах и их складах"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/delivery-method/list",
+      "operationId": "WarehouseAPI_DeliveryMethodList",
+      "deprecated": false,
+      "summary": "Список методов доставки склада"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/balance",
+      "operationId": "GetFinanceBalanceV1",
+      "deprecated": false,
+      "summary": "Получить отчёт о балансе"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/cash-flow-statement/list",
+      "operationId": "FinanceAPI_FinanceCashFlowStatementList",
+      "deprecated": false,
+      "summary": "Финансовый отчёт"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/compensation",
+      "operationId": "ReportAPI_GetCompensationReport",
+      "deprecated": false,
+      "summary": "Отчёт о компенсациях"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/decompensation",
+      "operationId": "ReportAPI_GetDecompensationReport",
+      "deprecated": false,
+      "summary": "Отчёт о декомпенсациях"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/document-b2b-sales",
+      "operationId": "ReportAPI_CreateDocumentB2BSalesReport",
+      "deprecated": false,
+      "summary": "Реестр продаж юридическим лицам"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/mutual-settlement",
+      "operationId": "ReportAPI_CreateMutualSettlementReport",
+      "deprecated": false,
+      "summary": "Отчёт о взаиморасчётах"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/product/info/warehouse/stocks",
+      "operationId": "ProductInfoWarehouseStocks",
+      "deprecated": false,
+      "summary": "Получить информацию по остаткам на складе FBS и rFBS"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/answer/list",
+      "operationId": "QuestionAnswer_List",
+      "deprecated": false,
+      "summary": "Список ответов на вопрос"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/count",
+      "operationId": "Question_Count",
+      "deprecated": false,
+      "summary": "Количество вопросов по статусам"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/info",
+      "operationId": "Question_Info",
+      "deprecated": false,
+      "summary": "Информация о вопросе"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/list",
+      "operationId": "Question_List",
+      "deprecated": false,
+      "summary": "Список вопросов"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/rating/history",
+      "operationId": "RatingAPI_RatingHistoryV1",
+      "deprecated": false,
+      "summary": "Получить информацию о рейтингах продавца за период"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/rating/summary",
+      "operationId": "RatingAPI_RatingSummaryV1",
+      "deprecated": false,
+      "summary": "Получить информацию о текущих рейтингах продавца"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/info",
+      "operationId": "ReportAPI_ReportInfo",
+      "deprecated": false,
+      "summary": "Информация об отчёте"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/list",
+      "operationId": "ReportAPI_ReportList",
+      "deprecated": false,
+      "summary": "Список отчётов"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/postings/create",
+      "operationId": "ReportAPI_CreateCompanyPostingsReport",
+      "deprecated": false,
+      "summary": "Отчёт об отправлениях"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/products/create",
+      "operationId": "ReportAPI_CreateCompanyProductsReport",
+      "deprecated": false,
+      "summary": "Отчёт по товарам"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/warehouse/stock",
+      "operationId": "ReportAPI_CreateStockByWarehouseReport",
+      "deprecated": false,
+      "summary": "Отчёт об остатках на FBS-складе"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/returns/list",
+      "operationId": "returnsList",
+      "deprecated": false,
+      "summary": "Информация о возвратах FBO и FBS"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/comment/create",
+      "operationId": "ReviewAPI_CommentCreate",
+      "deprecated": false,
+      "summary": "Оставить комментарий на отзыв"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/comment/list",
+      "operationId": "ReviewAPI_CommentList",
+      "deprecated": false,
+      "summary": "Получить список комментариев на отзыв"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/count",
+      "operationId": "ReviewAPI_ReviewCount",
+      "deprecated": true,
+      "summary": "Количество отзывов по статусам"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/info",
+      "operationId": "ReviewAPI_ReviewInfo",
+      "deprecated": true,
+      "summary": "Получить информацию об отзыве"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/list",
+      "operationId": "ReviewAPI_ReviewList",
+      "deprecated": true,
+      "summary": "Получить список отзывов"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/warehouse/fbo/seller/list",
+      "operationId": "WarehouseFboSellerList",
+      "deprecated": false,
+      "summary": "Получить список складов продавца"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/finance/realization",
+      "operationId": "FinanceAPI_GetRealizationReportV2",
+      "deprecated": false,
+      "summary": "Отчёт о реализации товаров (версия 2)"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/posting/fbo/list",
+      "operationId": "PostingAPI_GetFboPostingList",
+      "deprecated": true,
+      "summary": "Список отправлений"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/product/info/stocks-by-warehouse/fbs",
+      "operationId": "ProductAPI_GetProductInfoStocksByWarehouseFbsV2",
+      "deprecated": false,
+      "summary": "Получить информацию об остатках на складах продавца"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/report/returns/create",
+      "operationId": "ReportAPI_ReportReturnsCreate",
+      "deprecated": false,
+      "summary": "Отчёт о возвратах"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/returns/rfbs/get",
+      "operationId": "RFBSReturnsAPI_ReturnsRfbsGetV2",
+      "deprecated": false,
+      "summary": "Информация о заявке на возврат"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/returns/rfbs/list",
+      "operationId": "RFBSReturnsAPI_ReturnsRfbsListV2",
+      "deprecated": false,
+      "summary": "Список заявок на возврат"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/finance/transaction/list",
+      "operationId": "FinanceAPI_FinanceTransactionListV3",
+      "deprecated": false,
+      "summary": "Список транзакций"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/finance/transaction/totals",
+      "operationId": "FinanceAPI_FinanceTransactionTotalV3",
+      "deprecated": false,
+      "summary": "Суммы транзакций"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/posting/fbs/get",
+      "operationId": "PostingAPI_GetFbsPostingV3",
+      "deprecated": false,
+      "summary": "Получить информацию об отправлении по идентификатору"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/posting/fbs/list",
+      "operationId": "PostingAPI_GetFbsPostingListV3",
+      "deprecated": true,
+      "summary": "Список отправлений"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/product/info/list",
+      "operationId": "ProductAPI_GetProductInfoList",
+      "deprecated": false,
+      "summary": "Получить информацию о товарах по идентификаторам"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/product/list",
+      "operationId": "ProductAPI_GetProductList",
+      "deprecated": false,
+      "summary": "Список товаров"
+    },
+    {
+      "method": "POST",
+      "path": "/v4/product/info/attributes",
+      "operationId": "ProductAPI_GetProductAttributesV4",
+      "deprecated": false,
+      "summary": "Получить описание характеристик товара"
+    },
+    {
+      "method": "POST",
+      "path": "/v4/product/info/stocks",
+      "operationId": "ProductAPI_GetProductInfoStocks",
+      "deprecated": false,
+      "summary": "Информация о количестве товаров"
+    }
+  ],
+  "missing_in_swagger": [
+    {
+      "method": "GET",
+      "path": "/api/client/campaign"
+    },
+    {
+      "method": "POST",
+      "path": "/api/client/statistic/orders/generate/json"
+    },
+    {
+      "method": "POST",
+      "path": "/api/client/statistics/json"
+    },
+    {
+      "method": "POST",
+      "path": "/api/client/token"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/average-delivery-time"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/average-delivery-time/details"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/average-delivery-time/summary"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/history"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/updates"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/product/info/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/top_sku"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/product/info"
+    },
+    {
+      "method": "POST",
+      "path": "/v4/product/info/prices"
+    }
+  ],
+  "deprecated_in_swagger": [
+    {
+      "method": "POST",
+      "path": "/v1/review/count",
+      "operationId": "ReviewAPI_ReviewCount",
+      "deprecated": true,
+      "summary": "Количество отзывов по статусам"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/info",
+      "operationId": "ReviewAPI_ReviewInfo",
+      "deprecated": true,
+      "summary": "Получить информацию об отзыве"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/list",
+      "operationId": "ReviewAPI_ReviewList",
+      "deprecated": true,
+      "summary": "Получить список отзывов"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/posting/fbo/list",
+      "operationId": "PostingAPI_GetFboPostingList",
+      "deprecated": true,
+      "summary": "Список отправлений"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/posting/fbs/list",
+      "operationId": "PostingAPI_GetFbsPostingListV3",
+      "deprecated": true,
+      "summary": "Список отправлений"
+    }
+  ]
+}

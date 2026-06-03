@@ -175,8 +175,12 @@ python -m src.main --mode campaigns
 - Статистика: views, clicks, spent, orders, revenue
 
 ### 6. **Аналитика**
-- `/v1/analytics/data` - данные аналитики
-- `/v2/analytics/stock_on_warehouses` - остатки на складах
+- `/v1/analytics/data` - данные аналитики (актуально; limit 1..1000, dimension, metrics)
+- `/v1/analytics/product-queries` - агрегированная аналитика поисковых запросов по SKU (актуально)
+- `/v1/analytics/product-queries/details` - детализация поисковых запросов по SKU (актуально)
+- `/v1/analytics/stocks` - аналитика остатков по SKU (актуально, основная замена stock_on_warehouses)
+- `/v1/analytics/turnover/stocks` - оборачиваемость по SKU (актуально)
+- `/v2/analytics/stock_on_warehouses` - устаревающий метод, используйте `/v1/analytics/stocks`
 
 ### 7. **Рейтинг продавца**
 - `/v1/rating/summary` - сводка по рейтингу

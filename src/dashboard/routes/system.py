@@ -40,6 +40,15 @@ async def create_pool(app: web.Application) -> None:
     app["pool"] = await asyncpg.create_pool(dsn=dsn, min_size=1, max_size=5)
     await ensure_finance_report_tables(app["pool"])
     await ensure_reviews_report_tables(app["pool"])
+    # Авто-расчёт главных запросов при старте
+    try:
+        from src.services.serp_service import recalculate_primary_queries
+        import logging
+        n = await recalculate_primary_queries(app["pool"])
+        logging.getLogger(__name__).info("SERP: recalculated primary queries on startup: %d", n)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("SERP: primary query recalculate failed on startup: %s", e)
 
 
 async def close_pool(app: web.Application) -> None:
@@ -53,6 +62,7 @@ def reset_sync_status():
     sync_status["progress"] = 0
     sync_status["stage"] = ""
     sync_status["stages"] = []
+    sync_status["step_results"] = []
     sync_status["started_at"] = None
     sync_status["completed_at"] = None
     sync_status["error"] = None
@@ -189,10 +199,10 @@ async def run_sync_step(cmd: list, stage: str, progress: int, continue_on_error:
         error_msg = stderr_text or stdout_text or "Unknown error"
         if continue_on_error:
             update_sync_status(progress, f"{stage} (пропущено: ошибка)")
-            return error_msg
+            return {"ok": False, "error": error_msg}
         raise Exception(f"{stage} failed: {error_msg}")
 
-    return "".join(stdout_chunks)
+    return {"ok": True, "output": "".join(stdout_chunks)}
 
 
 async def sync_ozon_data(request: web.Request) -> web.Response:
@@ -249,7 +259,7 @@ async def sync_ozon_data(request: web.Request) -> web.Response:
                         ([sys.executable, "-m", "src.main", "--mode", "report_warehouse_stock"], "Обновление отчёта остатков складов", False),
                         ([sys.executable, "-m", "src.main", "--mode", "analytics_stocks"], "Обновление аналитики остатков", False),
                         ([sys.executable, "-m", "src.main", "--mode", "analytics_data", "--days-back", str(days_back)], "Обновление дневной SKU-статистики", False),
-                        ([sys.executable, "-m", "src.main", "--mode", "analytics_product_queries", "--days-back", str(days_back)], "Обновление поисковых запросов по SKU", False),
+                        ([sys.executable, "-m", "src.main", "--mode", "analytics_product_queries", "--days-back", str(days_back)], "Обновление поисковых запросов по SKU", True),
                         ([sys.executable, "-m", "src.main", "--mode", "campaigns"], "Обновление рекламных кампаний и статистики", False),
                         ([sys.executable, "-m", "src.main", "--mode", "fbs_warehouse_stocks"], "Обновление FBS остатков", False),
                         ([sys.executable, "-m", "src.main", "--mode", "analytics_turnover", "--days-back", str(days_back)], "Обновление оборачиваемости", False),
@@ -265,7 +275,50 @@ async def sync_ozon_data(request: web.Request) -> web.Response:
                     steps_count = len(steps)
                     for i, (cmd, stage, continue_on_error) in enumerate(steps, start=1):
                         progress = min(95, int((i / max(steps_count, 1)) * 95))
-                        await run_sync_step(cmd, stage, progress, continue_on_error=continue_on_error)
+                        step_started_at = datetime.now().isoformat()
+                        step_status = "OK"
+                        step_error = ""
+                        try:
+                            step_result = await run_sync_step(cmd, stage, progress, continue_on_error=continue_on_error)
+                            if continue_on_error and isinstance(step_result, dict) and not step_result.get("ok", True):
+                                step_output = str(step_result.get("error", "")).strip()
+                                lower_output = step_output.lower()
+                                if (
+                                    "fresh_recent_sync" in lower_output
+                                    or "'skipped': 1" in lower_output
+                                    or '"skipped": 1' in lower_output
+                                    or ("sync result:" in lower_output and "skipped" in lower_output and "error" not in lower_output)
+                                ):
+                                    step_status = "SKIPPED"
+                                else:
+                                    step_status = "ERROR"
+                                    step_error = step_output[:500]
+                        except Exception as step_exc:
+                            step_status = "ERROR"
+                            step_error = str(step_exc)[:500]
+                            sync_status.setdefault("step_results", []).append({
+                                "stage": stage,
+                                "status": step_status,
+                                "details": "Ошибка",
+                                "error": step_error,
+                                "started_at": step_started_at,
+                                "at": datetime.now().isoformat(),
+                            })
+                            raise
+                        else:
+                            step_details = "Загружено"
+                            if step_status == "SKIPPED":
+                                step_details = "Пропущено"
+                            elif step_status == "ERROR":
+                                step_details = "Ошибка"
+                            sync_status.setdefault("step_results", []).append({
+                                "stage": stage,
+                                "status": step_status,
+                                "details": step_details,
+                                "error": step_error,
+                                "started_at": step_started_at,
+                                "at": datetime.now().isoformat(),
+                            })
                 else:
                     # Фолбэк для нестандартных профилей.
                     await run_sync_step(
@@ -312,6 +365,7 @@ async def get_sync_status(request: web.Request) -> web.Response:
         "progress": sync_status["progress"],
         "stage": sync_status["stage"],
         "stages": sync_status.get("stages", []),
+        "step_results": sync_status.get("step_results", []),
         "started_at": sync_status["started_at"],
         "completed_at": sync_status["completed_at"],
         "error": sync_status["error"]

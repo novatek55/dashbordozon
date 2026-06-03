@@ -1,45 +1,53 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Себестоимость</title>
+  <link rel="stylesheet" href="/shared-report-theme.css" />
   <style>
-    body { font-family: Arial, sans-serif; margin: 16px; background: #f7f2ea; color: #2b2117; }
-    .card { background: #fffaf2; border: 1px solid #d8c9b2; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
-    h2 { margin-top: 0; }
+    body { margin: 0; padding: 16px; }
+    .card { padding: 14px; margin-bottom: 12px; }
+    h2 { margin-top: 0; margin-bottom: 12px; }
     .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-    input[type="file"] { padding: 7px; border: 1px solid #d8c9b2; border-radius: 8px; background: #fff; }
-    button { padding: 8px 12px; border: 1px solid #8c5c2a; border-radius: 8px; background: #8c5c2a; color: #fffaf2; cursor: pointer; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
-    th, td { border: 1px solid #d8c9b2; padding: 6px; text-align: left; }
-    th { background: #f1e3cf; }
-    .meta { font-size: 13px; color: #6d5e4c; margin: 6px 0; }
+    .nav-row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .nav-row a { text-decoration: none; }
+    .nav-row button { width: auto; }
+    .meta { font-size: 12px; color: var(--muted); margin: 6px 0; }
+    .file-input { max-width: 280px; }
+    .table-wrap { max-width: 100%; }
+    @media (max-width: 560px) {
+      body { padding: 12px; }
+      .file-input { max-width: 100%; }
+    }
   </style>
 </head>
 <body>
-  <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-    <a href="/orders_dashboard.html" style="text-decoration: none;">
-      <button type="button" style="background: #6c757d;">📊 Дашборд</button>
+  <div class="nav-row">
+    <a href="/orders_dashboard.html">
+      <button type="button" class="btn-secondary">📊 Дашборд</button>
     </a>
-    <a href="/palletization/" target="_blank" style="text-decoration: none;">
-      <button type="button" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📦 Паллетизация</button>
+    <a href="/palletization/" target="_blank">
+      <button type="button">📦 Паллетизация</button>
     </a>
   </div>
+
   <h2>Справочник себестоимости</h2>
   <div class="card">
     <div class="row">
-      <input id="file" type="file" accept=".xlsx,.xls" />
+      <input id="file" class="file-input" type="file" accept=".xlsx,.xls" />
       <button id="upload_btn" type="button">Загрузить Excel</button>
     </div>
     <div id="status" class="meta">Готово</div>
   </div>
 
   <div class="card">
-    <table id="costs_table">
-      <thead><tr><th>SKU</th><th>Артикул</th><th>Себестоимость на ед.</th><th>Обновлено</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <div class="table-wrap">
+      <table id="costs_table">
+        <thead><tr><th>SKU</th><th>Артикул</th><th>Себестоимость на ед.</th><th>Обновлено</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 
   <script>

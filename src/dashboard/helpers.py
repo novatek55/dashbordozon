@@ -521,7 +521,9 @@ def month_timeline(month_value: str) -> Tuple[int, int]:
         return days_total, days_total
     if selected_month > current_month:
         return 0, days_total
-    return min(now_msk.day, days_total), days_total
+    # Текущий день в МСК неполный, для прогноза берём только полностью закрытые дни.
+    full_days_passed = max(0, now_msk.day - 1)
+    return min(full_days_passed, days_total), days_total
 
 
 def scale_plan_value(base_value: float, revenue_plan: float) -> float:

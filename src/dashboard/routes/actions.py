@@ -187,13 +187,31 @@ def _norm_offer(value: Any) -> str:
 
 
 def _index_accrual_items_by_offer(accrual_response: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
-    """offer_id_normalized в†’ item dict."""
+    """Индекс начислений по нескольким ключам: offer_id и sku:<id>."""
     out: Dict[str, Dict[str, Any]] = {}
     for item in accrual_response.get("items", []) or []:
-        norm = _norm_offer(item.get("offer_id_normalized") or item.get("offer_id"))
-        if norm:
-            out[norm] = item
+        norm_offer = _norm_offer(item.get("offer_id"))
+        norm_offer_id = _norm_offer(item.get("offer_id_normalized"))
+        if norm_offer:
+            out[norm_offer] = item
+        if norm_offer_id:
+            out[norm_offer_id] = item
     return out
+
+
+def _find_accrual_item(
+    accrual_index: Dict[str, Dict[str, Any]],
+    offer_norm: str,
+    sku_val: Optional[int],
+) -> Optional[Dict[str, Any]]:
+    """Поиск начислений: сначала по offer_id, затем по sku-ключу."""
+    if offer_norm:
+        item = accrual_index.get(offer_norm)
+        if item:
+            return item
+    if sku_val is not None:
+        return accrual_index.get(f"sku:{int(sku_val)}")
+    return None
 
 
 async def get_actions_report(request: web.Request) -> web.Response:
@@ -423,7 +441,7 @@ async def get_actions_report(request: web.Request) -> web.Response:
             for p in prods:
                 offer_id = (p.get("offer_id") or "").strip()
                 offer_norm = _norm_offer(offer_id) if offer_id else ""
-                accrual_item = accrual_index.get(offer_norm) if offer_norm else None
+                accrual_item = _find_accrual_item(accrual_index, offer_norm, sku_val)
                 values = (accrual_item or {}).get("values", {}) if accrual_item else {}
                 sku_val = int(p["fbo_sku"]) if p.get("fbo_sku") else None
                 base_econ = base_from_accrual_values(
@@ -580,7 +598,7 @@ async def get_actions_report(request: web.Request) -> web.Response:
                 sku_val = int(p["fbo_sku"]) if p.get("fbo_sku") else None
 
                 # Р¤РђРљРў вЂ” Р·Р° РїРµСЂРёРѕРґ Р°РєС†РёРё (РїРѕСЃР»РµРґРЅРёРµ compare_days РґРЅРµР№)
-                accrual_item = accrual_index.get(offer_norm) if offer_norm else None
+                accrual_item = _find_accrual_item(accrual_index, offer_norm, sku_val)
                 values = (accrual_item or {}).get("values", {}) if accrual_item else {}
                 base_econ = base_from_accrual_values(
                     offer_id=offer_id,
@@ -622,7 +640,7 @@ async def get_actions_report(request: web.Request) -> web.Response:
                         pre_resp = await _fetch_accruals_for_period(base_url, p_pre_date_from, p_pre_date_to)
                         pre_accrual_cache[cache_key] = _index_accrual_items_by_offer(pre_resp)
                     pre_accrual_idx = pre_accrual_cache[cache_key]
-                    pre_item = pre_accrual_idx.get(offer_norm) if offer_norm else None
+                    pre_item = _find_accrual_item(pre_accrual_idx, offer_norm, sku_val)
                     pre_values = (pre_item or {}).get("values", {}) if pre_item else {}
 
                 # Р‘РђР—Рђ (РґРѕ Р°РєС†РёРё) вЂ” Р·Р° СЌРєРІРёРІР°Р»РµРЅС‚РЅС‹Р№ РїРµСЂРёРѕРґ РїРµСЂРµРґ РґРѕР±Р°РІР»РµРЅРёРµРј С‚РѕРІР°СЂР°

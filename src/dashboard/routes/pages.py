@@ -1,4 +1,5 @@
 """Dashboard routes/pages.py handlers."""
+import os
 from aiohttp import web
 from src.dashboard.constants import HTML_PATH, COSTS_HTML_PATH, PALLETIZATION_WEB_DIR
 
@@ -13,6 +14,10 @@ async def finance_costs_page(_: web.Request) -> web.Response:
 
 async def palletization_page(_: web.Request) -> web.Response:
     return web.FileResponse(path=PALLETIZATION_WEB_DIR / "index.html")
+
+
+async def shared_theme_css(_: web.Request) -> web.Response:
+    return web.FileResponse(path=HTML_PATH.parent / "shared-report-theme.css")
 
 
 async def palletization_asset(request: web.Request) -> web.Response:

@@ -123,7 +123,10 @@
 | Метод | URL | Описание |
 |-------|-----|----------|
 | `POST` | `/v1/analytics/data` | Данные аналитики |
-| `POST` | `/v2/analytics/stock_on_warehouses` | Остатки на складах |
+| `POST` | `/v1/analytics/product-queries` | Запросы моих товаров (summary) |
+| `POST` | `/v1/analytics/product-queries/details` | Запросы моих товаров (details) |
+| `POST` | `/v1/analytics/stocks` | Актуальная аналитика остатков по SKU (замена stock_on_warehouses) |
+| `POST` | `/v2/analytics/stock_on_warehouses` | Устаревающий метод, в будущем будет отключён |
 | `POST` | `/v1/analytics/turnover/stocks` | Оборачиваемость |
 | `POST` | `/v1/analytics/manage/stocks` | Управление остатками |
 

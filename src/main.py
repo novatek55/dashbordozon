@@ -2,14 +2,23 @@
 import asyncio
 import logging
 import sys
+import time
+import json
+from pathlib import Path
 from datetime import datetime
 from typing import Optional
 import argparse
+import requests
 
 from src.config import settings
 from src.database import init_database, close_database, db_manager
 from src.ozon_client import OzonClient
 from src.sync_manager import SyncManager
+from src.wb_finance_sync import (
+    normalize_wb_finance_raw_to_fact,
+    rebuild_wb_finance_daily_vitrine,
+    sync_wb_finance_raw,
+)
 
 
 # Nastrojka logirovanija
@@ -30,11 +39,16 @@ def setup_logging(log_level: str = "INFO"):
     # Kornevoj logger
     root_logger = logging.getLogger()
     root_logger.setLevel(getattr(logging, log_level.upper()))
+    if root_logger.handlers:
+        root_logger.handlers.clear()
     root_logger.addHandler(console_handler)
     root_logger.addHandler(file_handler)
     
     # Logger dlja sqlalchemy (umenshaem shum)
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+    # Python 3.14 + asyncpg can emit noisy pool errors during interpreter shutdown.
+    # We keep application-level DB errors, but suppress this transport-layer noise.
+    logging.getLogger("sqlalchemy.pool.impl.AsyncAdaptedQueuePool").setLevel(logging.CRITICAL)
 
 
 async def sync_products(client: OzonClient, sync_manager: SyncManager):
@@ -222,9 +236,56 @@ async def sync_fbs_warehouse_stocks(client: OzonClient, sync_manager: SyncManage
     logging.info(f"FBS warehouse stocks sync result: {result}")
 
 
+def _download_swagger_json() -> Optional[Path]:
+    """
+    Best-effort download of Ozon Seller swagger.json.
+    Saves to project root as swagger.json and to api_contract/history.
+    Returns saved file path or None if download failed.
+    """
+    urls = [
+        f"https://docs.ozon.ru/api/seller/swagger.json?{int(time.time() * 1000)}",
+        f"https://docs.ozon.ru/api/seller/en/swagger.json?{int(time.time() * 1000)}",
+    ]
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        ),
+        "Accept": "application/json,text/plain,*/*",
+        "Referer": "https://docs.ozon.ru/api/seller/",
+    }
+
+    project_root = Path.cwd()
+    target = project_root / "swagger.json"
+    history_dir = project_root / "api_contract" / "history"
+    history_dir.mkdir(parents=True, exist_ok=True)
+
+    for url in urls:
+        try:
+            resp = requests.get(url, headers=headers, timeout=60, allow_redirects=True)
+            resp.raise_for_status()
+            payload = resp.json()
+            text = json_dumps_pretty(payload)
+            target.write_text(text, encoding="utf-8")
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            (history_dir / f"swagger_{stamp}.json").write_text(text, encoding="utf-8")
+            logging.info(f"Swagger saved: {target}")
+            return target
+        except Exception as exc:
+            logging.warning(f"Swagger download failed from {url}: {exc}")
+            continue
+    return None
+
+
+def json_dumps_pretty(payload: dict) -> str:
+    return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+
+
 async def full_sync(client: OzonClient, sync_manager: SyncManager):
     """Polnaja sinhronizacija vseh dannyh."""
     logging.info("=== Starting Full Sync ===")
+    await asyncio.to_thread(_download_swagger_json)
     results = await sync_manager.full_sync()
     
     logging.info("\n=== Sync Results Summary ===")
@@ -233,6 +294,33 @@ async def full_sync(client: OzonClient, sync_manager: SyncManager):
             logging.error(f"{entity}: ERROR - {result['error']}")
         else:
             logging.info(f"{entity}: {result}")
+
+
+async def sync_wb_finance(days_back: int = None):
+    """Raw-sync WB finance detailed report into shared DB."""
+    if not settings.wb_api_key:
+        raise ValueError("WB_API_KEY is not set in environment")
+    effective_days = days_back if days_back is not None else 3
+    logging.info("=== Syncing WB Finance Raw ===")
+    result = await sync_wb_finance_raw(
+        api_key=settings.wb_api_key,
+        days_back=effective_days,
+    )
+    logging.info(f"WB finance raw sync result: {result}")
+
+
+async def normalize_wb_finance():
+    """Normalize WB raw rows into wb_fact_finance."""
+    logging.info("=== Normalizing WB Finance Raw -> Fact ===")
+    result = await normalize_wb_finance_raw_to_fact()
+    logging.info(f"WB finance normalize result: {result}")
+
+
+async def rebuild_wb_finance_daily():
+    """Rebuild WB daily finance vitrine with final-day marker."""
+    logging.info("=== Rebuilding WB Finance Daily Vitrine ===")
+    result = await rebuild_wb_finance_daily_vitrine()
+    logging.info(f"WB finance daily rebuild result: {result}")
 
 
 async def main():
@@ -245,7 +333,7 @@ async def main():
                  "report_postings", "report_products", "report_returns", "report_compensation", "report_warehouse_stock",
                  "fbs_warehouse_stocks",
                  "analytics_data", "analytics_product_queries", "analytics_stocks", "analytics_turnover", "average_delivery_time", "realization_v2",
-                 "dimensions"],
+                 "dimensions", "wb_finance_raw", "wb_finance_normalize", "wb_finance_daily"],
         default="full",
         help="Sync mode (default: full)"
     )
@@ -301,7 +389,12 @@ async def main():
             api_key=settings.ozon_api_key,
             performance_client_id=settings.ozon_performance_client_id,
             performance_client_secret=settings.ozon_performance_client_secret,
-            max_concurrent_requests=settings.max_concurrent_requests
+            max_concurrent_requests=settings.max_concurrent_requests,
+            http_timeout_total=settings.ozon_http_timeout_total,
+            http_timeout_connect=settings.ozon_http_timeout_connect,
+            http_timeout_sock_read=settings.ozon_http_timeout_sock_read,
+            trust_env_proxy=settings.ozon_trust_env_proxy,
+            force_ipv4=settings.ozon_force_ipv4,
         ) as client:
             
             # Sozdanie menedzhera sinhronizacii
@@ -362,6 +455,12 @@ async def main():
                 logger.info("Starting product dimensions sync...")
                 result = await sync_manager.sync_product_dimensions()
                 logger.info(f"Product dimensions sync completed: {result}")
+            elif args.mode == "wb_finance_raw":
+                await sync_wb_finance(args.days_back)
+            elif args.mode == "wb_finance_normalize":
+                await normalize_wb_finance()
+            elif args.mode == "wb_finance_daily":
+                await rebuild_wb_finance_daily()
         
         logger.info("=" * 50)
         logger.info("Sync completed successfully!")

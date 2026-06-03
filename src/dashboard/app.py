@@ -85,7 +85,7 @@ from src.dashboard.routes.serp import (
     get_serp_snapshot, post_serp_competitor, get_serp_competitors,
     get_serp_primary_query, put_serp_primary_query,
     get_serp_article_report, post_serp_recalculate_primary,
-    post_serp_save_from_overlay,
+    post_serp_save_from_overlay, get_serp_all_primary_queries,
 )
 
 
@@ -226,6 +226,7 @@ def create_app() -> web.Application:
     app.router.add_get("/api/serp/article-report", get_serp_article_report)
     app.router.add_post("/api/serp/recalculate-primary", post_serp_recalculate_primary)
     app.router.add_post("/api/serp/save-from-overlay", post_serp_save_from_overlay)
+    app.router.add_get("/api/serp/all-primary-queries", get_serp_all_primary_queries)
 
     app.on_startup.append(create_pool)
     app.on_cleanup.append(close_pool)

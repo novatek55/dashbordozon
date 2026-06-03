@@ -7,6 +7,7 @@ import csv
 import io
 import hashlib
 import os
+import json
 from io import BytesIO
 from sqlalchemy import select, insert, update, delete, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -38,6 +39,11 @@ from src.config import settings
 
 logger = logging.getLogger(__name__)
 MSK = timezone(timedelta(hours=3))
+PENALTY_OPERATION_TYPES = {
+    "DefectFineShipmentDelayRated",
+    "DefectFineShipmentDelay",
+    "DefectFineCancellation",
+}
 
 
 class SyncManager:
@@ -94,6 +100,156 @@ class SyncManager:
             window_end = min(cursor + timedelta(days=7) - timedelta(seconds=1), to_date)
             yield cursor, window_end
             cursor = window_end + timedelta(seconds=1)
+
+    async def _ensure_campaign_cpo_orders_schema(self) -> None:
+        """Создаёт таблицу заказов CPO-отчёта, если её ещё нет."""
+        if "postgresql" not in settings.database_url.lower():
+            return
+        create_table_sql = """
+            CREATE TABLE IF NOT EXISTS campaign_cpo_orders (
+                id BIGSERIAL PRIMARY KEY,
+                report_date DATE NOT NULL,
+                order_id TEXT,
+                posting_number TEXT,
+                sku BIGINT,
+                promoted_sku BIGINT,
+                offer_id TEXT,
+                product_name TEXT,
+                order_source TEXT,
+                quantity NUMERIC(15, 3),
+                amount NUMERIC(15, 2),
+                rate_pct NUMERIC(10, 4),
+                rate_amount NUMERIC(15, 2),
+                expense NUMERIC(15, 2) NOT NULL DEFAULT 0,
+                raw_data JSONB,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+            );
+        """
+        create_index_promoted_sql = """
+            CREATE INDEX IF NOT EXISTS ix_cpo_orders_date_promoted_sku
+                ON campaign_cpo_orders (report_date, promoted_sku);
+        """
+        create_index_sku_sql = """
+            CREATE INDEX IF NOT EXISTS ix_cpo_orders_date_sku
+                ON campaign_cpo_orders (report_date, sku);
+        """
+        async with db_manager.session() as session:
+            await session.execute(_sql_text(create_table_sql))
+            await session.execute(_sql_text(create_index_promoted_sql))
+            await session.execute(_sql_text(create_index_sku_sql))
+
+    async def _sync_cpo_orders_report(self, date_from: datetime, date_to: datetime) -> int:
+        """Синхронизирует CPO-отчёт заказов (Оплата за заказ) в campaign_cpo_orders."""
+        await self._ensure_campaign_cpo_orders_schema()
+
+        uuid = await self._with_rate_limit_retry(
+            lambda: self.client.request_cpo_orders_report_json(date_from=date_from, date_to=date_to),
+            attempts=4,
+            base_delay=5.0,
+        )
+        if not uuid:
+            raise OzonAPIError("CPO orders report request returned empty UUID")
+
+        payload: Any = None
+        last_status: Dict[str, Any] = {}
+        for _ in range(24):
+            await asyncio.sleep(5.0)
+            status = await self._with_rate_limit_retry(
+                lambda: self.client.get_cpo_orders_report_status(uuid),
+                attempts=3,
+                base_delay=4.0,
+            )
+            if isinstance(status, dict):
+                last_status = status
+                state = str(status.get("state") or status.get("status") or "").upper()
+                if state == "ERROR":
+                    raise OzonAPIError(f"CPO orders report failed: {status}")
+                if state in {"OK", "DONE", "SUCCESS", "COMPLETED"}:
+                    payload = await self._with_rate_limit_retry(
+                        lambda: self.client.download_cpo_orders_report_json(uuid),
+                        attempts=3,
+                        base_delay=4.0,
+                    )
+                    break
+        if payload is None:
+            raise OzonAPIError(f"CPO orders report {uuid} was not ready in time: {last_status}")
+
+        rows: List[Dict[str, Any]] = []
+        if isinstance(payload, dict):
+            raw_rows = payload.get("rows") or payload.get("items") or payload.get("result") or []
+            if isinstance(raw_rows, list):
+                rows = [r for r in raw_rows if isinstance(r, dict)]
+        elif isinstance(payload, list):
+            rows = [r for r in payload if isinstance(r, dict)]
+
+        def _pick(d: Dict[str, Any], keys: List[str], default=None):
+            for k in keys:
+                if k in d and d.get(k) not in (None, ""):
+                    return d.get(k)
+            lowered = {str(k).strip().lower(): v for k, v in d.items()}
+            for k in keys:
+                v = lowered.get(str(k).strip().lower())
+                if v not in (None, ""):
+                    return v
+            return default
+
+        date_from_day = date_from.date()
+        date_to_day = date_to.date()
+
+        insert_rows: List[Dict[str, Any]] = []
+        for row in rows:
+            report_day = self._parse_datetime_flexible(_pick(row, ["date", "Дата"]))
+            report_date = (report_day.date() if report_day else date_from_day)
+            sku = self._parse_int_flexible(_pick(row, ["sku", "SKU"]))
+            promoted_sku = self._parse_int_flexible(_pick(row, ["promotedSku", "promoSku", "SKU продвигаемого товара"]))
+            insert_rows.append(
+                {
+                    "report_date": report_date,
+                    "order_id": str(_pick(row, ["orderId", "order_id", "ID заказа"], "") or "") or None,
+                    "posting_number": str(_pick(row, ["postingNumber", "orderNumber", "номер заказа"], "") or "") or None,
+                    "sku": sku,
+                    "promoted_sku": promoted_sku or sku,
+                    "offer_id": str(_pick(row, ["offerId", "offer_id", "артикул"], "") or "") or None,
+                    "product_name": str(_pick(row, ["name", "productName", "наименование"], "") or "") or None,
+                    "order_source": str(_pick(row, ["source", "orderSource", "источник заказа"], "") or "") or None,
+                    "quantity": self._parse_decimal_flexible(_pick(row, ["quantity", "количество"])) or 0.0,
+                    "amount": self._parse_decimal_flexible(_pick(row, ["price", "amount", "стоимость"])) or 0.0,
+                    "rate_pct": self._parse_decimal_flexible(_pick(row, ["ratePercent", "rate_pct", "ставка, %"])),
+                    "rate_amount": self._parse_decimal_flexible(_pick(row, ["rateAmount", "rate_amount", "ставка, ₽"])),
+                    "expense": self._parse_decimal_flexible(_pick(row, ["expense", "spent", "расход"])) or 0.0,
+                    "raw_data": json.dumps(row, ensure_ascii=False),
+                }
+            )
+
+        async with db_manager.session() as session:
+            await session.execute(
+                _sql_text(
+                    """
+                    DELETE FROM campaign_cpo_orders
+                    WHERE report_date >= :date_from
+                      AND report_date <= :date_to
+                    """
+                ),
+                {"date_from": date_from_day, "date_to": date_to_day},
+            )
+            if insert_rows:
+                await session.execute(
+                    _sql_text(
+                        """
+                        INSERT INTO campaign_cpo_orders (
+                            report_date, order_id, posting_number, sku, promoted_sku, offer_id,
+                            product_name, order_source, quantity, amount, rate_pct, rate_amount,
+                            expense, raw_data
+                        ) VALUES (
+                            :report_date, :order_id, :posting_number, :sku, :promoted_sku, :offer_id,
+                            :product_name, :order_source, :quantity, :amount, :rate_pct, :rate_amount,
+                            :expense, CAST(:raw_data AS jsonb)
+                        )
+                        """
+                    ),
+                    insert_rows,
+                )
+        return len(insert_rows)
 
     async def _ensure_analytics_product_queries_schema(self) -> None:
         """Минимальная миграция таблиц product queries для PostgreSQL."""
@@ -550,6 +706,11 @@ class SyncManager:
         entity_type: str,
     ) -> Optional[Dict[str, int]]:
         """Propuskaet povtornuju zagruzku async-otcheta, esli on uzhe nedavno sinhronizirovalsja."""
+        # report_postings нужен для оперативного обновления fact_orders;
+        # не применяем к нему 24h окно "fresh skip".
+        if entity_type == "report_postings":
+            return None
+
         refresh_hours = max(int(settings.async_report_refresh_hours or 0), 0)
         if refresh_hours <= 0:
             return None
@@ -1048,6 +1209,7 @@ class SyncManager:
         self,
         session,
         transaction_id: int,
+        operation_type: Optional[str],
         posting_number: Optional[str],
         operation_date: Optional[datetime],
         raw_data: Optional[Dict[str, Any]],
@@ -1055,6 +1217,35 @@ class SyncManager:
         payload = raw_data if isinstance(raw_data, dict) else {}
         items = payload.get("items") if isinstance(payload.get("items"), list) else []
         services = payload.get("services") if isinstance(payload.get("services"), list) else []
+
+        # For penalty accruals, Ozon often sends no per-item lines. If posting has
+        # exactly one product in fact_order_items, synthesize one item line so article
+        # reports can attribute the penalty to that product.
+        if not items and posting_number and (operation_type in PENALTY_OPERATION_TYPES):
+            fact_rows = (
+                await session.execute(
+                    select(FactOrderItem).where(FactOrderItem.posting_number == posting_number)
+                )
+            ).scalars().all()
+            unique_keys = {
+                (
+                    str(r.offer_id).strip() if r.offer_id else None,
+                    int(r.sku) if r.sku is not None else None,
+                )
+                for r in fact_rows
+            }
+            # only unambiguous mapping
+            if len(unique_keys) == 1 and fact_rows:
+                src = fact_rows[0]
+                items = [
+                    {
+                        "sku": int(src.sku) if src.sku is not None else None,
+                        "name": src.product_name,
+                        "quantity": float(src.quantity) if src.quantity is not None else 1,
+                        "offer_id": src.offer_id,
+                        "_synthetic_from_fact_order_items": True,
+                    }
+                ]
 
         await session.execute(delete(TransactionItem).where(TransactionItem.transaction_id == transaction_id))
         await session.execute(delete(TransactionService).where(TransactionService.transaction_id == transaction_id))
@@ -1071,7 +1262,20 @@ class SyncManager:
                 "raw_data": item,
                 "last_synced_at": datetime.now(),
             }
-            await session.execute(insert(TransactionItem).values(**row_data))
+            stmt_item = pg_insert(TransactionItem).values(**row_data)
+            stmt_item = stmt_item.on_conflict_do_update(
+                index_elements=["transaction_id", "line_no"],
+                set_={
+                    "posting_number": row_data["posting_number"],
+                    "operation_date": row_data["operation_date"],
+                    "sku": row_data["sku"],
+                    "name": row_data["name"],
+                    "quantity": row_data["quantity"],
+                    "raw_data": row_data["raw_data"],
+                    "last_synced_at": row_data["last_synced_at"],
+                },
+            )
+            await session.execute(stmt_item)
 
         for line_no, service in enumerate(services, start=1):
             row_data = {
@@ -1084,7 +1288,19 @@ class SyncManager:
                 "raw_data": service,
                 "last_synced_at": datetime.now(),
             }
-            await session.execute(insert(TransactionService).values(**row_data))
+            stmt_service = pg_insert(TransactionService).values(**row_data)
+            stmt_service = stmt_service.on_conflict_do_update(
+                index_elements=["transaction_id", "line_no"],
+                set_={
+                    "posting_number": row_data["posting_number"],
+                    "operation_date": row_data["operation_date"],
+                    "service_name": row_data["service_name"],
+                    "price": row_data["price"],
+                    "raw_data": row_data["raw_data"],
+                    "last_synced_at": row_data["last_synced_at"],
+                },
+            )
+            await session.execute(stmt_service)
 
     async def _replace_fact_order_items(
         self,
@@ -1218,6 +1434,7 @@ class SyncManager:
                             await self._replace_transaction_children(
                                 session=session,
                                 transaction_id=int(operation_id),
+                                operation_type=transaction_data.get("operation_type"),
                                 posting_number=posting.get("posting_number"),
                                 operation_date=transaction_dict["operation_date"],
                                 raw_data=transaction_data,
@@ -1265,6 +1482,7 @@ class SyncManager:
                     await self._replace_transaction_children(
                         session=session,
                         transaction_id=transaction.transaction_id,
+                        operation_type=transaction.operation_type,
                         posting_number=transaction.posting_number,
                         operation_date=transaction.operation_date,
                         raw_data=transaction.raw_data,
@@ -2477,17 +2695,30 @@ class SyncManager:
                             if not summary_items:
                                 break
                             api_rows += len(summary_items)
+                            summary_batch_rows: List[Dict[str, Any]] = []
                             for item in summary_items:
                                 row = _normalize_summary_row(item, period_start, period_end, sku_ref)
                                 if not row:
                                     continue
-                                stmt = pg_insert(AnalyticsProductQuerySummary).values(**row)
-                                stmt = stmt.on_conflict_do_update(
+                                summary_batch_rows.append(row)
+                            if summary_batch_rows:
+                                summary_insert = pg_insert(AnalyticsProductQuerySummary)
+                                summary_stmt = summary_insert.on_conflict_do_update(
                                     index_elements=["period_start", "period_end", "granularity", "sku"],
-                                    set_={k: v for k, v in row.items() if k not in {"period_start", "period_end", "granularity", "sku"}},
+                                    set_={
+                                        "offer_id": summary_insert.excluded.offer_id,
+                                        "product_name": summary_insert.excluded.product_name,
+                                        "searches": summary_insert.excluded.searches,
+                                        "views": summary_insert.excluded.views,
+                                        "avg_position": summary_insert.excluded.avg_position,
+                                        "conversion": summary_insert.excluded.conversion,
+                                        "gmv": summary_insert.excluded.gmv,
+                                        "raw_data": summary_insert.excluded.raw_data,
+                                        "last_synced_at": summary_insert.excluded.last_synced_at,
+                                    },
                                 )
-                                await session.execute(stmt)
-                                summary_rows_upserted += 1
+                                await session.execute(summary_stmt, summary_batch_rows)
+                                summary_rows_upserted += len(summary_batch_rows)
 
                             page_count = _extract_page_count(summary_container)
                             total = _extract_total(summary_container)
@@ -2528,15 +2759,28 @@ class SyncManager:
                             if not detail_items:
                                 break
                             api_rows += len(detail_items)
+                            detail_batch_rows: List[Dict[str, Any]] = []
                             for item in detail_items:
                                 for row in _normalize_detail_rows(item, period_start, period_end, sku_ref):
-                                    stmt = pg_insert(AnalyticsProductQueryDetail).values(**row)
-                                    stmt = stmt.on_conflict_do_update(
-                                        index_elements=["period_start", "period_end", "granularity", "sku", "query_text"],
-                                        set_={k: v for k, v in row.items() if k not in {"period_start", "period_end", "granularity", "sku", "query_text"}},
-                                    )
-                                    await session.execute(stmt)
-                                    detail_rows_upserted += 1
+                                    detail_batch_rows.append(row)
+                            if detail_batch_rows:
+                                detail_insert = pg_insert(AnalyticsProductQueryDetail)
+                                detail_stmt = detail_insert.on_conflict_do_update(
+                                    index_elements=["period_start", "period_end", "granularity", "sku", "query_text"],
+                                    set_={
+                                        "offer_id": detail_insert.excluded.offer_id,
+                                        "product_name": detail_insert.excluded.product_name,
+                                        "searches": detail_insert.excluded.searches,
+                                        "views": detail_insert.excluded.views,
+                                        "avg_position": detail_insert.excluded.avg_position,
+                                        "conversion": detail_insert.excluded.conversion,
+                                        "gmv": detail_insert.excluded.gmv,
+                                        "raw_data": detail_insert.excluded.raw_data,
+                                        "last_synced_at": detail_insert.excluded.last_synced_at,
+                                    },
+                                )
+                                await session.execute(detail_stmt, detail_batch_rows)
+                                detail_rows_upserted += len(detail_batch_rows)
 
                             page_count = _extract_page_count(details_container)
                             total = _extract_total(details_container)
@@ -2738,48 +2982,94 @@ class SyncManager:
             raise
 
     async def sync_analytics_average_delivery_time(self) -> Dict[str, int]:
-        """Sinhronizacija /v1/analytics/average-delivery-time."""
+        """Расчёт среднего времени доставки по кластерам из fact_orders (fallback после удаления legacy API)."""
         logger.info("Starting analytics_average_delivery_time sync...")
         sync_log = await self._create_sync_log("analytics_average_delivery_time")
 
         records_processed = 0
         try:
-            result = await self._with_rate_limit_retry(
-                lambda: self.client.get_analytics_average_delivery_time({})
-            )
-            items = result.get("data", []) if isinstance(result, dict) else []
-            if not isinstance(items, list):
-                items = []
+            lookback_days = max(int(settings.sync_days_back or 30), 30)
+            cutoff = datetime.now(timezone.utc) - timedelta(days=lookback_days)
 
             async with db_manager.session() as session:
-                for item in items:
-                    metrics = item.get("metrics", {}) if isinstance(item.get("metrics"), dict) else {}
-                    orders_count = metrics.get("orders_count", {}) if isinstance(metrics.get("orders_count"), dict) else {}
-                    fast = orders_count.get("fast", {}) if isinstance(orders_count.get("fast"), dict) else {}
-                    medium = orders_count.get("medium", {}) if isinstance(orders_count.get("medium"), dict) else {}
-                    long_ = orders_count.get("long", {}) if isinstance(orders_count.get("long"), dict) else {}
+                rows = (
+                    await session.execute(
+                        text(
+                            """
+                            SELECT
+                                COALESCE(NULLIF(TRIM(delivery_cluster_to), ''), 'UNKNOWN') AS cluster_name,
+                                EXTRACT(EPOCH FROM (delivered_at - created_at)) / 86400.0 AS delivery_days
+                            FROM fact_orders
+                            WHERE delivered_at IS NOT NULL
+                              AND created_at IS NOT NULL
+                              AND delivered_at >= :cutoff
+                              AND delivered_at >= created_at
+                            """
+                        ),
+                        {"cutoff": cutoff},
+                    )
+                ).mappings().all()
 
+                agg: Dict[str, Dict[str, Any]] = {}
+                for rec in rows:
+                    cluster_name = str(rec.get("cluster_name") or "UNKNOWN").strip() or "UNKNOWN"
+                    days_value = self._parse_decimal_flexible(rec.get("delivery_days"))
+                    if days_value is None:
+                        continue
+                    if cluster_name not in agg:
+                        agg[cluster_name] = {
+                            "sum_days": 0.0,
+                            "orders_total": 0,
+                            "orders_fast": 0,
+                            "orders_medium": 0,
+                            "orders_long": 0,
+                        }
+                    node = agg[cluster_name]
+                    node["sum_days"] += float(days_value)
+                    node["orders_total"] += 1
+                    if days_value <= 2.0:
+                        node["orders_fast"] += 1
+                    elif days_value <= 5.0:
+                        node["orders_medium"] += 1
+                    else:
+                        node["orders_long"] += 1
+
+                for cluster_name, node in agg.items():
+                    total = int(node["orders_total"] or 0)
+                    if total <= 0:
+                        continue
+                    avg_days = float(node["sum_days"]) / total
+                    if avg_days <= 2.0:
+                        status = "FAST"
+                    elif avg_days <= 5.0:
+                        status = "MEDIUM"
+                    else:
+                        status = "SLOW"
+                    hash_hex = hashlib.sha1(cluster_name.encode("utf-8")).hexdigest()[:15]
+                    cluster_id = int(hash_hex, 16)
                     row = {
-                        "delivery_cluster_id": self._parse_int_flexible(item.get("delivery_cluster_id")) or 0,
-                        "average_delivery_time": self._parse_decimal_flexible(metrics.get("average_delivery_time")),
-                        "average_delivery_time_status": metrics.get("average_delivery_time_status"),
-                        "lost_profit": self._parse_decimal_flexible(metrics.get("lost_profit")),
-                        "exact_impact_share": self._parse_decimal_flexible(metrics.get("exact_impact_share")),
-                        "attention_level": metrics.get("attention_level"),
-                        "recommended_supply": self._parse_int_flexible(metrics.get("recommended_supply")),
-                        "orders_total": self._parse_int_flexible(orders_count.get("total")),
-                        "orders_fast": self._parse_int_flexible(fast.get("value")),
-                        "orders_fast_percent": self._parse_decimal_flexible(fast.get("percent")),
-                        "orders_medium": self._parse_int_flexible(medium.get("value")),
-                        "orders_medium_percent": self._parse_decimal_flexible(medium.get("percent")),
-                        "orders_long": self._parse_int_flexible(long_.get("value")),
-                        "orders_long_percent": self._parse_decimal_flexible(long_.get("percent")),
-                        "clusters_data": item.get("clusters_data"),
-                        "raw_data": item,
+                        "delivery_cluster_id": cluster_id,
+                        "average_delivery_time": self._parse_decimal_flexible(avg_days),
+                        "average_delivery_time_status": status,
+                        "lost_profit": None,
+                        "exact_impact_share": None,
+                        "attention_level": None,
+                        "recommended_supply": None,
+                        "orders_total": total,
+                        "orders_fast": int(node["orders_fast"]),
+                        "orders_fast_percent": self._parse_decimal_flexible(node["orders_fast"] / total),
+                        "orders_medium": int(node["orders_medium"]),
+                        "orders_medium_percent": self._parse_decimal_flexible(node["orders_medium"] / total),
+                        "orders_long": int(node["orders_long"]),
+                        "orders_long_percent": self._parse_decimal_flexible(node["orders_long"] / total),
+                        "clusters_data": {"cluster_name": cluster_name},
+                        "raw_data": {
+                            "source": "fact_orders",
+                            "cluster_name": cluster_name,
+                            "lookback_days": lookback_days,
+                        },
                         "last_synced_at": datetime.now(),
                     }
-                    if not row["delivery_cluster_id"]:
-                        continue
                     stmt = pg_insert(AnalyticsAverageDeliveryTime).values(**row)
                     stmt = stmt.on_conflict_do_update(
                         index_elements=["delivery_cluster_id"],
@@ -3226,6 +3516,8 @@ class SyncManager:
         campaign_objects_errors = 0
         statistics_processed = 0
         statistics_batches = 0
+        statistics_campaigns_skipped = 0
+        cpo_orders_processed = 0
         
         try:
             logger.info("campaigns sync: fetching campaign list from API...")
@@ -3387,9 +3679,12 @@ class SyncManager:
                         campaign_objects_processed += 1
 
             logger.info("campaigns sync: all details saved (%d), starting statistics...", campaign_details_updated)
+            date_to = datetime.now(timezone.utc)
+            # Performance API limit: max 62 days in one statistics export.
+            statistics_days_back = max(int(settings.sync_days_back or 30), 30)
+            statistics_days_back = min(statistics_days_back, 62)
+            date_from = date_to - timedelta(days=statistics_days_back)
             if campaign_id_map:
-                date_to = datetime.now(timezone.utc)
-                date_from = date_to - timedelta(days=max(int(settings.sync_days_back or 30), 30))
                 external_ids = sorted(campaign_id_map.keys())
                 batch_size = 10
 
@@ -3429,7 +3724,7 @@ class SyncManager:
                 async def _wait_campaign_report(
                     uuid: str,
                     expected_ids: List[int],
-                    attempts: int = 24,
+                    attempts: int = 72,
                     delay_seconds: float = 5.0,
                 ) -> Dict[str, Any]:
                     last_error: Optional[Exception] = None
@@ -3511,93 +3806,21 @@ class SyncManager:
                         f"Campaign report could not be obtained for batch {batch_external_ids}"
                     )
 
-                total_batches = (len(external_ids) + batch_size - 1) // batch_size
-                for idx in range(0, len(external_ids), batch_size):
-                    batch_external_ids = external_ids[idx:idx + batch_size]
-                    batch_num = idx // batch_size + 1
-                    logger.info(
-                        "campaigns sync: requesting statistics report batch %d/%d (ids: %s)",
-                        batch_num, total_batches, batch_external_ids[:3],
-                    )
-                    try:
-                        report_payload = await _request_campaign_report_with_retry(batch_external_ids)
-                    except Exception as exc:
-                        root_exc = exc.last_attempt.exception() if isinstance(exc, RetryError) and exc.last_attempt else exc
-                        if isinstance(root_exc, RateLimitError) or (
-                            isinstance(root_exc, OzonAPIError) and root_exc.status_code == 429
-                        ) or _is_active_campaign_request_limit_error(root_exc):
-                            warning_message = (
-                                "Campaign statistics refresh skipped due to Performance API rate limit; "
-                                "campaign list was updated successfully"
-                            )
-                            logger.warning(
-                                "%s. batch=%s error=%s",
-                                warning_message,
-                                batch_external_ids,
-                                root_exc,
-                            )
-                            await self._update_sync_log(
-                                sync_log,
-                                "success",
-                                records_processed=campaigns_processed + statistics_processed,
-                                records_inserted=campaigns_inserted + statistics_processed,
-                                records_updated=campaigns_updated,
-                                error_message=warning_message,
-                            )
-                            return {
-                                "processed": campaigns_processed + statistics_processed,
-                                "campaigns_processed": campaigns_processed,
-                                "campaigns_inserted": campaigns_inserted,
-                                "campaigns_updated": campaigns_updated,
-                                "statistics_processed": statistics_processed,
-                                "statistics_batches": statistics_batches,
-                                "statistics_skipped": 1,
-                                "skip_reason": "rate_limit",
-                            }
-                        if _is_campaign_report_unavailable_error(root_exc):
-                            warning_message = (
-                                "Campaign statistics refresh skipped because Performance API report was not available "
-                                "in time; campaign list was updated successfully"
-                            )
-                            logger.warning(
-                                "%s. batch=%s error=%s",
-                                warning_message,
-                                batch_external_ids,
-                                root_exc,
-                            )
-                            await self._update_sync_log(
-                                sync_log,
-                                "success",
-                                records_processed=campaigns_processed + statistics_processed,
-                                records_inserted=campaigns_inserted + statistics_processed,
-                                records_updated=campaigns_updated,
-                                error_message=warning_message,
-                            )
-                            return {
-                                "processed": campaigns_processed + statistics_processed,
-                                "campaigns_processed": campaigns_processed,
-                                "campaigns_inserted": campaigns_inserted,
-                                "campaigns_updated": campaigns_updated,
-                                "statistics_processed": statistics_processed,
-                                "statistics_batches": statistics_batches,
-                                "statistics_skipped": 1,
-                                "skip_reason": "report_unavailable",
-                            }
-                        raise root_exc
-                    statistics_batches += 1
-                    if idx > 0:
-                        await asyncio.sleep(2.5)
-
+                async def _store_report_payload(
+                    report_payload: Dict[str, Any],
+                    target_external_ids: List[int],
+                ) -> int:
+                    inserted_rows = 0
                     async with db_manager.session() as session:
                         await session.execute(
                             delete(CampaignStatistic).where(
-                                CampaignStatistic.campaign_id.in_([campaign_id_map[cid] for cid in batch_external_ids]),
+                                CampaignStatistic.campaign_id.in_([campaign_id_map[cid] for cid in target_external_ids]),
                                 CampaignStatistic.date >= date_from,
                                 CampaignStatistic.date <= date_to,
                             )
                         )
 
-                        for external_campaign_id in batch_external_ids:
+                        for external_campaign_id in target_external_ids:
                             campaign_block = report_payload.get(str(external_campaign_id)) or report_payload.get(external_campaign_id)
                             if not isinstance(campaign_block, dict):
                                 continue
@@ -3605,6 +3828,7 @@ class SyncManager:
                             if not isinstance(report_rows, list):
                                 continue
 
+                            stats_rows_batch: List[Dict[str, Any]] = []
                             for row in report_rows:
                                 if not isinstance(row, dict):
                                     continue
@@ -3642,20 +3866,110 @@ class SyncManager:
                                     "sku": sku,
                                     "raw_data": row,
                                 }
-                                await session.execute(pg_insert(CampaignStatistic).values(**stat_dict))
-                                statistics_processed += 1
+                                stats_rows_batch.append(stat_dict)
+                            if stats_rows_batch:
+                                await session.execute(pg_insert(CampaignStatistic), stats_rows_batch)
+                                inserted_rows += len(stats_rows_batch)
+                    return inserted_rows
+
+                total_batches = (len(external_ids) + batch_size - 1) // batch_size
+                for idx in range(0, len(external_ids), batch_size):
+                    batch_external_ids = external_ids[idx:idx + batch_size]
+                    batch_num = idx // batch_size + 1
+                    logger.info(
+                        "campaigns sync: requesting statistics report batch %d/%d (ids: %s)",
+                        batch_num, total_batches, batch_external_ids[:3],
+                    )
+                    try:
+                        report_payload = await _request_campaign_report_with_retry(batch_external_ids)
+                    except Exception as exc:
+                        root_exc = exc.last_attempt.exception() if isinstance(exc, RetryError) and exc.last_attempt else exc
+                        if isinstance(root_exc, RateLimitError) or (
+                            isinstance(root_exc, OzonAPIError) and root_exc.status_code == 429
+                        ) or _is_active_campaign_request_limit_error(root_exc):
+                            warning_message = (
+                                "Campaign statistics refresh skipped due to Performance API rate limit; "
+                                "campaign list was updated successfully"
+                            )
+                            logger.warning(
+                                "%s. batch=%s error=%s",
+                                warning_message,
+                                batch_external_ids,
+                                root_exc,
+                            )
+                            try:
+                                cpo_orders_processed = await self._sync_cpo_orders_report(date_from=date_from, date_to=date_to)
+                            except Exception as cpo_exc:
+                                cpo_orders_processed = 0
+                                logger.warning("campaigns sync: CPO orders sync skipped: %s", cpo_exc)
+                            await self._update_sync_log(
+                                sync_log,
+                                "success",
+                                records_processed=campaigns_processed + statistics_processed + cpo_orders_processed,
+                                records_inserted=campaigns_inserted + statistics_processed + cpo_orders_processed,
+                                records_updated=campaigns_updated,
+                                error_message=f"{warning_message}; cpo_orders={cpo_orders_processed}",
+                            )
+                            return {
+                                "processed": campaigns_processed + statistics_processed + cpo_orders_processed,
+                                "campaigns_processed": campaigns_processed,
+                                "campaigns_inserted": campaigns_inserted,
+                                "campaigns_updated": campaigns_updated,
+                                "statistics_processed": statistics_processed,
+                                "statistics_batches": statistics_batches,
+                                "cpo_orders_processed": cpo_orders_processed,
+                                "statistics_skipped": 1,
+                                "skip_reason": "rate_limit",
+                            }
+                        if _is_campaign_report_unavailable_error(root_exc):
+                            warning_message = "Campaign report was not available in time; fallback to one-by-one campaign stats sync"
+                            logger.warning(
+                                "%s. batch=%s error=%s",
+                                warning_message,
+                                batch_external_ids,
+                                root_exc,
+                            )
+                            for single_campaign_id in batch_external_ids:
+                                try:
+                                    single_payload = await _request_campaign_report_with_retry([single_campaign_id])
+                                    inserted_rows = await _store_report_payload(single_payload, [single_campaign_id])
+                                    statistics_processed += inserted_rows
+                                    statistics_batches += 1
+                                    await asyncio.sleep(1.5)
+                                except Exception as single_exc:
+                                    statistics_campaigns_skipped += 1
+                                    logger.warning(
+                                        "campaigns sync: failed to load statistics for campaign %s in fallback mode: %s",
+                                        single_campaign_id,
+                                        single_exc,
+                                    )
+                            continue
+                        raise root_exc
+                    statistics_batches += 1
+                    if idx > 0:
+                        await asyncio.sleep(2.5)
+                    inserted_rows = await _store_report_payload(report_payload, batch_external_ids)
+                    statistics_processed += inserted_rows
             
+            try:
+                cpo_orders_processed = await self._sync_cpo_orders_report(date_from=date_from, date_to=date_to)
+                logger.info("campaigns sync: CPO orders synced: %s", cpo_orders_processed)
+            except Exception as cpo_exc:
+                logger.warning("campaigns sync: CPO orders sync skipped: %s", cpo_exc)
+
             await self._update_sync_log(
                 sync_log,
                 "success",
-                records_processed=campaigns_processed + statistics_processed,
-                records_inserted=campaigns_inserted + statistics_processed + campaign_objects_processed,
+                records_processed=campaigns_processed + statistics_processed + cpo_orders_processed,
+                records_inserted=campaigns_inserted + statistics_processed + campaign_objects_processed + cpo_orders_processed,
                 records_updated=campaigns_updated + campaign_details_updated,
                 error_message=(
                     f"objects_loaded={campaign_objects_processed}; "
                     f"objects_skipped={campaign_objects_skipped}; "
                     f"objects_not_found={campaign_objects_not_found}; "
-                    f"objects_errors={campaign_objects_errors}"
+                    f"objects_errors={campaign_objects_errors}; "
+                    f"statistics_campaigns_skipped={statistics_campaigns_skipped}; "
+                    f"cpo_orders={cpo_orders_processed}"
                 ),
             )
             
@@ -3666,7 +3980,7 @@ class SyncManager:
                 statistics_batches,
             )
             return {
-                "processed": campaigns_processed + statistics_processed + campaign_objects_processed,
+                "processed": campaigns_processed + statistics_processed + campaign_objects_processed + cpo_orders_processed,
                 "campaigns_processed": campaigns_processed,
                 "campaigns_inserted": campaigns_inserted,
                 "campaigns_updated": campaigns_updated,
@@ -3675,8 +3989,10 @@ class SyncManager:
                 "campaign_objects_skipped": campaign_objects_skipped,
                 "campaign_objects_not_found": campaign_objects_not_found,
                 "campaign_objects_errors": campaign_objects_errors,
+                "statistics_campaigns_skipped": statistics_campaigns_skipped,
                 "statistics_processed": statistics_processed,
                 "statistics_batches": statistics_batches,
+                "cpo_orders_processed": cpo_orders_processed,
             }
             
         except Exception as e:
@@ -3687,46 +4003,81 @@ class SyncManager:
     # ==================== REVIEWS SYNC ====================
     
     async def sync_reviews(self) -> Dict[str, int]:
-        """Sinhronizacija otzyvov."""
-        logger.info("Starting reviews sync...")
+        """Fallback without Reviews subscription: sync seller rating metrics."""
+        logger.info("Starting reviews fallback sync via seller rating...")
         sync_log = await self._create_sync_log("reviews")
-        
-        records_processed = 0
-        
+
         try:
-            async for reviews in self.client.get_all_reviews():
-                for review_data in reviews:
-                    review_dict = {
-                        "review_id": review_data.get("id"),
-                        "sku": review_data.get("sku"),
-                        "offer_id": review_data.get("offer_id"),
-                        "rating": review_data.get("rating"),
-                        "text": review_data.get("text"),
-                        "status": review_data.get("status"),
-                        "is_buyer": review_data.get("is_buyer", False),
-                        "published_at": self._parse_datetime(review_data.get("published_at")),
-                        "created_at": self._parse_datetime(review_data.get("created_at")),
-                        "helpful_count": review_data.get("helpful_count", 0),
-                        "unhelpful_count": review_data.get("unhelpful_count", 0),
-                        "raw_data": review_data,
-                        "last_synced_at": datetime.now()
-                    }
-                    
-                    async with db_manager.session() as session:
-                        stmt = pg_insert(Review).values(**review_dict)
-                        stmt = stmt.on_conflict_do_update(
-                            index_elements=["review_id"],
-                            set_={k: v for k, v in review_dict.items() if k != "review_id"}
+            rating_summary = await self.client.get_rating_summary()
+            now = datetime.now()
+            rating_row = {
+                "date": now.date(),
+                "overall_rating": self._parse_decimal(rating_summary.get("rating")),
+                "position_in_category": rating_summary.get("position_in_category"),
+                "price_quality_rating": self._parse_decimal(rating_summary.get("price_quality_rating")),
+                "delivery_rating": self._parse_decimal(rating_summary.get("delivery_rating")),
+                "service_rating": self._parse_decimal(rating_summary.get("service_rating")),
+                "cancellation_rate": self._parse_decimal(rating_summary.get("cancellation_rate")),
+                "late_shipment_rate": self._parse_decimal(rating_summary.get("late_shipment_rate")),
+                "return_rate": self._parse_decimal(rating_summary.get("return_rate")),
+                "raw_data": rating_summary,
+                "last_synced_at": now,
+            }
+            inserted_history = 0
+            async with db_manager.session() as session:
+                stmt = pg_insert(SellerRating).values(**rating_row)
+                stmt = stmt.on_conflict_do_update(
+                    index_elements=["date"],
+                    set_={k: v for k, v in rating_row.items() if k != "date"},
+                )
+                await session.execute(stmt)
+
+                try:
+                    history_payload = await self.client.get_rating_history(days=30)
+                    history_rows = history_payload.get("ratings", []) if isinstance(history_payload, dict) else []
+                    for row in history_rows:
+                        hist_date = self._parse_datetime(row.get("date"))
+                        if not hist_date:
+                            continue
+                        hist_data = {
+                            "date": hist_date.date(),
+                            "overall_rating": self._parse_decimal(row.get("rating")),
+                            "position_in_category": row.get("position_in_category"),
+                            "price_quality_rating": self._parse_decimal(row.get("price_quality_rating")),
+                            "delivery_rating": self._parse_decimal(row.get("delivery_rating")),
+                            "service_rating": self._parse_decimal(row.get("service_rating")),
+                            "cancellation_rate": self._parse_decimal(row.get("cancellation_rate")),
+                            "late_shipment_rate": self._parse_decimal(row.get("late_shipment_rate")),
+                            "return_rate": self._parse_decimal(row.get("return_rate")),
+                            "raw_data": row,
+                            "last_synced_at": now,
+                        }
+                        hist_stmt = pg_insert(SellerRatingHistory).values(**hist_data)
+                        hist_stmt = hist_stmt.on_conflict_do_update(
+                            index_elements=["date"],
+                            set_={k: v for k, v in hist_data.items() if k != "date"},
                         )
-                        await session.execute(stmt)
-                        records_processed += 1
-            
-            await self._snapshot_review_ratings()
+                        await session.execute(hist_stmt)
+                        inserted_history += 1
+                except Exception as history_exc:
+                    logger.warning("reviews fallback: rating history sync skipped: %s", history_exc)
 
-            await self._update_sync_log(sync_log, "success", records_processed)
-            logger.info(f"Reviews sync completed: {records_processed} processed")
-            return {"processed": records_processed}
-
+            await self._update_sync_log(
+                sync_log,
+                "success",
+                records_processed=1 + inserted_history,
+                error_message="reviews subscription disabled; used seller_rating fallback",
+            )
+            logger.info(
+                "Reviews fallback completed via seller rating: summary=1 history=%s",
+                inserted_history,
+            )
+            return {
+                "processed": 1 + inserted_history,
+                "summary_processed": 1,
+                "history_processed": inserted_history,
+                "mode": "seller_rating_fallback",
+            }
         except Exception as e:
             logger.error(f"Reviews sync failed: {e}")
             await self._update_sync_log(sync_log, "error", error_message=str(e))

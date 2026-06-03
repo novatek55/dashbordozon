@@ -82,21 +82,26 @@ async def get_advertising_summary(request: web.Request) -> web.Response:
         sku_identity_map = await load_sku_identity_map(conn, all_skus)
         sku_to_offer = {sku: v["offer_id"] for sku, v in sku_identity_map.items() if v.get("offer_id")}
         sku_to_name = {sku: v["product_name"] for sku, v in sku_identity_map.items() if v.get("product_name")}
+        ad_offer_ids_norm = sorted(
+            {
+                str(v).strip().lower()
+                for v in sku_to_offer.values()
+                if str(v).strip()
+            }
+        )
 
-        # 3. РћР±С‰РёРµ Р·Р°РєР°Р·С‹ РїРѕ СЌС‚РёРј SKU Р·Р° РїРµСЂРёРѕРґ
+        # 3. Общие заказы/выручка по SKU за период (тот же источник: Performance analytics_data)
         total_rows = await conn.fetch(
             """
             SELECT
-                foi.sku,
-                sum(coalesce(foi.quantity, 0))::int AS total_qty,
-                sum(coalesce(foi.price, 0) * coalesce(foi.quantity, 0))::float8 AS total_revenue
-            FROM fact_order_items foi
-            JOIN fact_orders fo ON fo.order_id = foi.order_id
-            WHERE foi.sku = any($1::bigint[])
-              AND (fo.created_at AT TIME ZONE 'UTC')::date >= $2
-              AND (fo.created_at AT TIME ZONE 'UTC')::date < $3
-              AND coalesce(foi.quantity, 0) > 0
-            GROUP BY foi.sku
+                ad.sku,
+                sum(coalesce((ad.metric_values ->> 'ordered_units')::numeric, ad.ordered_units, 0))::int AS total_qty,
+                sum(coalesce((ad.metric_values ->> 'revenue')::numeric, ad.revenue, 0))::float8 AS total_revenue
+            FROM analytics_data ad
+            WHERE ad.sku = any($1::bigint[])
+              AND ad.date::date >= $2::date
+              AND ad.date::date < $3::date
+            GROUP BY ad.sku
             """,
             all_skus,
             date_from,
@@ -112,6 +117,47 @@ async def get_advertising_summary(request: web.Request) -> web.Response:
             """,
         )
         cost_by_article = {r["article"]: float(r["unit_cost"]) for r in cost_rows if r["unit_cost"]}
+
+        # 5. Остатки по артикулам (как в отчёте «Остатки»): FBO total + FBS present
+        stock_total_by_offer: Dict[str, int] = {}
+        if ad_offer_ids_norm:
+            fbo_stock_rows = await conn.fetch(
+                """
+                SELECT
+                    lower(trim(offer_id)) AS offer_key,
+                    sum(
+                        coalesce(available_stock_count, 0) +
+                        coalesce(waiting_docs_stock_count, 0) +
+                        coalesce(requested_stock_count, 0) +
+                        coalesce(transit_stock_count, 0)
+                    )::bigint AS total_stock
+                FROM analytics_stocks
+                WHERE lower(trim(offer_id)) = any($1::text[])
+                GROUP BY lower(trim(offer_id))
+                """,
+                ad_offer_ids_norm,
+            )
+            fbs_stock_rows = await conn.fetch(
+                """
+                SELECT
+                    lower(trim(offer_id)) AS offer_key,
+                    sum(coalesce(present, 0))::bigint AS total_stock
+                FROM fbs_warehouse_stocks
+                WHERE lower(trim(offer_id)) = any($1::text[])
+                GROUP BY lower(trim(offer_id))
+                """,
+                ad_offer_ids_norm,
+            )
+            for r in fbo_stock_rows:
+                key = str(r["offer_key"] or "").strip().lower()
+                if not key:
+                    continue
+                stock_total_by_offer[key] = stock_total_by_offer.get(key, 0) + int(r["total_stock"] or 0)
+            for r in fbs_stock_rows:
+                key = str(r["offer_key"] or "").strip().lower()
+                if not key:
+                    continue
+                stock_total_by_offer[key] = stock_total_by_offer.get(key, 0) + int(r["total_stock"] or 0)
 
     # РђРіСЂРµРіР°С†РёСЏ РїРѕ offer_id
     offer_agg = defaultdict(lambda: {
@@ -162,6 +208,7 @@ async def get_advertising_summary(request: web.Request) -> web.Response:
         items.append({
             "offer_id": agg["offer_id"],
             "product_name": agg["product_name"],
+            "stock_total": int(stock_total_by_offer.get(oid_lower, 0)),
             "views": v,
             "clicks": c,
             "adds_to_cart": agg["adds_to_cart"],
@@ -174,9 +221,9 @@ async def get_advertising_summary(request: web.Request) -> web.Response:
             "ad_revenue_total": round(ar + ar_cpo, 2),
             "total_qty": tq,
             "total_revenue": round(tr_, 2),
-            "organic_qty": max(0, tq - ao),
-            "organic_revenue": round(max(0.0, tr_ - ar), 2),
-            "ad_share_pct": round((ao / tq * 100) if tq > 0 else 0.0, 1),
+            "organic_qty": max(0, tq - (ao + ao_cpo)),
+            "organic_revenue": round(max(0.0, tr_ - (ar + ar_cpo)), 2),
+            "ad_share_pct": round(((ao + ao_cpo) / tq * 100) if tq > 0 else 0.0, 1),
             "ctr": (kpis := _calc_ad_kpis(v, c, sp, ao, ar))["ctr"],
             "cpc": kpis["cpc"],
             "cpo": kpis["cpo"],
@@ -386,20 +433,18 @@ async def get_advertising_report(request: web.Request) -> web.Response:
             date_to_exclusive,
         )
 
-        # в”Ђв”Ђ 5. Total orders (all channels) for the article в”Ђв”Ђ
+        # в”Ђв”Ђ 5. Total orders/revenue (all channels) for the article, same source as Performance в”Ђв”Ђ
         total_orders_rows = await conn.fetch(
             """
             SELECT
-                (fo.created_at AT TIME ZONE 'UTC')::date AS day,
-                sum(coalesce(foi.quantity, 0))::int AS total_qty,
-                sum(coalesce(foi.price, 0) * coalesce(foi.quantity, 0))::float8 AS total_revenue
-            FROM fact_order_items foi
-            JOIN fact_orders fo ON fo.order_id = foi.order_id
-            WHERE foi.sku = any($1::bigint[])
-              AND (fo.created_at AT TIME ZONE 'UTC')::date >= $2
-              AND (fo.created_at AT TIME ZONE 'UTC')::date < $3
-              AND coalesce(foi.quantity, 0) > 0
-            GROUP BY (fo.created_at AT TIME ZONE 'UTC')::date
+                ad.date::date AS day,
+                sum(coalesce((ad.metric_values ->> 'ordered_units')::numeric, ad.ordered_units, 0))::int AS total_qty,
+                sum(coalesce((ad.metric_values ->> 'revenue')::numeric, ad.revenue, 0))::float8 AS total_revenue
+            FROM analytics_data ad
+            WHERE ad.sku = any($1::bigint[])
+              AND ad.date::date >= $2::date
+              AND ad.date::date < $3::date
+            GROUP BY ad.date::date
             ORDER BY day
             """,
             target_skus,
@@ -558,9 +603,11 @@ async def get_advertising_report(request: web.Request) -> web.Response:
 
     # Summary KPIs (raw data вЂ” economics calculated on frontend with accruals)
     t = totals
-    organic_qty = max(0, t["total_qty"] - t["ad_orders"])
-    organic_rev = max(0.0, t["total_revenue"] - t["ad_revenue"])
-    ad_share_pct = (t["ad_orders"] / t["total_qty"] * 100) if t["total_qty"] > 0 else 0.0
+    ad_orders_total = t["ad_orders"] + t["ad_orders_cpo"]
+    ad_revenue_total = t["ad_revenue"] + t["ad_revenue_cpo"]
+    organic_qty = max(0, t["total_qty"] - ad_orders_total)
+    organic_rev = max(0.0, t["total_revenue"] - ad_revenue_total)
+    ad_share_pct = (ad_orders_total / t["total_qty"] * 100) if t["total_qty"] > 0 else 0.0
     total_kpis = _calc_ad_kpis(t["views"], t["clicks"], t["spent"], t["ad_orders"], t["ad_revenue"])
     drr_total = (t["spent"] / t["total_revenue"] * 100) if t["total_revenue"] > 0 else 0.0
 
@@ -573,8 +620,8 @@ async def get_advertising_report(request: web.Request) -> web.Response:
         "ad_revenue": round(t["ad_revenue"], 2),
         "ad_orders_cpo": t["ad_orders_cpo"],
         "ad_revenue_cpo": round(t["ad_revenue_cpo"], 2),
-        "ad_orders_total": t["ad_orders"] + t["ad_orders_cpo"],
-        "ad_revenue_total": round(t["ad_revenue"] + t["ad_revenue_cpo"], 2),
+        "ad_orders_total": ad_orders_total,
+        "ad_revenue_total": round(ad_revenue_total, 2),
         "unit_cost": round(unit_cost, 2),
         "drr_ad": total_kpis["drr"],
         "total_qty": t["total_qty"],
@@ -974,5 +1021,192 @@ async def toggle_campaign(request: web.Request) -> web.Response:
             logger.warning("toggle_campaign: failed to update local state: %s", e)
 
     return web.json_response({"results": results, "new_state": new_state})
+
+
+async def disable_ad_for_sku(request: web.Request) -> web.Response:
+    """Отключить все активные рекламные кампании, где встречался SKU."""
+    from src.ozon_client import OzonClient
+
+    try:
+        body = await request.json()
+    except Exception:
+        return web.json_response({"error": "Invalid JSON body"}, status=400)
+
+    sku_raw = body.get("sku")
+    try:
+        sku = int(sku_raw)
+    except (TypeError, ValueError):
+        return web.json_response({"error": "sku must be integer"}, status=400)
+
+    pool: asyncpg.Pool = request.app["pool"]
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT DISTINCT c.campaign_id
+            FROM campaign_statistics cs
+            JOIN campaigns c ON c.id = cs.campaign_id
+            WHERE cs.sku = $1
+              AND coalesce(c.state, '') NOT IN (
+                'CAMPAIGN_STATE_STOPPED',
+                'CAMPAIGN_STATE_INACTIVE',
+                'CAMPAIGN_STATE_ARCHIVED',
+                'CAMPAIGN_STATE_FINISHED'
+              )
+            """,
+            sku,
+        )
+    campaign_ids = [int(r["campaign_id"]) for r in rows if r.get("campaign_id") is not None]
+    if not campaign_ids:
+        return web.json_response({"ok": True, "sku": sku, "campaign_ids": [], "results": []})
+
+    client_id, api_key = _get_ozon_credentials()
+    perf_id = (settings.ozon_performance_client_id or "").strip()
+    perf_secret = (settings.ozon_performance_client_secret or "").strip()
+    if not perf_id or not perf_secret:
+        return web.json_response(
+            {"error": "OZON_PERFORMANCE_CLIENT_ID/OZON_PERFORMANCE_CLIENT_SECRET not configured"},
+            status=500,
+        )
+
+    results: List[Dict[str, Any]] = []
+    try:
+        async with OzonClient(
+            client_id or "",
+            api_key or "",
+            performance_client_id=perf_id,
+            performance_client_secret=perf_secret,
+        ) as client:
+            for cid in campaign_ids:
+                try:
+                    resp = await client.deactivate_campaign(cid)
+                    results.append({"campaign_id": cid, "ok": True, "response": resp})
+                except Exception as e:
+                    logger.error("disable_ad_for_sku failed for campaign %s: %s", cid, e)
+                    results.append({"campaign_id": cid, "ok": False, "error": str(e)})
+    except Exception as e:
+        logger.error("disable_ad_for_sku client init failed: %s", e)
+        return web.json_response({"error": f"Ozon client error: {e}"}, status=500)
+
+    successful = [r["campaign_id"] for r in results if r.get("ok")]
+    if successful:
+        try:
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    UPDATE campaigns
+                       SET state = 'CAMPAIGN_STATE_STOPPED', last_synced_at = now()
+                     WHERE campaign_id = any($1::bigint[])
+                    """,
+                    successful,
+                )
+        except Exception as e:
+            logger.warning("disable_ad_for_sku: local campaigns state update failed: %s", e)
+
+    return web.json_response({"ok": True, "sku": sku, "campaign_ids": campaign_ids, "results": results})
+
+
+async def remove_sku_from_all_promos(request: web.Request) -> web.Response:
+    """Убрать товар (SKU) из всех акций, где он участвует."""
+    from src.ozon_client import OzonClient
+
+    try:
+        body = await request.json()
+    except Exception:
+        return web.json_response({"error": "Invalid JSON body"}, status=400)
+
+    sku_raw = body.get("sku")
+    try:
+        sku = int(sku_raw)
+    except (TypeError, ValueError):
+        return web.json_response({"error": "sku must be integer"}, status=400)
+
+    pool: asyncpg.Pool = request.app["pool"]
+    async with pool.acquire() as conn:
+        product_rows = await conn.fetch(
+            """
+            SELECT DISTINCT ozon_product_id::bigint AS product_id
+            FROM report_products_items
+            WHERE ozon_product_id IS NOT NULL
+              AND (fbo_sku_id = $1 OR fbs_sku_id = $1)
+            """,
+            sku,
+        )
+        product_ids = [int(r["product_id"]) for r in product_rows if r.get("product_id") is not None]
+        if not product_ids:
+            return web.json_response({"ok": True, "sku": sku, "product_ids": [], "actions": []})
+
+        promo_rows = await conn.fetch(
+            """
+            SELECT action_id::bigint AS action_id, sku::bigint AS product_id
+            FROM promo_products
+            WHERE is_participating = TRUE
+              AND sku = any($1::bigint[])
+            """,
+            product_ids,
+        )
+
+    by_action: Dict[int, List[int]] = defaultdict(list)
+    for row in promo_rows:
+        aid = int(row["action_id"])
+        pid = int(row["product_id"])
+        if pid not in by_action[aid]:
+            by_action[aid].append(pid)
+
+    if not by_action:
+        return web.json_response({"ok": True, "sku": sku, "product_ids": product_ids, "actions": []})
+
+    client_id, api_key = _get_ozon_credentials()
+    if not client_id or not api_key:
+        return web.json_response({"error": "OZON_CLIENT_ID/OZON_API_KEY not configured"}, status=500)
+
+    action_results: List[Dict[str, Any]] = []
+    try:
+        async with OzonClient(client_id, api_key) as client:
+            for action_id, pids in by_action.items():
+                try:
+                    resp = await client.deactivate_action_products(action_id=action_id, product_ids=pids)
+                    action_results.append({
+                        "action_id": action_id,
+                        "product_ids": pids,
+                        "ok": True,
+                        "response": resp,
+                    })
+                except Exception as e:
+                    logger.error("remove_sku_from_all_promos failed for action %s: %s", action_id, e)
+                    action_results.append({
+                        "action_id": action_id,
+                        "product_ids": pids,
+                        "ok": False,
+                        "error": str(e),
+                    })
+    except Exception as e:
+        logger.error("remove_sku_from_all_promos client init failed: %s", e)
+        return web.json_response({"error": f"Ozon client error: {e}"}, status=500)
+
+    successful_records = [
+        (entry["action_id"], pid)
+        for entry in action_results
+        if entry.get("ok")
+        for pid in entry.get("product_ids", [])
+    ]
+    if successful_records:
+        try:
+            async with pool.acquire() as conn:
+                for action_id, pid in successful_records:
+                    await conn.execute(
+                        """INSERT INTO promo_product_events (action_id, sku, event_type, source)
+                           VALUES ($1, $2, 'REMOVED', 'manual-rnp')""",
+                        int(action_id),
+                        int(pid),
+                    )
+        except Exception as e:
+            logger.warning("remove_sku_from_all_promos: failed to insert promo_product_events: %s", e)
+
+    return web.json_response({
+        "ok": True,
+        "sku": sku,
+        "product_ids": product_ids,
+        "actions": action_results,
+    })
 
 

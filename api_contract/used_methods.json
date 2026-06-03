@@ -1,0 +1,269 @@
+{
+  "count": 66,
+  "methods": [
+    {
+      "method": "GET",
+      "path": "/api/client/campaign"
+    },
+    {
+      "method": "POST",
+      "path": "/api/client/statistic/orders/generate/json"
+    },
+    {
+      "method": "POST",
+      "path": "/api/client/statistics/json"
+    },
+    {
+      "method": "POST",
+      "path": "/api/client/token"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/actions"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/candidates"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/products"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/products/activate"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/products/deactivate"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/average-delivery-time"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/average-delivery-time/details"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/average-delivery-time/summary"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/data"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/manage/stocks"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/product-queries"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/product-queries/details"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/stocks"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/turnover/stocks"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/history"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/updates"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/cluster/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/delivery-method/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/balance"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/cash-flow-statement/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/compensation"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/decompensation"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/document-b2b-sales"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/mutual-settlement"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/product/info/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/product/info/warehouse/stocks"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/answer/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/count"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/info"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/top_sku"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/rating/history"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/rating/summary"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/info"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/postings/create"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/products/create"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/warehouse/stock"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/returns/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/comment/create"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/comment/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/count"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/info"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/warehouse/fbo/seller/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/finance/realization"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/posting/fbo/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/product/info"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/product/info/stocks-by-warehouse/fbs"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/report/returns/create"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/returns/rfbs/get"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/returns/rfbs/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/finance/transaction/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/finance/transaction/totals"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/posting/fbs/get"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/posting/fbs/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/product/info/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v3/product/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v4/product/info/attributes"
+    },
+    {
+      "method": "POST",
+      "path": "/v4/product/info/prices"
+    },
+    {
+      "method": "POST",
+      "path": "/v4/product/info/stocks"
+    }
+  ]
+}

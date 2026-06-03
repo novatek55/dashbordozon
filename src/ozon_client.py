@@ -1,6 +1,7 @@
 """Klijent dlja raboty s Ozon API."""
 import aiohttp
 import asyncio
+import socket
 from typing import Optional, Dict, Any, List, AsyncGenerator
 from datetime import datetime, timedelta, timezone
 import logging
@@ -46,7 +47,12 @@ class OzonClient:
         api_key: str,
         performance_client_id: Optional[str] = None,
         performance_client_secret: Optional[str] = None,
-        max_concurrent_requests: int = 5
+        max_concurrent_requests: int = 5,
+        http_timeout_total: int = 180,
+        http_timeout_connect: int = 30,
+        http_timeout_sock_read: int = 120,
+        trust_env_proxy: bool = True,
+        force_ipv4: bool = False,
     ):
         self.client_id = client_id
         self.api_key = api_key
@@ -56,6 +62,11 @@ class OzonClient:
         self.session: Optional[aiohttp.ClientSession] = None
         self.performance_token: Optional[str] = None
         self.performance_token_expires: Optional[datetime] = None
+        self.http_timeout_total = http_timeout_total
+        self.http_timeout_connect = http_timeout_connect
+        self.http_timeout_sock_read = http_timeout_sock_read
+        self.trust_env_proxy = trust_env_proxy
+        self.force_ipv4 = force_ipv4
         
         # Semafhor dlja ogranichenija parallel'nyh zaprosov
         self.semaphore = asyncio.Semaphore(max_concurrent_requests)
@@ -74,6 +85,10 @@ class OzonClient:
         self._analytics_data_lock = asyncio.Lock()
         self._last_analytics_data_request_ts: float = 0.0
         self._analytics_data_min_interval_seconds: float = 6.0
+        # Global seller-api pacing to stay below strict per-client limits (2 RPS observed).
+        self._seller_api_lock = asyncio.Lock()
+        self._last_seller_api_request_ts: float = 0.0
+        self._seller_api_min_interval_seconds: float = 0.6
         
         # Zagolovki dlja Seller API
         self.headers = {
@@ -91,8 +106,22 @@ class OzonClient:
     
     async def initialize(self):
         """Inicializacija sessii."""
-        timeout = aiohttp.ClientTimeout(total=60, connect=10)
-        self.session = aiohttp.ClientSession(timeout=timeout)
+        timeout = aiohttp.ClientTimeout(
+            total=self.http_timeout_total,
+            connect=self.http_timeout_connect,
+            sock_connect=self.http_timeout_connect,
+            sock_read=self.http_timeout_sock_read,
+        )
+        connector = aiohttp.TCPConnector(
+            ttl_dns_cache=300,
+            family=socket.AF_INET if self.force_ipv4 else socket.AF_UNSPEC,
+            enable_cleanup_closed=True,
+        )
+        self.session = aiohttp.ClientSession(
+            timeout=timeout,
+            connector=connector,
+            trust_env=self.trust_env_proxy,
+        )
         
         # Poluchaem token dlja Performance API esli est' credentials
         if self.performance_client_id and self.performance_client_secret:
@@ -173,6 +202,14 @@ class OzonClient:
             else:
                 url = f"{self.BASE_URL}{endpoint}"
                 headers = self.headers
+                async with self._seller_api_lock:
+                    loop = asyncio.get_running_loop()
+                    wait_seconds = self._seller_api_min_interval_seconds - (
+                        loop.time() - self._last_seller_api_request_ts
+                    )
+                    if wait_seconds > 0:
+                        await asyncio.sleep(wait_seconds)
+                    self._last_seller_api_request_ts = loop.time()
                 return await self._perform_http_request(method, url, headers, data, endpoint)
 
     async def _perform_http_request(
@@ -206,7 +243,19 @@ class OzonClient:
                     message = response.reason or "HTTP error"
                     if response_text.strip():
                         message = f"{message}. Response: {response_text[:1000]}"
-                    logger.error(f"HTTP Error {response.status} for {endpoint}: {message}")
+                    lowered = response_text.lower()
+                    is_expected_no_data = (
+                        response.status in {400, 404}
+                        and (
+                            "there is no data for the specified period" in lowered
+                            or "report was not found" in lowered
+                            or "decompensation document not found" in lowered
+                        )
+                    )
+                    if is_expected_no_data:
+                        logger.warning(f"HTTP {response.status} for {endpoint}: {message}")
+                    else:
+                        logger.error(f"HTTP Error {response.status} for {endpoint}: {message}")
                     raise OzonAPIError(
                         f"HTTP Error {response.status}: {message}",
                         status_code=response.status,
@@ -624,14 +673,14 @@ class OzonClient:
         return await self._make_request("POST", "/v2/finance/realization", data)
 
     async def get_analytics_average_delivery_time(self, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Poluchenie analitiki srednego vremeni dostavki."""
+        """DEPRECATED: /v1/analytics/average-delivery-time is obsolete for many accounts."""
         return await self._make_request("POST", "/v1/analytics/average-delivery-time", payload or {})
 
     async def get_analytics_average_delivery_time_details(
         self,
         payload: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Poluchenie detalizacii po srednemu vremeni dostavki."""
+        """DEPRECATED: /v1/analytics/average-delivery-time/details may be obsolete for account."""
         return await self._make_request(
             "POST",
             "/v1/analytics/average-delivery-time/details",
@@ -642,7 +691,7 @@ class OzonClient:
         self,
         payload: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Poluchenie svodki po srednemu vremeni dostavki."""
+        """DEPRECATED: /v1/analytics/average-delivery-time/summary may be obsolete for account."""
         return await self._make_request(
             "POST",
             "/v1/analytics/average-delivery-time/summary",
@@ -892,28 +941,53 @@ class OzonClient:
         date_to: datetime,
         metrics: List[str],
         dimension: List[str],
-        filters: Optional[Dict] = None,
+        filters: Optional[Any] = None,
         limit: int = 1000,
         offset: int = 0
     ) -> Dict[str, Any]:
         """Poluchenie dannyh analitiki."""
+        safe_limit = max(1, min(int(limit), 1000))
+        safe_offset = max(0, int(offset))
         data = {
             "date_from": date_from.strftime("%Y-%m-%d"),
             "date_to": date_to.strftime("%Y-%m-%d"),
             "metrics": metrics,
             "dimension": dimension,
-            "limit": limit,
-            "offset": offset
+            "limit": safe_limit,
+            "offset": safe_offset
         }
-        
+
         if filters:
-            data["filters"] = filters
+            # API expects array of objects; keep backward compatibility for dict input.
+            if isinstance(filters, dict):
+                data["filters"] = [filters]
+            elif isinstance(filters, list):
+                data["filters"] = filters
         
         return await self._make_request("POST", "/v1/analytics/data", data)
     
     async def get_stock_on_warehouses(self, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Poluchenie ostatkov na skladah."""
-        return await self._make_request("POST", "/v2/analytics/stock_on_warehouses", payload or {})
+        """Deprecated wrapper: migrate calls to /v1/analytics/stocks."""
+        data = payload or {}
+        skus = data.get("skus")
+        if isinstance(skus, list) and skus:
+            sku_values: List[int] = []
+            for s in skus:
+                try:
+                    sku_values.append(int(s))
+                except Exception:
+                    continue
+            if not sku_values:
+                raise OzonAPIError(
+                    "Deprecated /v2/analytics/stock_on_warehouses call: no valid SKUs. "
+                    "Use get_analytics_stocks(skus=[...]) with 1..100 SKU."
+                )
+            return await self.get_analytics_stocks(sku_values[:100])
+
+        raise OzonAPIError(
+            "Deprecated /v2/analytics/stock_on_warehouses: endpoint is being disabled by Ozon. "
+            "Use /v1/analytics/stocks via get_analytics_stocks(skus=[...]) instead."
+        )
     
     async def get_analytics_turnover(
         self,
@@ -1534,8 +1608,12 @@ class OzonClient:
         group_by: str = "DATE"
     ) -> str:
         """Zapros otcheta po kampanii. Vozvrashhaet UUID otcheta."""
+        from_ts = date_from.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        to_ts = date_to.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         data = {
             "campaigns": [str(cid) for cid in campaign_ids],
+            "from": from_ts,
+            "to": to_ts,
             "dateFrom": date_from.strftime("%Y-%m-%d"),
             "dateTo": date_to.strftime("%Y-%m-%d"),
             "groupBy": group_by
@@ -1563,6 +1641,40 @@ class OzonClient:
             "GET",
             f"/api/client/statistics/report?UUID={uuid}",
             use_performance=True
+        )
+
+    async def request_cpo_orders_report_json(
+        self,
+        date_from: datetime,
+        date_to: datetime,
+    ) -> str:
+        """Запрос JSON-отчёта по заказам CPO (Оплата за заказ). Возвращает UUID."""
+        data = {
+            "from": date_from.strftime("%Y-%m-%d"),
+            "to": date_to.strftime("%Y-%m-%d"),
+        }
+        result = await self._make_request(
+            "POST",
+            "/api/client/statistic/orders/generate/json",
+            data,
+            use_performance=True,
+        )
+        return str(result.get("UUID") or result.get("uuid") or "").strip()
+
+    async def get_cpo_orders_report_status(self, uuid: str) -> Dict[str, Any]:
+        """Статус JSON-отчёта CPO-заказов."""
+        return await self._make_request(
+            "GET",
+            f"/api/client/statistic/orders/{uuid}",
+            use_performance=True,
+        )
+
+    async def download_cpo_orders_report_json(self, uuid: str) -> Any:
+        """Скачивание готового JSON-отчёта CPO-заказов по UUID."""
+        return await self._make_request(
+            "GET",
+            f"/api/client/statistic/orders/report?UUID={uuid}",
+            use_performance=True,
         )
 
     async def download_report(self, uuid: str) -> bytes:

@@ -1,0 +1,4555 @@
+{
+  "swagger_file": "swagger.json",
+  "info": {
+    "title": "Документация Ozon Seller API",
+    "version": 2.1,
+    "x-logo": {
+      "url": "https://cdn2.ozone.ru/s3/redoc/ozon-seller-logo.svg",
+      "backgroundColor": null,
+      "altText": "Ozon logo"
+    },
+    "description": "По вопросам работы с Seller API обращайтесь в поддержку через личный кабинет.\n\n> [Инструкции по работе с маркетплейсом](https://seller-edu.ozon.ru)\n\n> [Информационная платформа и сообщество разработчиков Ozon for dev](https://dev.ozon.ru/)\n"
+  },
+  "openapi": "3.0.0",
+  "used_methods_total": 66,
+  "matched": 52,
+  "missing": 14,
+  "methods": [
+    {
+      "method": "GET",
+      "path": "/v1/actions",
+      "operationId": "Promos",
+      "summary": "Список акций",
+      "description": "Метод для получения списка акций Ozon, в которых можно участвовать.\n\n[Подробнее об акциях Ozon](https://seller-edu.ozon.ru/ceny-i-akcii/akcii-skidki-i-kupony/promo)\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Список акций",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/seller_apiGetSellerActionsV1Response"
+              },
+              "example": {
+                "result": [
+                  {
+                    "id": 71342,
+                    "title": "test voucher #2",
+                    "date_start": "2021-11-22T09:46:38Z",
+                    "date_end": "2021-11-30T20:59:59Z",
+                    "auto_add_dates": [
+                      "2025-12-30T20:59:59Z"
+                    ],
+                    "potential_products_count": 0,
+                    "is_participating": true,
+                    "participating_products_count": 5,
+                    "description": "",
+                    "action_type": "DISCOUNT",
+                    "banned_products_count": 0,
+                    "with_targeting": false,
+                    "discount_type": "UNKNOWN",
+                    "discount_value": 0,
+                    "order_amount": 0,
+                    "freeze_date": "",
+                    "is_voucher_action": true
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Promos"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/candidates",
+      "operationId": "PromosCandidates",
+      "summary": "Список доступных для акции товаров",
+      "description": "Метод для получения списка товаров, которые могут участвовать в акции, по её идентификатору.\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Список товаров",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/seller_apiGetSellerProductV1Response"
+              },
+              "example": {
+                "result": {
+                  "products": [
+                    {
+                      "id": 226,
+                      "price": 250,
+                      "action_price": 10,
+                      "alert_max_action_price_failed": true,
+                      "alert_max_action_price": 31,
+                      "max_action_price": 175,
+                      "add_mode": "NOT_SET",
+                      "stock": 2,
+                      "min_stock": 1,
+                      "current_boost": 3,
+                      "price_min_elastic": 150,
+                      "price_max_elastic": 300,
+                      "min_boost": 12,
+                      "max_boost": 15
+                    }
+                  ],
+                  "total": 2,
+                  "last_id": "bnVсbA=="
+                }
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Promos"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/products",
+      "operationId": "PromosProducts",
+      "summary": "Список участвующих в акции товаров",
+      "description": "Метод для получения списка товаров, участвующих в акции, по её идентификатору.\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Список товаров",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/seller_apiGetSellerProductV1Response"
+              },
+              "example": {
+                "result": {
+                  "products": [
+                    {
+                      "id": 28745,
+                      "price": 99,
+                      "action_price": 50,
+                      "alert_max_action_price_failed": true,
+                      "alert_max_action_price": 31,
+                      "max_action_price": 32,
+                      "add_mode": "MANUAL",
+                      "stock": 20,
+                      "min_stock": 3,
+                      "current_boost": 1,
+                      "price_min_elastic": 2,
+                      "price_max_elastic": 5,
+                      "min_boost": 10,
+                      "max_boost": 15
+                    }
+                  ],
+                  "total": 263,
+                  "last_id": "bnVсbA=="
+                }
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Promos"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/products/activate",
+      "operationId": "PromosProductsActivate",
+      "summary": "Добавить товар в акцию",
+      "description": "Метод для добавления товаров в доступную акцию.",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Товар добавлен в акцию",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/seller_apiProductV1Response"
+              },
+              "example": {
+                "result": {
+                  "product_ids": [
+                    1389
+                  ],
+                  "rejected": []
+                }
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Promos"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/products/deactivate",
+      "operationId": "PromosProductsDeactivate",
+      "summary": "Удалить товары из акции",
+      "description": "Метод для удаления товаров из акции.",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Товары удалены из акции",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/seller_apiProductV1ResponseDeactivate"
+              },
+              "example": {
+                "result": {
+                  "product_ids": [
+                    14975
+                  ],
+                  "rejected": []
+                }
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Promos"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/data",
+      "operationId": "AnalyticsAPI_AnalyticsGetData",
+      "summary": "Данные аналитики",
+      "description": "Уĸажите период и метриĸи, ĸоторые нужно посчитать. В ответе будет аналитиĸа, сгруппированная по параметру `dimensions`.\n\nДля продавцов без подписки [Premium Plus](https://seller-edu.ozon.ru/seller-rating/about-rating/subscription-premium-plus):\n- доступны данные за последние 3 месяца,\n- есть ограничения по способам группировки данных и метрикам.\n\nДля продавцов с подпиской [Premium Plus](https://seller-edu.ozon.ru/seller-rating/about-rating/subscription-premium-plus) или [Premium Pro](https://seller-edu.ozon.ru/seller-rating/about-rating/podpiska-premium-pro) ограничений нет.\n\nМетод можно использовать не больше 1 раза в минуту.\nСоответствует разделу **Аналитика → Графики** в личном кабинете.\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Данные аналитики",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/analyticsAnalyticsGetDataResponse"
+              },
+              "example": {
+                "result": {
+                  "data": [],
+                  "totals": [
+                    0
+                  ]
+                },
+                "timestamp": "2021-11-25 15:19:21"
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Premium"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/manage/stocks",
+      "operationId": "AnalyticsAPI_ManageStocks",
+      "summary": "Управление остатками",
+      "description": "\n<aside class=\"warning\">\n22 января 2026 года метод будет отключён. Переключитесь на <a href=\"#operation/AnalyticsAPI_AnalyticsStocks\">/v1/analytics/stocks</a>.\n</aside>\n\nИспользуйте метод, чтобы узнать, сколько товаров осталось на складах FBO.\n\nВы можете оставить обратную связь по этому методу в комментариях к [обсуждению](https://dev.ozon.ru/community/1106-Razdel-upravleniia-ostatkami-analytics-manage-stocks)\nв сообществе разработчиков Ozon for dev.\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Информация об остатках",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1AnalyticsManageStocksResponse"
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "BetaMethod"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/product-queries",
+      "operationId": "AnalyticsAPI_AnalyticsProductQueries",
+      "summary": "Получить информацию о запросах моих товаров",
+      "description": "Используйте метод, чтобы получить данные о запросах ваших товаров. Полная аналитика доступна с подпиской [Premium](https://seller-edu.ozon.ru/seller-rating/about-rating/premium-program), [Premium Plus](https://seller-edu.ozon.ru/seller-rating/about-rating/subscription-premium-plus) или [Premium Pro](https://seller-edu.ozon.ru/seller-rating/about-rating/podpiska-premium-pro). Без подписки вы можете посмотреть часть показателей. Метод аналогичен вкладке **Товары в поиске → Запросы моего товара** в личном кабинете.\n\nАналитику по запросам можно проверить за определённые даты. Для этого укажите интервал в полях `date_from` и `date_to`. Данные за последний месяц доступны в любом интервале, кроме текущей даты — расчёт происходит в течение 1–2 дней. Аналитика за даты раньше месяца назад доступна только с подпиской [Premium](https://seller-edu.ozon.ru/seller-rating/about-rating/premium-program), [Premium Plus](https://seller-edu.ozon.ru/seller-rating/about-rating/subscription-premium-plus) или [Premium Pro](https://seller-edu.ozon.ru/seller-rating/about-rating/podpiska-premium-pro) и только по неделям — в запросе укажите параметр `date_from`.\n\n[Подробнее о работе с запросами товара в Базе знаний продавца](https://seller-edu.ozon.ru/analytics-and-metrics/graphs/analitika-po-zaprosu)\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Информация о запросах моих товаров",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1AnalyticsProductQueriesResponse"
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Premium"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/product-queries/details",
+      "operationId": "AnalyticsAPI_AnalyticsProductQueriesDetails",
+      "summary": "Получить детализацию запросов по товару",
+      "description": "Используйте метод, чтобы получить данные по запросам на конкретный товар. Полная аналитика доступна с подпиской [Premium](https://seller-edu.ozon.ru/seller-rating/about-rating/premium-program), [Premium Plus](https://seller-edu.ozon.ru/seller-rating/about-rating/subscription-premium-plus) или [Premium Pro](https://seller-edu.ozon.ru/seller-rating/about-rating/podpiska-premium-pro). Без подписки вы можете посмотреть часть показателей. Метод аналогичен просмотру данных по товару на вкладке **Товары в поиске → Запросы моего товара** в личном кабинете.\n\nАналитику по запросам можно проверить за определённые даты. Для этого укажите интервал в полях `date_from` и `date_to`. Данные за последний месяц доступны в любом интервале, кроме текущей даты — расчёт происходит в течение 1–2 дней. Аналитика за даты раньше месяца назад доступна только с подпиской [Premium](https://seller-edu.ozon.ru/seller-rating/about-rating/premium-program), [Premium Plus](https://seller-edu.ozon.ru/seller-rating/about-rating/subscription-premium-plus) или [Premium Pro](https://seller-edu.ozon.ru/seller-rating/about-rating/podpiska-premium-pro) и только по неделям — в запросе укажите параметр `date_from`.\n\n[Подробнее о работе с запросами товара в Базе знаний продавца](https://seller-edu.ozon.ru/analytics-and-metrics/graphs/analitika-po-zaprosu)\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Информация о запросах по конкретному товару",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1AnalyticsProductQueriesDetailsResponse"
+              }
+            }
+          }
+        },
+        "400": {
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../components/schemas/rpcStatus.yaml"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ответ не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../components/schemas/rpcStatus.yaml"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../components/schemas/rpcStatus.yaml"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../components/schemas/rpcStatus.yaml"
+                }
+              }
+            }
+          },
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Premium"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/stocks",
+      "operationId": "AnalyticsAPI_AnalyticsStocks",
+      "summary": "Получить аналитику по остаткам",
+      "description": "Используйте метод, чтобы получить аналитику по остаткам товаров на складах. Метод соответствует разделу [**FBO → Управление остатками**](https://seller.ozon.ru/app/fbo-stocks/stocks-management/) в личном кабинете. Аналитика обновляется два раза в день: примерно в 07:00 и 16:00 по UTC.\n\nВ запросе используйте только одно из полей: `cluster_ids` или `macrolocal_cluster_ids`, иначе вернётся ошибка.\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Аналитика по остаткам на складах",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1AnalyticsStocksResponse"
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "AnalyticsAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/turnover/stocks",
+      "operationId": "AnalyticsAPI_StocksTurnover",
+      "summary": "Оборачиваемость товара",
+      "description": "Используйте метод, чтобы узнать оборачиваемость товара и количество дней, на которое хватит текущего остатка. \nМетод соответствует разделу [**FBO -> Управление остатками**](https://seller.ozon.ru/app/supply/stocks-management) в личном кабинете.\nВы можете делать не больше 1 запроса в минуту по одному кабинету `Client-Id`.\n    \nЕсли вы запрашиваете список товаров по `sku`, параметры `limit` и `offset` необязательны.\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Информация об оборачиваемости",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1AnalyticsTurnoverStocksResponse"
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "AnalyticsAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/cluster/list",
+      "operationId": "SupplyDraftAPI_DraftClusterList",
+      "summary": "Информация о кластерах и их складах",
+      "description": "",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Информация о кластерах",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1DraftClusterListResponse"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "FboSupplyRequest"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/delivery-method/list",
+      "operationId": "WarehouseAPI_DeliveryMethodList",
+      "summary": "Список методов доставки склада",
+      "description": "<aside class=\"warning\">\n  Метод устаревает и будет отключён 7 апреля 2026 года. Переключитесь на <a href=\"#operation/WarehouseAPI_DeliveryMethodListV2\">/v2/delivery-method/list</a>.\n</aside>\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Список методов склада",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/warehouseDeliveryMethodListResponse"
+              },
+              "example": {
+                "result": [
+                  {
+                    "id": 15588127982000,
+                    "company_id": 1,
+                    "name": "Ozon Логистика курьеру, Есипово",
+                    "status": "ACTIVE",
+                    "cutoff": "13:00",
+                    "provider_id": 24,
+                    "template_id": 0,
+                    "warehouse_id": 15588127982000,
+                    "created_at": "2019-04-04T15:22:31.048202Z",
+                    "updated_at": "2021-08-15T10:21:44.854209Z",
+                    "sla_cut_in": 1440
+                  }
+                ],
+                "has_next": false
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "WarehouseAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/balance",
+      "operationId": "GetFinanceBalanceV1",
+      "summary": "Получить отчёт о балансе",
+      "description": "Соответствует разделу **Финансы → Баланс** в личном кабинете.\n\nВы можете оставить обратную связь по этому методу в комментариях к [обсуждению](https://dev.ozon.ru/community/1732-Novyi-metod-polucheniia-dannykh-po-balansu/) в сообществе разработчиков Ozon for dev.\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Отчёт о балансе",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1GetFinanceBalanceV1Response"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "BetaMethod"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/cash-flow-statement/list",
+      "operationId": "FinanceAPI_FinanceCashFlowStatementList",
+      "summary": "Финансовый отчёт",
+      "description": "Метод для получения финансового отчёта за периоды с 01 по 15 и с 16 по 31. \nЗапросить отчёт за отдельные дни не получится. \nСоответствует разделу **Финансы → Баланс → Доходы и расходы** в личном кабинете.\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Финансовый отчёт",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v3FinanceCashFlowStatementListResponse"
+              },
+              "example": {
+                "result": {
+                  "cash_flows": [
+                    {
+                      "commission_amount": 1437,
+                      "currency_code": "string",
+                      "item_delivery_and_return_amount": 1991,
+                      "orders_amount": 1000,
+                      "period": {
+                        "begin": "2023-04-03T09:12:10.239Z",
+                        "end": "2023-04-03T09:12:10.239Z",
+                        "id": 11567022278500
+                      },
+                      "returns_amount": -3000,
+                      "services_amount": 8471.28
+                    }
+                  ],
+                  "details": {
+                    "period": {
+                      "begin": "2023-04-03T09:12:10.239Z",
+                      "end": "2023-04-03T09:12:10.239Z",
+                      "id": 11567022278500
+                    },
+                    "payments": [
+                      {
+                        "payment": 0,
+                        "currency_code": "string"
+                      }
+                    ],
+                    "begin_balance_amount": 0,
+                    "delivery": {
+                      "total": 0,
+                      "amount": 0,
+                      "delivery_services": {
+                        "total": 0,
+                        "items": [
+                          {
+                            "name": "string",
+                            "price": 0
+                          }
+                        ]
+                      }
+                    },
+                    "return": {
+                      "total": 0,
+                      "amount": 0,
+                      "return_services": {
+                        "total": 0,
+                        "items": [
+                          {
+                            "name": "string",
+                            "price": 0
+                          }
+                        ]
+                      }
+                    },
+                    "loan": 0,
+                    "invoice_transfer": 0,
+                    "rfbs": {
+                      "total": 0,
+                      "transfer_delivery": 0,
+                      "transfer_delivery_return": 0,
+                      "compensation_delivery_return": 0,
+                      "partial_compensation": 0,
+                      "partial_compensation_return": 0
+                    },
+                    "services": {
+                      "total": 0,
+                      "items": [
+                        {
+                          "name": "string",
+                          "price": 0
+                        }
+                      ]
+                    },
+                    "others": {
+                      "total": 0,
+                      "items": [
+                        {
+                          "name": "string",
+                          "price": 0
+                        }
+                      ]
+                    },
+                    "end_balance_amount": 0
+                  }
+                },
+                "page_count": 15
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReportAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/compensation",
+      "operationId": "ReportAPI_GetCompensationReport",
+      "summary": "Отчёт о компенсациях",
+      "description": "Метод для получения отчёта о компенсациях. Соответствует отчёту из раздела **Финансы → Документы → Компенсации и прочие начисления** в личном кабинете.\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Отчёт о компенсациях",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportResponse"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "FinanceAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/decompensation",
+      "operationId": "ReportAPI_GetDecompensationReport",
+      "summary": "Отчёт о декомпенсациях",
+      "description": "Метод для получения отчёта о декомпенсациях. Соответствует отчёту из раздела **Финансы → Документы → Компенсации и прочие начисления** в личном кабинете.\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Отчёт о декомпенсациях",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportResponse"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "FinanceAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/document-b2b-sales",
+      "operationId": "ReportAPI_CreateDocumentB2BSalesReport",
+      "summary": "Реестр продаж юридическим лицам",
+      "description": "Используйте метод, чтобы получить отчёт по продажам юридическим лицам. Соответствует разделу **Финансы → Документы → Реестр продаж юр. лицам** в личном кабинете.",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Результат запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/commonCreateReportResponse"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "FinanceAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/finance/mutual-settlement",
+      "operationId": "ReportAPI_CreateMutualSettlementReport",
+      "summary": "Отчёт о взаиморасчётах",
+      "description": "Используйте метод, чтобы получить отчёт о взаиморасчетах. Соответствует разделу **Финансы → Документы → Аналитические отчеты → Отчет о взаиморасчетах** в личном кабинете.",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Результат запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/commonCreateReportResponse"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "FinanceAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/product/info/warehouse/stocks",
+      "operationId": "ProductInfoWarehouseStocks",
+      "summary": "Получить информацию по остаткам на складе FBS и rFBS",
+      "description": null,
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Количество товара на складе FBS и rFBS",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1ProductInfoWarehouseStocksResponse"
+              },
+              "example": {
+                "stocks": [
+                  {
+                    "sku": 147035011,
+                    "product_id": 28743,
+                    "offer_id": "02105020-35",
+                    "warehouse_id": 1020003080073000,
+                    "present": 1000,
+                    "reserved": 0,
+                    "free_stock": 1000,
+                    "updated_at": "2025-09-15T10:36:24.417498Z"
+                  }
+                ],
+                "has_next": false,
+                "cursor": "147035011"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Prices&StocksAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/answer/list",
+      "operationId": "QuestionAnswer_List",
+      "summary": "Список ответов на вопрос",
+      "description": "Доступно для продавцов с подпиской [Premium Plus](https://seller-edu.ozon.ru/seller-rating/about-rating/subscription-premium-plus).\n\nВы можете оставить обратную связь по этому методу в комментариях к обсуждению в [сообществе разработчиков Ozon for dev](https://dev.ozon.ru/community/1198-Metody-dlia-raboty-s-voprosami-otvetami).\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Список ответов на вопрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1QuestionAnswerListResponse"
+              },
+              "example": {
+                "answers": [
+                  {
+                    "author_name": "string",
+                    "id": "string",
+                    "published_at": "2024-08-14T11:44:35.352Z",
+                    "question_id": "string",
+                    "sku": 646399170,
+                    "status_publication": "",
+                    "text": "string"
+                  }
+                ],
+                "last_id": "string"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1QuestionAnswerCreateDefault"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Questions&Answers"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/count",
+      "operationId": "Question_Count",
+      "summary": "Количество вопросов по статусам",
+      "description": "Доступно для продавцов с подпиской [Premium Plus](https://seller-edu.ozon.ru/seller-rating/about-rating/subscription-premium-plus).\n\nВы можете оставить обратную связь по этому методу в комментариях к обсуждению в [сообществе разработчиков Ozon for dev](https://dev.ozon.ru/community/1198-Metody-dlia-raboty-s-voprosami-otvetami).\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Количество вопросов по статусам",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1QuestionCountResponse"
+              },
+              "example": {
+                "all": 10,
+                "new": 3,
+                "processed": 4,
+                "unprocessed": 1,
+                "viewed": 1
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1QuestionAnswerCreateDefault"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Questions&Answers"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/info",
+      "operationId": "Question_Info",
+      "summary": "Информация о вопросе",
+      "description": "Доступно для продавцов с подпиской [Premium Plus](https://seller-edu.ozon.ru/seller-rating/about-rating/subscription-premium-plus).\n\nВы можете оставить обратную связь по этому методу в комментариях к обсуждению в [сообществе разработчиков Ozon for dev](https://dev.ozon.ru/community/1198-Metody-dlia-raboty-s-voprosami-otvetami).\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Информация о вопросе",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1QuestionInfoResponse"
+              },
+              "example": {
+                "answers_count": "0",
+                "author_name": "Пользователь OZON",
+                "product_url": "https://www.ozon.ru/product/149829950/",
+                "sku": 646399170,
+                "id": "0192a009-769f-7ee9-b412-893045171a66",
+                "text": "Можно выбрать цвет?",
+                "question_link": "https://www.ozon.ru/product/149829950/questions/?qid=290125772&utm_campaign=reviews_sc_link&utm_medium=share_button&utm_source=smm",
+                "published_at": "2024-10-08T10:09:29.099284Z",
+                "status": "VIEWED"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1QuestionAnswerCreateDefault"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Questions&Answers"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/list",
+      "operationId": "Question_List",
+      "summary": "Список вопросов",
+      "description": "Доступно для продавцов с подпиской [Premium Plus](https://seller-edu.ozon.ru/seller-rating/about-rating/subscription-premium-plus).\n\nВы можете оставить обратную связь по этому методу в комментариях к обсуждению в [сообществе разработчиков Ozon for dev](https://dev.ozon.ru/community/1198-Metody-dlia-raboty-s-voprosami-otvetami).\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Список вопросов",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1QuestionListResponse"
+              },
+              "example": {
+                "has_next": true,
+                "questions": [
+                  {
+                    "answers_count": 1,
+                    "author_name": "Пользователь OZON",
+                    "id": "019294ff-6888-7009-89d8-26569e4e450d",
+                    "sku": 646399170,
+                    "product_url": "https://www.ozon.ru/product/1649246352/",
+                    "published_at": "2024-08-14T12:02:01.889Z",
+                    "question_link": "https://www.ozon.ru/product/1649246352/questions/?qid=290180206&utm_campaign=reviews_sc_link&utm_medium=share_button&utm_source=smm",
+                    "text": "Новый вопрос о товаре Света",
+                    "status": "PROCESSED"
+                  }
+                ],
+                "last_id": "019228a7-91d8-76af-a73a-e989dfac7ac8"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1QuestionAnswerCreateDefault"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Questions&Answers"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/rating/history",
+      "operationId": "RatingAPI_RatingHistoryV1",
+      "summary": "Получить информацию о рейтингах продавца за период",
+      "description": "Информация о рейтингах за заданный период и с фильтром по нужному рейтингу.\nСоответствует разделу **Рейтинги → Рейтинги продавца** в личном кабинете.\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Информация о рейтингах",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1RatingHistoryV1Response"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "SellerRating"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/rating/summary",
+      "operationId": "RatingAPI_RatingSummaryV1",
+      "summary": "Получить информацию о текущих рейтингах продавца",
+      "description": "Рейтинг продавца по следующим показателям: индекс цен, доставки вовремя, процент отмен, жалобы и другие.\nСоответствует разделу **Рейтинги → Рейтинги продавца** в личном кабинете.\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Информация о рейтингах",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1RatingSummaryV1Response"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "SellerRating"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/info",
+      "operationId": "ReportAPI_ReportInfo",
+      "summary": "Информация об отчёте",
+      "description": "Возвращает информацию о созданном ранее отчёте по его идентификатору.",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Информация об отчёте",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/reportReportInfoResponse"
+              },
+              "example": {
+                "result": {
+                  "code": "REPORT_seller_products_924336_1720170405_a9ea2f27",
+                  "status": "success",
+                  "error": "",
+                  "expires_at": "2025-11-10T11:16:00.267Z",
+                  "file": "https://cdn1.ozone.ru/s3/item-picture-6/f3/ce/f4ceae54b323213d3e61e59c323bd8e5.csv",
+                  "report_type": "seller_products",
+                  "params": {},
+                  "created_at": "2021-11-25T14:54:55.688260Z"
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReportAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/list",
+      "operationId": "ReportAPI_ReportList",
+      "summary": "Список отчётов",
+      "description": "Возвращает список отчётов, которые были сформированы раньше.",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Список отчётов",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/reportReportListResponse"
+              },
+              "example": {
+                "result": {
+                  "reports": [
+                    {
+                      "code": "REPORT_seller_products_924336_1720170405_a9ea2f27-a473-4b13-99f9-d0cfcb5b1a69",
+                      "status": "success",
+                      "error": "",
+                      "expires_at": "2025-11-10T11:35:10.028Z",
+                      "file": "https://cdn1.ozone.ru/s3/item-picture-6/f3/ce/f4ceae54b323213d3e61e59c323bd8e5.csvv",
+                      "report_type": "seller_products",
+                      "params": {
+                        "visibility": "3"
+                      },
+                      "created_at": "2019-02-06T12:09:47.258062Z"
+                    },
+                    {
+                      "code": "REPORT_seller_products_924336_1720170405_a9ea2f27-a473-4b13-99f9-d0cfcb5b1a69",
+                      "status": "success",
+                      "error": "",
+                      "file": "https://cdn1.ozone.ru/s3/item-picture-6/f3/ce/f4ceae54b323213d3e61e59c323bd8e5.csv",
+                      "report_type": "seller_products",
+                      "params": {
+                        "visibility": "3"
+                      },
+                      "created_at": "2019-02-15T08:34:32.267178Z"
+                    }
+                  ],
+                  "total": 2
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReportAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/postings/create",
+      "operationId": "ReportAPI_CreateCompanyPostingsReport",
+      "summary": "Отчёт об отправлениях",
+      "description": "Отчёт об отправлениях с информацией по заказам:\n  - статусы заказов,\n  - дата начала обработки,\n  - номера заказов,\n  - номера отправлений,\n  - стоимость отправлений,\n  - содержимое отправлений.\nСоответствует разделу **FBO → Заказы со склада Ozon** и **FBS → Заказы с моих складов → CSV** в личном кабинете.\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Отчёт об отправлениях",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/reportCreateReportResponse"
+              },
+              "example": {
+                "result": {
+                  "code": "REPORT_seller_postings_514893_1722847571_32a3508c-6b53-408c-a212-6c97138d23ed"
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReportAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/products/create",
+      "operationId": "ReportAPI_CreateCompanyProductsReport",
+      "summary": "Отчёт по товарам",
+      "description": "Метод для получения отчёта с данными о товарах. Например, Ozon ID, количества товаров, цен, статуса.\nСоответствует разделу/действию **Товары и цены → Список товаров → Скачать → Товары CSV** в личном кабинете.\n\nПояснения к некоторым полям:\n  - __Ozon Product ID__ — идентификатор товара в нашей системе. Например, если вы продаёте товар со склада Ozon и со своего склада, Ozon Product ID будет для них одинаковым.\n  - __FBO Ozon SKU ID__ — идентификатор товара, который продаётся со склада Ozon.\n  - __FBS Ozon SKU ID__ — идентификатор товара, который продаётся с вашего склада.\n  - __CrossBorder Ozon SKU__ — идентификатор товара, который продаётся из-за границы.\n  - __Barcode__ — штрихкод товара, который печатается на маркировке.\n  - __Статус товара__ — можно ли купить товар на Ozon. Если статус «Готов к продаже», товар купить нельзя.\n  - __Доступно на складе Ozon, шт__ — сколько штук товара на складе доступно для продажи. Это количество не включает зарезервированные товары.\n  - __Зарезервировано, шт__ — сколько штук товара со статусом «Зарезервировано». Товар зарезервирован с момента получения заказа на Ozon и до упаковки для передачи покупателю.\n  - __Текущая цена с учётом скидки, руб.__ — цена, по которой товар продаётся сейчас (на момент загрузки отчёта, с учётом скидки). Если товар участвует в акции, указана цена без её учёта.\n  - __Базовая цена (цена до скидок), руб.__ — цена без учёта скидки.\n  - __Цена Premium, руб.__ — цена для покупателей с подпиской Ozon Premium.\n  - __Рекомендованная цена, руб.__ — минимальная цена на товар на другой торговой площадке.\n  - __Актуальная ссылка на рекомендованную цену__ — ссылка на товар с рекомендованной ценой на другой торговой площадке.\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Отчёт по товарам",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/reportCreateReportResponse"
+              },
+              "example": {
+                "result": {
+                  "code": "REPORT_seller_products_924336_1720170405_a9ea2f27-a473-4b13-99f9-d0cfcb5b1a69"
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReportAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/report/warehouse/stock",
+      "operationId": "ReportAPI_CreateStockByWarehouseReport",
+      "summary": "Отчёт об остатках на FBS-складе",
+      "description": "\nОтчёт с информацией о количестве доступных и зарезервированных единиц товара на складе.\nСоответствует разделу **FBS → Управление логистикой → Управление остатками → Скачать в XLS** в личном кабинете.\n\nВ результате запроса будет не сам отчёт, а его уникальный идентификатор. \nЧтобы получить отчёт, отправьте идентификатор в запросе метода [/v1/report/info](#operation/ReportAPI_ReportInfo).\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Результат запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/commonCreateReportResponse"
+              },
+              "example": {
+                "code": "REPORT_seller_products_924336_1720170405_a9ea2f27-a473-4b13-99f9-d0cfcb5b1a69"
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReportAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/returns/list",
+      "operationId": "returnsList",
+      "summary": "Информация о возвратах FBO и FBS",
+      "description": "Метод для получения информации о возвратах FBO и FBS.",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Информация по возвратам",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1GetReturnsListResponse"
+              },
+              "example": {
+                "returns": [
+                  {
+                    "exemplars": [
+                      {
+                        "id": "1019562967545956"
+                      }
+                    ],
+                    "id": "1000015552",
+                    "company_id": "3058",
+                    "return_reason_name": "Покупатель отказался при вручении: недоволен качеством товара",
+                    "type": "FullReturn",
+                    "schema": "Fbs",
+                    "order_id": "24540784250",
+                    "order_number": "58544282-0057",
+                    "place": {
+                      "id": "23869688194000",
+                      "name": "СЦ_Львовский_Возвраты",
+                      "address": "Россия, обл. Московская, г. Подольск, промышленная зона Львовский, ул. Московская, д. 69, стр. 5"
+                    },
+                    "target_place": {
+                      "id": "23869688194000",
+                      "name": "СЦ_Львовский_Возвраты",
+                      "address": "Россия, обл. Московская, г. Подольск, промышленная зона Львовский, ул. Московская, д. 69, стр. 5"
+                    },
+                    "storage": {
+                      "sum": {
+                        "currency_code": "RUB",
+                        "price": "1231"
+                      },
+                      "tariffication_first_date": "2024-07-30T06:15:48.998146Z",
+                      "tariffication_start_date": "2024-07-29T06:15:48.998146Z",
+                      "arrived_moment": "2024-07-29T06:15:48.998146Z",
+                      "days": "0",
+                      "utilization_sum": {
+                        "currency_code": "RUB",
+                        "price": "1231"
+                      },
+                      "utilization_forecast_date": "2024-07-29T06:15:48.998146Z"
+                    },
+                    "product": {
+                      "sku": "1100526203",
+                      "offer_id": "81451",
+                      "name": "Кукла Дотти Плачущий младенец Cry Babies Dressy Dotty",
+                      "price": {
+                        "currency_code": "RUB",
+                        "price": "3318"
+                      },
+                      "price_without_commission": {
+                        "currency_code": "RUB",
+                        "price": "3318"
+                      },
+                      "commission_percent": "1.2",
+                      "commission": {
+                        "currency_code": "RUB",
+                        "price": "2312"
+                      },
+                      "quantity": 1
+                    },
+                    "logistic": {
+                      "technical_return_moment": "2024-07-29T06:15:48.998146Z",
+                      "final_moment": "2024-07-29T06:15:48.998146Z",
+                      "cancelled_with_compensation_moment": "2024-07-29T06:15:48.998146Z",
+                      "return_date": "2024-07-29T06:15:48.998146Z",
+                      "barcode": "ii5275210303"
+                    },
+                    "visual": {
+                      "status": {
+                        "id": 3,
+                        "display_name": "В пункте выдачи",
+                        "sys_name": "ArrivedAtReturnPlace"
+                      },
+                      "change_moment": "2024-07-29T06:15:48.998146Z"
+                    },
+                    "additional_info": {
+                      "is_opened": true,
+                      "is_super_econom": false
+                    },
+                    "source_id": "90426223",
+                    "posting_number": "58544282-0057-1",
+                    "clearing_id": "21190893156000",
+                    "return_clearing_id": null,
+                    "compensation_status": {
+                      "status": {
+                        "id": 2,
+                        "display_name": "Вы получили компенсацию",
+                        "sys_name": "Received"
+                      },
+                      "change_moment": "2025-11-06T16:06:56.639Z"
+                    }
+                  }
+                ],
+                "has_next": false
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReturnsAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/comment/create",
+      "operationId": "ReviewAPI_CommentCreate",
+      "summary": "Оставить комментарий на отзыв",
+      "description": "Доступно для продавцов с подпиской [Управление отзывами](https://seller-edu.ozon.ru/libra/seller-rating/podpiska-upravlenie-otzyvami) или [Premium Pro](https://seller-edu.ozon.ru/seller-rating/about-rating/podpiska-premium-pro).\n\nВы можете оставить обратную связь по этому методу в комментариях к [обсуждению](https://dev.ozon.ru/community/1190-Metody-dlia-raboty-s-otzyvami) в сообществе разработчиков Ozon for dev.\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Комментарий создан",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1CommentCreateResponse"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReviewAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/comment/list",
+      "operationId": "ReviewAPI_CommentList",
+      "summary": "Получить список комментариев на отзыв",
+      "description": "Доступно для продавцов с подпиской [Управление отзывами](https://seller-edu.ozon.ru/libra/seller-rating/podpiska-upravlenie-otzyvami) или [Premium Pro](https://seller-edu.ozon.ru/seller-rating/about-rating/podpiska-premium-pro).\n\nВы можете оставить обратную связь по этому методу в комментариях к [обсуждению](https://dev.ozon.ru/community/1190-Metody-dlia-raboty-s-otzyvami) в сообществе разработчиков Ozon for dev.\n\nМетод возвращает информацию по комментариям на отзывы, которые прошли модерацию.\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Информация о комментариях на отзыв",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1CommentListResponse"
+              },
+              "example": {
+                "comments": [
+                  {
+                    "id": "1234-5678",
+                    "text": "comment text",
+                    "parent_comment_id": "3333-3333",
+                    "is_owner": true,
+                    "is_official": false,
+                    "is_published": true,
+                    "is_rejected": true,
+                    "likes_amount": 0,
+                    "dislikes_amount": 0,
+                    "deviation_reason": "string",
+                    "published_at": "2021-09-03T07:04:53.220Z"
+                  }
+                ],
+                "offset": 124
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReviewAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/count",
+      "operationId": "ReviewAPI_ReviewCount",
+      "summary": "Количество отзывов по статусам",
+      "description": "<aside class=\"warning\">\n  Метод устаревает. Переключитесь на <a href=\"#operation/ReviewCountV2\">/v2/review/count</a>.\n</aside>\n\nДоступно для продавцов с подпиской [Управление отзывами](https://seller-edu.ozon.ru/libra/seller-rating/podpiska-upravlenie-otzyvami) или [Premium Pro](https://seller-edu.ozon.ru/seller-rating/about-rating/podpiska-premium-pro).\n\nВы можете оставить обратную связь по этому методу в комментариях к [обсуждению](https://dev.ozon.ru/community/1190-Metody-dlia-raboty-s-otzyvami) в сообществе разработчиков Ozon for dev.\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Количество обработанных и необработанных отзывов",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1ReviewCountResponse"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReviewAPI"
+      ],
+      "deprecated": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/info",
+      "operationId": "ReviewAPI_ReviewInfo",
+      "summary": "Получить информацию об отзыве",
+      "description": "<aside class=\"warning\">\n  Метод устаревает. Переключитесь на <a href=\"#operation/ReviewInfoV2\">/v2/review/info</a>.\n</aside>\n\nДоступно для продавцов с подпиской [Управление отзывами](https://seller-edu.ozon.ru/libra/seller-rating/podpiska-upravlenie-otzyvami) или [Premium Pro](https://seller-edu.ozon.ru/seller-rating/about-rating/podpiska-premium-pro).\n\nВы можете оставить обратную связь по этому методу в комментариях к [обсуждению](https://dev.ozon.ru/community/1190-Metody-dlia-raboty-s-otzyvami) в сообществе разработчиков Ozon for dev.\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Информация об отзыве",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1ReviewInfoResponse"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReviewAPI"
+      ],
+      "deprecated": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/review/list",
+      "operationId": "ReviewAPI_ReviewList",
+      "summary": "Получить список отзывов",
+      "description": "<aside class=\"warning\">\n  Метод устаревает. Переключитесь на <a href=\"#operation/ReviewListV2\">/v2/review/list</a>.\n</aside>\n\nДоступно для продавцов с подпиской [Управление отзывами](https://seller-edu.ozon.ru/libra/seller-rating/podpiska-upravlenie-otzyvami) или [Premium Pro](https://seller-edu.ozon.ru/seller-rating/about-rating/podpiska-premium-pro).\n\nВы можете оставить обратную связь по этому методу в комментариях к [обсуждению](https://dev.ozon.ru/community/1190-Metody-dlia-raboty-s-otzyvami) в сообществе разработчиков Ozon for dev.\n\nМетод не возвращает параметры «Достоинства» и «Недостатки», если они есть в отзывах на товар. Эти параметры устарели, в новых отзывах их нет.\n",
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "Список отзывов",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1ReviewListResponse"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReviewAPI"
+      ],
+      "deprecated": true
+    },
+    {
+      "method": "POST",
+      "path": "/v1/warehouse/fbo/seller/list",
+      "operationId": "WarehouseFboSellerList",
+      "summary": "Получить список складов продавца",
+      "description": null,
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Список складов",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1WarehouseFboSellerListResponse"
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/googlerpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "FboSupplyRequest"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v2/finance/realization",
+      "operationId": "FinanceAPI_GetRealizationReportV2",
+      "summary": "Отчёт о реализации товаров (версия 2)",
+      "description": "<aside class=\"warning\">\nМетод недоступен для продавцов, которые заключили договор с ТОО «ОЗОН Маркетплейс Казахстан».\n</aside>\n\nОтчёт о реализации доставленных и возвращённых товаров за месяц. Отмены и невыкупы не включаются.\nСоответствует разделу **Финансы → Документы → Отчёты о реализации → Отчёт о реализации товара** в личном кабинете.\n\nОтчёт придёт не позднее 5-го числа следующего месяца.\n\n[Подробнее об отчёте в Базе знаний продавца](https://seller-edu.ozon.ru/docs/finances-documents/calculations-documents/otchet-o-realizacii-tovarov.html)\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Отчёт о реализации",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v2GetRealizationReportResponseV2"
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "FinanceAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v2/posting/fbo/list",
+      "operationId": "PostingAPI_GetFboPostingList",
+      "summary": "Список отправлений",
+      "description": "<aside class=\"warning\">\nС 1 июня 2026 года метод будет отключён. Переключитесь на <a href=\"#operation/PostingFboList\">/v3/posting/fbo/list</a>.\n</aside>\n\nВозвращает список отправлений за указанный период времени.\nЕсли период больше года, вернётся ошибка `PERIOD_IS_TOO_LONG`.\n\nДополнительно можно отфильтровать отправления по их статусу.\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Список отправлений",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v2FboPostingListResponse"
+              },
+              "example": {
+                "result": [
+                  {
+                    "order_id": 354680487,
+                    "order_number": "16965409-0014",
+                    "posting_number": "16965409-0014-1",
+                    "status": "delivered",
+                    "substatus": "posting_delivered",
+                    "cancel_reason_id": 7,
+                    "created_at": "2021-09-01T00:23:45.607000Z",
+                    "in_process_at": "2021-09-01T00:25:30.120000Z",
+                    "legal_info": {
+                      "company_name": "ООО Книжный Мир",
+                      "inn": "77123456789",
+                      "kpp": "777777777"
+                    },
+                    "products": [
+                      {
+                        "sku": 160249683,
+                        "name": "Так говорил Омар Хайям. Жизнеописание. Афоризмы и рубайят. Классика в словах и картинках",
+                        "quantity": 1,
+                        "offer_id": "978-5-906864-56-7",
+                        "price": "81.00",
+                        "is_marketplace_buyout": true,
+                        "digital_codes": [],
+                        "currency_code": "RUB"
+                      }
+                    ],
+                    "analytics_data": {
+                      "city": "Ростов-на-Дону",
+                      "delivery_type": "PVZ",
+                      "is_premium": false,
+                      "payment_type_group_name": "Карты оплаты",
+                      "warehouse_id": 17717042026000,
+                      "warehouse_name": "РОСТОВ-НА-ДОНУ_РФЦ",
+                      "is_legal": false,
+                      "client_delivery_date_begin": "2025-11-24T13:32:40.336Z",
+                      "client_delivery_date_end": "2025-11-24T18:32:40.336Z"
+                    },
+                    "financial_data": {
+                      "products": [
+                        {
+                          "commission_amount": 12.15,
+                          "commission_percent": 15,
+                          "payout": 68.85,
+                          "product_id": 160249683,
+                          "currency_code": "RUB",
+                          "old_price": 115,
+                          "price": 81,
+                          "total_discount_value": 34,
+                          "total_discount_percent": 29.57,
+                          "actions": [
+                            "Системная виртуальная скидка селлера"
+                          ],
+                          "quantity": 1
+                        }
+                      ]
+                    },
+                    "additional_data": [
+                      {
+                        "delivery_track_number": "RX123456789RU",
+                        "courier_name": "Иванов П.С.",
+                        "delivery_time": "2025-11-24T15:20:00.000Z"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "FBO"
+      ],
+      "deprecated": true
+    },
+    {
+      "method": "POST",
+      "path": "/v2/product/info/stocks-by-warehouse/fbs",
+      "operationId": "ProductAPI_GetProductInfoStocksByWarehouseFbsV2",
+      "summary": "Получить информацию об остатках на складах продавца",
+      "description": null,
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Количество товаров на складах",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v2GetProductInfoStocksByWarehouseFbsResponseV2"
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Prices&StocksAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v2/report/returns/create",
+      "operationId": "ReportAPI_ReportReturnsCreate",
+      "summary": "Отчёт о возвратах",
+      "description": "Метод для получения отчёта о возвратах FBO и FBS.",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Отчёт о возвратах FBO и FBS",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v2ReportReturnsCreateResponse"
+              },
+              "example": {
+                "result": {
+                  "code": "REPORT_seller_products_924336_1720170405_a9ea2f27-a473-4b13-99f9-d0cfcb5b1a69"
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ReportAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v2/returns/rfbs/get",
+      "operationId": "RFBSReturnsAPI_ReturnsRfbsGetV2",
+      "summary": "Информация о заявке на возврат",
+      "description": null,
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Информация о заявке",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v2ReturnsRfbsGetResponse"
+              },
+              "example": {
+                "returns": {
+                  "available_actions": [
+                    {
+                      "action": {
+                        "id": 0,
+                        "name": "string"
+                      }
+                    }
+                  ],
+                  "client_name": "string",
+                  "client_photo": [
+                    "string"
+                  ],
+                  "client_return_method_type": {
+                    "id": 0,
+                    "name": "string"
+                  },
+                  "comment": "string",
+                  "created_at": "2025-09-04T13:49:20.340Z",
+                  "order_number": "string",
+                  "posting_number": "string",
+                  "product": {
+                    "currency_code": "string",
+                    "name": "string",
+                    "offer_id": "string",
+                    "price": 0,
+                    "sku": 0
+                  },
+                  "rejection_comment": "string",
+                  "rejection_reason": [
+                    {
+                      "hint": "string",
+                      "id": 0,
+                      "is_comment_required": true,
+                      "name": "string"
+                    }
+                  ],
+                  "return_method_description": "string",
+                  "return_number": "string",
+                  "return_reason": {
+                    "id": 0,
+                    "is_defect": true,
+                    "name": "string"
+                  },
+                  "ru_post_tracking_number": "string",
+                  "state": {
+                    "state": "string",
+                    "state_name": "string"
+                  },
+                  "warehouse_id": 0
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "RFBSReturnsAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v2/returns/rfbs/list",
+      "operationId": "RFBSReturnsAPI_ReturnsRfbsListV2",
+      "summary": "Список заявок на возврат",
+      "description": null,
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Список заявок на возврат",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v2ReturnsRfbsListResponse"
+              },
+              "example": {
+                "returns": [
+                  {
+                    "client_name": "string",
+                    "created_at": "2025-09-03T06:59:05.132Z",
+                    "order_number": "string",
+                    "posting_number": "string",
+                    "product": {
+                      "currency_code": "string",
+                      "name": "string",
+                      "offer_id": "string",
+                      "price": 0,
+                      "sku": 0
+                    },
+                    "return_id": 0,
+                    "return_number": "string",
+                    "state": {
+                      "group_state": "string",
+                      "money_return_state_name": "string",
+                      "state": "string",
+                      "state_name": "string"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "RFBSReturnsAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v3/finance/transaction/list",
+      "operationId": "FinanceAPI_FinanceTransactionListV3",
+      "summary": "Список транзакций",
+      "description": "\n<aside class=\"warning\">\nМетод устаревает и будет отключён 6 июля 2026 года. Переключитесь на <a href=\"#operation/GetFinanceAccrualPostings\">/v1/finance/accrual/postings</a>, <a href=\"#operation/GetFinanceAccrualTypes\">/v1/finance/accrual/types</a>, <a href=\"#operation/GetFinanceAccrualByDay\">/v1/finance/accrual/by-day</a>.\n<br><br>\nИспользуйте метод с последовательной отправкой запросов.<br>\nДанные могут не соответствовать информации в личном кабинете.\n</aside>\n\nВозвращает подробную информацию по всем начислениям. Максимальный период, за который можно получить информацию в одном запросе — 1 месяц.\n\nЕсли в запросе не указывать `posting_number`, то в ответе будут все отправления за указанный период или отправления определённого типа.\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Список транзакций",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/financev3FinanceTransactionListV3Response"
+              },
+              "example": {
+                "result": {
+                  "operations": [
+                    {
+                      "operation_id": 11401182187840,
+                      "operation_type": "MarketplaceMarketingActionCostOperation",
+                      "operation_date": "2021-11-01 00:00:00",
+                      "operation_type_name": "Услуги продвижения товаров",
+                      "delivery_charge": 0,
+                      "return_delivery_charge": 0,
+                      "accruals_for_sale": 0,
+                      "sale_commission": 0,
+                      "amount": -6.46,
+                      "type": "services",
+                      "posting": {
+                        "delivery_schema": "",
+                        "order_date": "",
+                        "posting_number": "",
+                        "warehouse_id": 0
+                      },
+                      "items": [],
+                      "services": []
+                    }
+                  ],
+                  "page_count": 1,
+                  "row_count": 355
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "FinanceAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v3/finance/transaction/totals",
+      "operationId": "FinanceAPI_FinanceTransactionTotalV3",
+      "summary": "Суммы транзакций",
+      "description": "\n<aside class=\"warning\">\nМетод устаревает и будет отключён 6 июля 2026 года. Переключитесь на <a href=\"#operation/GetFinanceAccrualPostings\">/v1/finance/accrual/postings</a>, <a href=\"#operation/GetFinanceAccrualTypes\">/v1/finance/accrual/types</a>, <a href=\"#operation/GetFinanceAccrualByDay\">/v1/finance/accrual/by-day</a>.\n<br><br>\nДанные могут не соответствовать информации в личном кабинете.\n</aside>\n\nВозвращает итоговые суммы по транзакциям за указанный период. \n\nЕсли вы неправильно заполните номера отправлений, в ответе вернутся нулевые значения.\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Суммы транзакций",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/financev3FinanceTransactionTotalsV3Response"
+              },
+              "example": {
+                "result": {
+                  "accruals_for_sale": 96647.58,
+                  "sale_commission": -11456.65,
+                  "processing_and_delivery": -24405.68,
+                  "refunds_and_cancellations": -330,
+                  "services_amount": -1307.57,
+                  "compensation_amount": 0,
+                  "money_transfer": 0,
+                  "others_amount": 113.05
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "FinanceAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v3/posting/fbs/get",
+      "operationId": "PostingAPI_GetFbsPostingV3",
+      "summary": "Получить информацию об отправлении по идентификатору",
+      "description": "Чтобы получать актуальную дату отгрузки, регулярно обновляйте информацию об отправлениях или подключите [пуш-уведомления](#tag/push_start).",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Информация об отправлении",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v3GetFbsPostingResponseV3"
+              },
+              "example": {
+                "result": {
+                  "posting_number": "0132112277-0101-1",
+                  "order_id": 35566798085,
+                  "order_number": "0132112277-0101",
+                  "status": "awaiting_packaging",
+                  "delivery_method": {
+                    "id": 1020005003107121,
+                    "name": "Доставка Ozon самостоятельно, Ногинск",
+                    "warehouse_id": 1020005003107121,
+                    "warehouse": "FBS LikeSK",
+                    "tpl_provider_id": 24,
+                    "tpl_provider": "Доставка Ozon"
+                  },
+                  "tracking_number": "",
+                  "tpl_integration_type": "ozon",
+                  "in_process_at": "2026-03-30T11:26:00Z",
+                  "shipment_date": "2026-03-31T09:00:00Z",
+                  "delivering_date": null,
+                  "provider_status": "",
+                  "delivery_price": "",
+                  "cancellation": {
+                    "cancel_reason_id": 0,
+                    "cancel_reason": "",
+                    "cancellation_type": "",
+                    "cancelled_after_ship": false,
+                    "affect_cancellation_rating": false,
+                    "cancellation_initiator": ""
+                  },
+                  "container": {
+                    "cargo_type": "BOX",
+                    "container_date": "string",
+                    "container_id": 0,
+                    "container_number": 0
+                  },
+                  "container_sort_type": "string",
+                  "customer": null,
+                  "addressee": null,
+                  "products": [
+                    {
+                      "price": "1530.0000",
+                      "offer_id": "SK-58 (малиновый)",
+                      "name": "Профессиональная плойка Cronier cr-2013 для афро кудрей 9 мм",
+                      "sku": 827098843,
+                      "quantity": 1,
+                      "dimensions": {
+                        "height": "150.00",
+                        "length": "500.00",
+                        "weight": "550",
+                        "width": "300.00"
+                      },
+                      "currency_code": "RUB",
+                      "is_blr_traceable": false,
+                      "is_marketplace_buyout": false,
+                      "has_imei": false,
+                      "weight_max": 0.55,
+                      "weight_min": 0,
+                      "is_weight_needed": false
+                    }
+                  ],
+                  "barcodes": null,
+                  "analytics_data": null,
+                  "financial_data": null,
+                  "additional_data": [],
+                  "is_express": false,
+                  "requirements": {
+                    "products_requiring_gtd": [],
+                    "products_requiring_country": [],
+                    "products_requiring_mandatory_mark": [],
+                    "products_requiring_rnpt": [],
+                    "products_requiring_jw_uin": [],
+                    "products_requiring_change_country": [],
+                    "products_requiring_imei": [],
+                    "products_requiring_weight": []
+                  },
+                  "product_exemplars": null,
+                  "courier": null,
+                  "parent_posting_number": "",
+                  "related_postings": null,
+                  "available_actions": [
+                    "cancel",
+                    "has_barcode_for_printing",
+                    "product_cancel",
+                    "ship",
+                    "ship_async"
+                  ],
+                  "multi_box_qty": 1,
+                  "is_multibox": false,
+                  "substatus": "posting_created",
+                  "previous_substatus": "posting_split_pending",
+                  "prr_option": {
+                    "code": "",
+                    "price": "",
+                    "currency_code": "RUB",
+                    "floor": ""
+                  },
+                  "tariffication": {
+                    "current_tariff_rate": 1,
+                    "current_tariff_type": "no_discount",
+                    "current_tariff_charge": "",
+                    "current_tariff_charge_currency_code": "RUB",
+                    "next_tariff_rate": 1,
+                    "next_tariff_type": "commission",
+                    "next_tariff_charge": "50",
+                    "next_tariff_starts_at": "2026-03-31T09:00:01Z",
+                    "next_tariff_charge_currency_code": "RUB"
+                  },
+                  "destination_place_id": 0,
+                  "destination_place_name": "",
+                  "is_presortable": false,
+                  "pickup_code_verified_at": null,
+                  "optional": {
+                    "products_with_possible_mandatory_mark": []
+                  },
+                  "fact_delivery_date": null,
+                  "legal_info": {
+                    "company_name": "",
+                    "inn": "",
+                    "kpp": ""
+                  },
+                  "related_weight_postings": [],
+                  "shipment_date_without_delay": "2026-04-04T16:59:00Z",
+                  "require_blr_traceable_attrs": false,
+                  "is_click_and_collect": false,
+                  "tariffication_steps": [
+                    {
+                      "min_charge": null,
+                      "tariff_charge": {
+                        "amount": "0",
+                        "currency": "RUB"
+                      },
+                      "tariff_deadline_at": "2026-03-31T09:00:00Z",
+                      "tariff_rate": 0,
+                      "tariff_type": "no_discount"
+                    },
+                    {
+                      "min_charge": {
+                        "amount": "50",
+                        "currency": "RUB"
+                      },
+                      "tariff_charge": {
+                        "amount": "50",
+                        "currency": "RUB"
+                      },
+                      "tariff_deadline_at": "2026-03-31T21:00:00Z",
+                      "tariff_rate": 1,
+                      "tariff_type": "commission"
+                    },
+                    {
+                      "min_charge": {
+                        "amount": "50",
+                        "currency": "RUB"
+                      },
+                      "tariff_charge": {
+                        "amount": "50",
+                        "currency": "RUB"
+                      },
+                      "tariff_deadline_at": "2026-04-01T09:00:00Z",
+                      "tariff_rate": 1,
+                      "tariff_type": "commission"
+                    },
+                    {
+                      "min_charge": {
+                        "amount": "100",
+                        "currency": "RUB"
+                      },
+                      "tariff_charge": {
+                        "amount": "100",
+                        "currency": "RUB"
+                      },
+                      "tariff_deadline_at": "2026-04-01T21:00:00Z",
+                      "tariff_rate": 2,
+                      "tariff_type": "commission"
+                    },
+                    {
+                      "min_charge": {
+                        "amount": "100",
+                        "currency": "RUB"
+                      },
+                      "tariff_charge": {
+                        "amount": "100",
+                        "currency": "RUB"
+                      },
+                      "tariff_deadline_at": "2026-04-02T09:00:00Z",
+                      "tariff_rate": 2,
+                      "tariff_type": "commission"
+                    },
+                    {
+                      "min_charge": {
+                        "amount": "150",
+                        "currency": "RUB"
+                      },
+                      "tariff_charge": {
+                        "amount": "150",
+                        "currency": "RUB"
+                      },
+                      "tariff_deadline_at": "9999-12-31T23:59:59.999999900Z",
+                      "tariff_rate": 3,
+                      "tariff_type": "commission"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "FBS"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v3/posting/fbs/list",
+      "operationId": "PostingAPI_GetFbsPostingListV3",
+      "summary": "Список отправлений",
+      "description": "<aside class=\"warning\">\nС 1 июня 2026 года метод будет отключён. Переключитесь на <a href=\"#operation/PostingFbsList\">/v4/posting/fbs/list</a>.\n</aside>\n\nВозвращает список отправлений за указанный период времени — он должен быть не больше одного года.\n\n`has_next = true` в ответе может значить, что вернули не весь массив отправлений. Чтобы получить информацию об остальных отправлениях, сделайте новый запрос с другим значением `offset`.\n\n Чтобы получать актуальную дату отгрузки, регулярно обновляйте информацию об отправлениях или подключите [пуш-уведомления](#tag/push_start).\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Список отправлений",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v3GetFbsPostingListResponseV3"
+              },
+              "example": {
+                "result": {
+                  "postings": [
+                    {
+                      "posting_number": "0132112277-0101-1",
+                      "order_id": 35566798085,
+                      "order_number": "0132112277-0101",
+                      "status": "awaiting_packaging",
+                      "delivery_method": {
+                        "id": 1020005003107121,
+                        "name": "Доставка Ozon самостоятельно, Ногинск",
+                        "warehouse_id": 1020005003107121,
+                        "warehouse": "FBS LikeSK",
+                        "tpl_provider_id": 24,
+                        "tpl_provider": "Доставка Ozon"
+                      },
+                      "tracking_number": "",
+                      "tpl_integration_type": "ozon",
+                      "in_process_at": "2026-03-30T11:26:00Z",
+                      "shipment_date": "2026-03-31T09:00:00Z",
+                      "delivering_date": null,
+                      "cancellation": {
+                        "cancel_reason_id": 0,
+                        "cancel_reason": "",
+                        "cancellation_type": "",
+                        "cancelled_after_ship": false,
+                        "affect_cancellation_rating": false,
+                        "cancellation_initiator": ""
+                      },
+                      "container": {
+                        "cargo_type": "BOX",
+                        "container_date": "string",
+                        "container_id": 0,
+                        "container_number": 0
+                      },
+                      "container_sort_type": "string",
+                      "customer": null,
+                      "products": [
+                        {
+                          "price": "1530.0000",
+                          "offer_id": "SK-58 (малиновый)",
+                          "name": "Профессиональная плойка Cronier cr-2013 для афро кудрей 9 мм",
+                          "sku": 827098843,
+                          "quantity": 1,
+                          "currency_code": "RUB",
+                          "is_blr_traceable": false,
+                          "is_marketplace_buyout": false,
+                          "imei": []
+                        }
+                      ],
+                      "addressee": null,
+                      "barcodes": {
+                        "upper_barcode": "711008270053000",
+                        "lower_barcode": "711008270053000"
+                      },
+                      "analytics_data": {
+                        "region": "",
+                        "city": "",
+                        "delivery_type": "PVZ",
+                        "is_premium": false,
+                        "payment_type_group_name": "Ozon Банк",
+                        "warehouse_id": 1020005003107121,
+                        "warehouse": "FBS LikeSK",
+                        "tpl_provider_id": 24,
+                        "tpl_provider": "Доставка Ozon",
+                        "delivery_date_begin": "2026-04-11T15:00:00Z",
+                        "delivery_date_end": "2026-04-11T16:00:00Z",
+                        "is_legal": false,
+                        "client_delivery_date_begin": null,
+                        "client_delivery_date_end": null
+                      },
+                      "financial_data": {
+                        "products": [
+                          {
+                            "commission_amount": 0,
+                            "commission_percent": 0,
+                            "payout": 0,
+                            "product_id": 827098843,
+                            "old_price": 1530,
+                            "price": 1530,
+                            "total_discount_value": 0,
+                            "total_discount_percent": 0,
+                            "actions": [
+                              "Округление"
+                            ],
+                            "quantity": 1,
+                            "currency_code": "RUB",
+                            "customer_currency_code": "RUB",
+                            "customer_price": 662.86
+                          }
+                        ],
+                        "cluster_from": "Moskva, MO i Dal`nie regiony`",
+                        "cluster_to": "Rostov"
+                      },
+                      "is_express": false,
+                      "requirements": {
+                        "products_requiring_gtd": [],
+                        "products_requiring_country": [],
+                        "products_requiring_mandatory_mark": [],
+                        "products_requiring_rnpt": [],
+                        "products_requiring_jw_uin": [],
+                        "products_requiring_change_country": [],
+                        "products_requiring_imei": [],
+                        "products_requiring_weight": []
+                      },
+                      "parent_posting_number": "",
+                      "available_actions": [
+                        "cancel",
+                        "has_barcode_for_printing",
+                        "product_cancel",
+                        "ship",
+                        "ship_async"
+                      ],
+                      "multi_box_qty": 1,
+                      "is_multibox": false,
+                      "substatus": "posting_created",
+                      "prr_option": "",
+                      "quantum_id": 0,
+                      "tariffication": {
+                        "current_tariff_rate": 0,
+                        "current_tariff_type": "no_discount",
+                        "current_tariff_charge": "",
+                        "current_tariff_charge_currency_code": "RUB",
+                        "next_tariff_rate": 0,
+                        "next_tariff_type": "commission",
+                        "next_tariff_charge": "50",
+                        "next_tariff_starts_at": "2026-03-31T09:00:01Z",
+                        "next_tariff_charge_currency_code": "RUB"
+                      },
+                      "destination_place_id": 0,
+                      "destination_place_name": "",
+                      "is_presortable": false,
+                      "pickup_code_verified_at": null,
+                      "optional": {
+                        "products_with_possible_mandatory_mark": []
+                      },
+                      "legal_info": {
+                        "company_name": "",
+                        "inn": "",
+                        "kpp": ""
+                      },
+                      "shipment_date_without_delay": "2026-04-04T16:59:00Z",
+                      "require_blr_traceable_attrs": false,
+                      "is_click_and_collect": false,
+                      "tariffication_steps": [
+                        {
+                          "min_charge": null,
+                          "tariff_charge": {
+                            "amount": "0",
+                            "currency": "RUB"
+                          },
+                          "tariff_deadline_at": "2026-03-31T09:00:00Z",
+                          "tariff_rate": 0,
+                          "tariff_type": "no_discount"
+                        },
+                        {
+                          "min_charge": {
+                            "amount": "50",
+                            "currency": "RUB"
+                          },
+                          "tariff_charge": {
+                            "amount": "50",
+                            "currency": "RUB"
+                          },
+                          "tariff_deadline_at": "2026-03-31T21:00:00Z",
+                          "tariff_rate": 1,
+                          "tariff_type": "commission"
+                        },
+                        {
+                          "min_charge": {
+                            "amount": "50",
+                            "currency": "RUB"
+                          },
+                          "tariff_charge": {
+                            "amount": "50",
+                            "currency": "RUB"
+                          },
+                          "tariff_deadline_at": "2026-04-01T09:00:00Z",
+                          "tariff_rate": 1,
+                          "tariff_type": "commission"
+                        },
+                        {
+                          "min_charge": {
+                            "amount": "100",
+                            "currency": "RUB"
+                          },
+                          "tariff_charge": {
+                            "amount": "100",
+                            "currency": "RUB"
+                          },
+                          "tariff_deadline_at": "2026-04-01T21:00:00Z",
+                          "tariff_rate": 2,
+                          "tariff_type": "commission"
+                        },
+                        {
+                          "min_charge": {
+                            "amount": "100",
+                            "currency": "RUB"
+                          },
+                          "tariff_charge": {
+                            "amount": "100",
+                            "currency": "RUB"
+                          },
+                          "tariff_deadline_at": "2026-04-02T09:00:00Z",
+                          "tariff_rate": 2,
+                          "tariff_type": "commission"
+                        },
+                        {
+                          "min_charge": {
+                            "amount": "150",
+                            "currency": "RUB"
+                          },
+                          "tariff_charge": {
+                            "amount": "150",
+                            "currency": "RUB"
+                          },
+                          "tariff_deadline_at": "9999-12-31T23:59:59.999999900Z",
+                          "tariff_rate": 3,
+                          "tariff_type": "commission"
+                        }
+                      ]
+                    }
+                  ],
+                  "has_next": false
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "FBS"
+      ],
+      "deprecated": true
+    },
+    {
+      "method": "POST",
+      "path": "/v3/product/info/list",
+      "operationId": "ProductAPI_GetProductInfoList",
+      "summary": "Получить информацию о товарах по идентификаторам",
+      "description": "\nМетод для получения информации о товарах по их идентификаторам.\n\nВ теле запроса должен быть массив однотипных идентификаторов, в ответе будет массив `items`.\n\nВ одном запросе вы можете передать не больше 1000 товаров по параметрам `offer_id`, `product_id` и `sku` в сумме.\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Список товаров",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v3GetProductInfoListResponse"
+              },
+              "example": {
+                "items": [
+                  {
+                    "availabilities": [
+                      {
+                        "availability": "in_stock",
+                        "reasons": [
+                          {
+                            "human_text": {
+                              "text": "Товар доступен на складе"
+                            },
+                            "id": 12345
+                          }
+                        ],
+                        "sku": 987654321,
+                        "source": "main_warehouse"
+                      }
+                    ],
+                    "barcodes": [
+                      "123456789012"
+                    ],
+                    "color_image": [
+                      "https://example.com/color_image_123.jpg"
+                    ],
+                    "commissions": [
+                      {
+                        "delivery_amount": 150,
+                        "percent": 10,
+                        "return_amount": 50,
+                        "sale_schema": "standard",
+                        "value": 200
+                      }
+                    ],
+                    "created_at": "2023-01-15T10:30:00Z",
+                    "currency_code": "RUB",
+                    "description_category_id": 42,
+                    "discounted_fbo_stocks": 5,
+                    "errors": [
+                      {
+                        "attribute_id": 101,
+                        "code": "INVALID_PRICE",
+                        "field": "price",
+                        "level": "ERROR",
+                        "state": "pending",
+                        "texts": {
+                          "attribute_name": "Цена",
+                          "description": "Цена не может быть отрицательной",
+                          "hint_code": "PRICE_NEGATIVE",
+                          "message": "Исправьте цену",
+                          "params": [
+                            {
+                              "name": "min_price",
+                              "value": "100"
+                            }
+                          ],
+                          "short_description": "Ошибка цены"
+                        }
+                      }
+                    ],
+                    "has_discounted_fbo_item": false,
+                    "id": 100001,
+                    "images": [
+                      "https://example.com/image1.jpg",
+                      "https://example.com/image2.jpg"
+                    ],
+                    "images360": [
+                      "https://example.com/360_image1.jpg"
+                    ],
+                    "is_archived": false,
+                    "is_autoarchived": false,
+                    "is_discounted": true,
+                    "is_kgt": false,
+                    "is_prepayment_allowed": true,
+                    "is_super": false,
+                    "min_price": "999.99",
+                    "model_info": {
+                      "count": 3,
+                      "model_id": 777
+                    },
+                    "name": "Тестовый товар 123",
+                    "offer_id": "OFFER_123456789",
+                    "old_price": "1499.99",
+                    "price": "1299.99",
+                    "price_indexes": {
+                      "color_index": "RED",
+                      "external_index_data": {
+                        "minimal_price": "1199.99",
+                        "minimal_price_currency": "RUB",
+                        "price_index_value": 85
+                      },
+                      "ozon_index_data": {
+                        "minimal_price": "1250.00",
+                        "minimal_price_currency": "RUB",
+                        "price_index_value": 90
+                      },
+                      "self_marketplaces_index_data": {
+                        "minimal_price": "1200.00",
+                        "minimal_price_currency": "RUB",
+                        "price_index_value": 88
+                      }
+                    },
+                    "primary_image": [
+                      "https://example.com/primary_image.jpg"
+                    ],
+                    "promotions": [
+                      {
+                        "is_enabled": true,
+                        "type": "DISCOUNT"
+                      }
+                    ],
+                    "sku": 123456789,
+                    "sources": [
+                      {
+                        "created_at": "2023-01-10T09:15:00Z",
+                        "quant_code": "QUANT_123",
+                        "shipment_type": "EXPRESS",
+                        "sku": 123456789,
+                        "source": "supplier_1"
+                      }
+                    ],
+                    "statuses": {
+                      "is_created": true,
+                      "moderate_status": "approved",
+                      "status": "active",
+                      "status_description": "Товар доступен для продажи",
+                      "status_failed": "none",
+                      "status_name": "Активен",
+                      "status_tooltip": "Товар прошёл модерацию",
+                      "status_updated_at": "2023-01-14T11:20:00Z",
+                      "validation_status": "valid"
+                    },
+                    "stocks": {
+                      "has_stock": true,
+                      "stocks": [
+                        {
+                          "present": 50,
+                          "reserved": 5,
+                          "sku": 123456789,
+                          "source": "main_warehouse"
+                        }
+                      ]
+                    },
+                    "type_id": 1,
+                    "updated_at": "2023-01-16T12:45:00Z",
+                    "vat": "20%",
+                    "visibility_details": {
+                      "has_price": true,
+                      "has_stock": true
+                    },
+                    "volume_weight": 1.5
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ProductAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v3/product/list",
+      "operationId": "ProductAPI_GetProductList",
+      "summary": "Список товаров",
+      "description": "Метод для получения списка всех товаров.\n\nЕсли вы используете фильтр по идентификатору `offer_id` или `product_id`, остальные параметры заполнять не обязательно.\nВернутся все товары с указанными идентификаторами, независимо от видимости.\nЗа один раз вы можете использовать только одну группу идентификаторов, не больше 1000 товаров.\n\nЕсли вы не используете для отображения идентификаторы, укажите `limit` и `last_id` в следующих запросах.\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Список товаров",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/productv3GetProductListResponse"
+              },
+              "example": {
+                "result": {
+                  "items": [
+                    {
+                      "product_id": 3397917680,
+                      "offer_id": "2026-01-13 16:56:03 PDF",
+                      "has_fbo_stocks": false,
+                      "has_fbs_stocks": false,
+                      "archived": false,
+                      "is_discounted": false,
+                      "quants": []
+                    }
+                  ],
+                  "total": 1,
+                  "last_id": "WzMzOTc5MTc2ODAsMzM5NzkxNzY4MF0="
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ProductAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v4/product/info/attributes",
+      "operationId": "ProductAPI_GetProductAttributesV4",
+      "summary": "Получить описание характеристик товара",
+      "description": "Возвращает описание характеристик товаров по идентификатору и видимости. Товар можно искать по `offer_id`, `product_id` или `sku`.",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Описание характеристик товара",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/productv4GetProductAttributesV4Response"
+              },
+              "example": {
+                "result": [
+                  {
+                    "id": 213761435,
+                    "barcode": "",
+                    "barcodes": [
+                      "123124123",
+                      "123342455"
+                    ],
+                    "name": "Пленка защитная для Xiaomi Redmi Note 10 Pro 5G",
+                    "offer_id": "21470",
+                    "type_id": 124572394,
+                    "height": 10,
+                    "depth": 210,
+                    "width": 140,
+                    "dimension_unit": "mm",
+                    "weight": 50,
+                    "weight_unit": "g",
+                    "primary_image": "https://cdn1.ozone.ru/s3/multimedia-4/6804736960.jpg",
+                    "sku": 423434534,
+                    "model_info": {
+                      "model_id": 43445453,
+                      "count": 4
+                    },
+                    "images": [
+                      "https://cdn1.ozone.ru/s3/multimedia-4/6804736960.jpg",
+                      "https://cdn1.ozone.ru/s3/multimedia-j/6835412647.jpg"
+                    ],
+                    "pdf_list": [],
+                    "attributes": [
+                      {
+                        "id": 5219,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 970718176,
+                            "value": "универсальный"
+                          }
+                        ]
+                      },
+                      {
+                        "id": 11051,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 970736931,
+                            "value": "Прозрачный"
+                          }
+                        ]
+                      },
+                      {
+                        "id": 10100,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 0,
+                            "value": "false"
+                          }
+                        ]
+                      },
+                      {
+                        "id": 11794,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 970860783,
+                            "value": "safe"
+                          }
+                        ]
+                      },
+                      {
+                        "id": 9048,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 0,
+                            "value": "Пленка защитная для Xiaomi Redmi Note 10 Pro 5G"
+                          }
+                        ]
+                      },
+                      {
+                        "id": 5076,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 39638,
+                            "value": "Xiaomi"
+                          }
+                        ]
+                      },
+                      {
+                        "id": 9024,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 0,
+                            "value": "21470"
+                          }
+                        ]
+                      },
+                      {
+                        "id": 10015,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 0,
+                            "value": "false"
+                          }
+                        ]
+                      },
+                      {
+                        "id": 85,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 971034861,
+                            "value": "Brand"
+                          }
+                        ]
+                      },
+                      {
+                        "id": 9461,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 349824787,
+                            "value": "Защитная пленка для смартфона"
+                          }
+                        ]
+                      },
+                      {
+                        "id": 4180,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 0,
+                            "value": "Пленка защитная для Xiaomi Redmi Note 10 Pro 5G"
+                          }
+                        ]
+                      },
+                      {
+                        "id": 4191,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 0,
+                            "value": "Пленка предназначена для модели Xiaomi Redmi Note 10 Pro 5G. Защитная гидрогелевая пленка обеспечит защиту вашего смартфона от царапин, пыли, сколов и потертостей."
+                          }
+                        ]
+                      },
+                      {
+                        "id": 8229,
+                        "complex_id": 0,
+                        "values": [
+                          {
+                            "dictionary_value_id": 91521,
+                            "value": "Защитная пленка"
+                          }
+                        ]
+                      }
+                    ],
+                    "attributes_with_defaults": [
+                      5435,
+                      3452
+                    ],
+                    "complex_attributes": [],
+                    "color_image": "",
+                    "description_category_id": 71107562
+                  }
+                ],
+                "total": 1,
+                "last_id": "onVsfA=="
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Неверный параметр",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Доступ запрещён",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Ответ не найден",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "409": {
+          "description": "Конфликт запроса",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Внутренняя ошибка сервера",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "ProductAPI"
+      ],
+      "deprecated": false
+    },
+    {
+      "method": "POST",
+      "path": "/v4/product/info/stocks",
+      "operationId": "ProductAPI_GetProductInfoStocks",
+      "summary": "Информация о количестве товаров",
+      "description": "Возвращает информацию о ĸоличестве товаров по схемам FBS, rFBS и FBP:\n  - сĸольĸо единиц есть в наличии,\n  - сĸольĸо зарезервировано поĸупателями.\n\nЧтобы получить информацию об остатках по схеме FBO, используйте метод [/v1/analytics/stocks](#operation/AnalyticsAPI_AnalyticsStocks).\n",
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Client-Id"
+        },
+        {
+          "$ref": "#/components/parameters/Api-Key"
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Количество товара",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v4GetProductInfoStocksResponse"
+              },
+              "example": {
+                "items": [
+                  {
+                    "offer_id": "test-offer-123456",
+                    "product_id": 1000123456,
+                    "stocks": [
+                      {
+                        "sku": 1000123456,
+                        "type": "fbs",
+                        "present": 150,
+                        "reserved": 25,
+                        "shipment_type": "SHIPMENT_TYPE_GENERAL"
+                      },
+                      {
+                        "sku": 1000123456,
+                        "type": "fbo",
+                        "present": 75,
+                        "reserved": 10,
+                        "shipment_type": "SHIPMENT_TYPE_GENERAL"
+                      }
+                    ]
+                  },
+                  {
+                    "offer_id": "test-offer-123457",
+                    "product_id": 1000123457,
+                    "stocks": [
+                      {
+                        "sku": 1000123457,
+                        "type": "fbs",
+                        "present": 45,
+                        "reserved": 5,
+                        "shipment_type": "SHIPMENT_TYPE_BOX"
+                      }
+                    ]
+                  }
+                ],
+                "cursor": "next-cursor-12345",
+                "total": 2
+              }
+            }
+          }
+        },
+        "default": {
+          "description": "Ошибка",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rpcStatus"
+              }
+            }
+          }
+        }
+      },
+      "tags": [
+        "Prices&StocksAPI"
+      ],
+      "deprecated": false
+    }
+  ],
+  "not_found_in_swagger": [
+    {
+      "method": "GET",
+      "path": "/api/client/campaign"
+    },
+    {
+      "method": "POST",
+      "path": "/api/client/statistic/orders/generate/json"
+    },
+    {
+      "method": "POST",
+      "path": "/api/client/statistics/json"
+    },
+    {
+      "method": "POST",
+      "path": "/api/client/token"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/average-delivery-time"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/average-delivery-time/details"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/analytics/average-delivery-time/summary"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/history"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/updates"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/product/info/list"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/question/top_sku"
+    },
+    {
+      "method": "POST",
+      "path": "/v2/product/info"
+    },
+    {
+      "method": "POST",
+      "path": "/v4/product/info/prices"
+    }
+  ]
+}
