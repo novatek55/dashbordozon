@@ -1775,13 +1775,13 @@
       <h2 style="margin-bottom:12px;">🔍 Поисковая выдача Ozon</h2>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
         <input id="serp-query-input" type="text" placeholder="Введите поисковый запрос..."
-               style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
+               style="flex:1;min-width:0;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;width:0;">
         <button id="serp-scrape-btn" onclick="serpScrape()"
-                style="padding:8px 16px;background:#005bff;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;">
+                style="flex-shrink:0;width:auto;padding:8px 16px;background:#005bff;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;white-space:nowrap;">
           🔄 Обновить выдачу
         </button>
         <button onclick="serpLoadCurrent()"
-                style="padding:8px 12px;background:#f0f4ff;color:#005bff;border:1px solid #c0d0ff;border-radius:6px;cursor:pointer;font-size:13px;">
+                style="flex-shrink:0;width:auto;padding:8px 12px;background:#f0f4ff;color:#005bff;border:1px solid #c0d0ff;border-radius:6px;cursor:pointer;font-size:13px;white-space:nowrap;">
           📂 Загрузить
         </button>
       </div>
@@ -17384,7 +17384,11 @@
         while (bridgeActive) {
           try {
             const task = await fetch("/api/plugin/poll").then(r => r.json());
-            if (!task.requestId) continue;
+            if (!task.requestId) {
+              // Нет задач — короткая пауза перед следующим поллингом
+              await new Promise(r => setTimeout(r, 300));
+              continue;
+            }
 
             const { requestId, action, payload } = task;
             let response;
@@ -17453,11 +17457,12 @@
       if (btn) btn.disabled = true;
       if (status) status.textContent = "⏳ Собираем выдачу... (до 60 сек)";
       try {
-        const res = await fetch("/api/serp/scrape", {
+        const httpRes = await fetch("/api/serp/scrape", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query_text: query, limit: 20 }),
-        }).then(r => r.json());
+        });
+        const res = await httpRes.json().catch(() => ({ error: `HTTP ${httpRes.status}` }));
         if (res.error) throw new Error(res.error);
         if (status) status.textContent = `✓ Снимок #${res.snapshot_id} — ${res.position_count} позиций`;
         await serpLoadSnapshot(query);

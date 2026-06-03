@@ -28,6 +28,10 @@ logger = logging.getLogger(__name__)
 PLUGIN_TIMEOUT = 60.0
 
 
+class _PluginError(Exception):
+    """Ошибка плагина — возвращается как JSON {error: ...}."""
+
+
 # ────────────────────────────────────────────────────────────────────────────
 # Helpers
 # ────────────────────────────────────────────────────────────────────────────
@@ -76,12 +80,12 @@ async def _call_plugin(request: web.Request, action: str, payload: Dict[str, Any
         result = await asyncio.wait_for(fut, timeout=PLUGIN_TIMEOUT)
     except asyncio.TimeoutError:
         pending.pop(request_id, None)
-        raise web.HTTPGatewayTimeout(reason="Plugin timeout — расширение не ответило")
+        raise _PluginError("Timeout: расширение не ответило за 60 сек. Убедитесь что дашборд открыт в Chrome с установленным плагином «Ozon Unitka Helper».")
     finally:
         pending.pop(request_id, None)
 
     if not result.get("ok"):
-        raise web.HTTPBadGateway(reason=result.get("error", "Plugin error"))
+        raise _PluginError(result.get("error", "Plugin error"))
 
     return result.get("data", {})
 
@@ -121,10 +125,13 @@ async def post_serp_scrape(request: web.Request) -> web.Response:
     limit = int(body.get("limit", 20))
     pool: asyncpg.Pool = request.app["pool"]
 
-    # 1. Скрейп через плагин
-    plugin_data = await _call_plugin(
-        request, "scrape_serp", {"query_text": query_text, "limit": limit}
-    )
+    try:
+        # 1. Скрейп через плагин
+        plugin_data = await _call_plugin(
+            request, "scrape_serp", {"query_text": query_text, "limit": limit}
+        )
+    except _PluginError as e:
+        return web.json_response({"error": str(e)}, status=502)
     positions = plugin_data.get("positions", [])
 
     # 2. Обогащение конкурентов данными bestsellers
