@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ozon Reports Dashboard</title>
+  <link rel="stylesheet" href="/shared-report-theme.css" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap');
     :root {
@@ -29,12 +30,39 @@
     body { font-family: "Onest", Arial, Helvetica, sans-serif; margin: 0; padding: 24px; color: var(--text); background: var(--bg); }
     h2 { margin: 0 0 18px; font-size: 28px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em; }
     .filters { display: grid; grid-template-columns: repeat(7, minmax(120px, 1fr)); gap: 10px; align-items: end; background: var(--panel); border: 1px solid var(--line); padding: 16px; border-radius: 18px; box-shadow: var(--shadow-soft); }
-    .report-top-menu { display: flex; gap: 10px; overflow-x: auto; margin: 0 0 14px; padding: 4px 2px 10px; scrollbar-width: thin; }
+    .report-top-menu { display: flex; flex-wrap: wrap; gap: 10px; overflow: visible; margin: 0 0 14px; padding: 4px 2px 10px; scrollbar-width: thin; position: relative; z-index: 30; }
     .report-top-menu::-webkit-scrollbar { height: 8px; }
     .report-top-menu::-webkit-scrollbar-thumb { background: rgba(28, 39, 60, 0.18); border-radius: 999px; }
     .report-top-menu-btn { width: auto; flex: 0 0 auto; padding: 10px 14px; border-radius: 999px; background: rgba(0, 91, 255, 0.06); color: var(--text); border: 1px solid rgba(0, 91, 255, 0.12); box-shadow: none; }
     .report-top-menu-btn:hover { box-shadow: none; background: rgba(0, 91, 255, 0.12); }
     .report-top-menu-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .report-top-menu-group { position: relative; }
+    .report-submenu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      min-width: 220px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow-soft);
+      padding: 6px;
+      display: none;
+      z-index: 50;
+    }
+    .report-top-menu-group.open .report-submenu { display: block; }
+    .report-submenu-btn {
+      width: 100%;
+      text-align: left;
+      border-radius: 8px;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      box-shadow: none;
+    }
+    .report-submenu-btn:hover { background: rgba(0, 91, 255, 0.08); }
+    .report-submenu-btn.active { background: var(--accent-soft); color: var(--accent); border-color: rgba(0, 91, 255, 0.14); }
     .report-type-hidden { display: none; }
     label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; font-family: "Onest", Arial, Helvetica, sans-serif; font-weight: 500; }
     input, select, button { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--text); font-family: "Onest", Arial, Helvetica, sans-serif; font-size: 14px; transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease; }
@@ -55,12 +83,40 @@
     .sync-progress-step { font-size: 12px; color: #5f6f85; line-height: 1.4; }
     .sync-progress-step + .sync-progress-step { margin-top: 4px; }
     .sync-progress-step.active { color: #1e6f64; font-weight: 600; }
+    .sync-step-results { margin-top: 10px; padding: 8px 10px; background: #fcfcfd; border: 1px solid #e4e8ef; border-radius: 10px; max-height: 220px; overflow: auto; }
+    .sync-step-result { font-size: 12px; line-height: 1.45; padding: 4px 0; border-bottom: 1px dashed #eef2f7; }
+    .sync-step-result:last-child { border-bottom: 0; }
+    .sync-step-status { font-weight: 700; margin-left: 6px; }
+    .sync-step-status.ok { color: #1f8b4c; }
+    .sync-step-status.error { color: #c0392b; }
+    .sync-step-status.skipped { color: #b7791f; }
     .meta { margin: 14px 0; font-size: 13px; color: var(--muted); font-family: "Onest", Arial, Helvetica, sans-serif; }
     table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--panel); }
     th, td { border: 1px solid var(--line); padding: 6px; text-align: left; }
     th { background: #f7f9fc; position: sticky; top: 0; z-index: 2; font-family: "Onest", Arial, Helvetica, sans-serif; font-size: 12px; color: #7a879c; font-weight: 600; }
     .table-wrap { max-height: 75vh; overflow: auto; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: var(--shadow-soft); }
     .hidden { display: none; }
+    .settings-costs-wrap { margin-top: 10px; }
+    .settings-costs-table th[data-sort-key] { cursor: pointer; }
+    .settings-costs-table input[type="number"] { width: 120px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); }
+    .settings-save-btn { width: auto; padding: 6px 10px; border-radius: 8px; font-size: 12px; }
+    /* UI polish: normalize major controls */
+    .report-top-menu-btn,
+    .report-submenu-btn,
+    .finance-mode-btn,
+    #load_btn,
+    #sync_btn,
+    #refresh_characteristics_btn {
+      min-height: 40px;
+      font-size: 14px !important;
+      padding-top: 10px !important;
+      padding-bottom: 10px !important;
+      line-height: 1.2;
+    }
+    .finance-mode-btn {
+      padding-left: 14px !important;
+      padding-right: 14px !important;
+    }
 
     /* === Cell Color Ranges Module === */
     .cell-color-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.35); z-index: 9999; display: flex; align-items: center; justify-content: center; }
@@ -204,6 +260,9 @@
       font-size: 11px;
       font-weight: 700;
       box-shadow: none;
+      min-height: 32px;
+      padding-top: 6px;
+      padding-bottom: 6px;
     }
     .accrual-report .total-row td {
       font-weight: 800;
@@ -230,7 +289,7 @@
       display: inline-block;
     }
     .accrual-abc-btn {
-      padding: 4px 10px;
+      padding: 8px 12px;
       border-radius: 6px;
       border: 1px solid #8fa0b7;
       background: #fff;
@@ -238,6 +297,7 @@
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
+      min-height: 36px;
     }
     .accrual-abc-btn.active {
       background: #e7edf3;
@@ -278,12 +338,13 @@
       justify-content: flex-end;
     }
     .accrual-abc-menu .abc-menu-footer button {
-      padding: 2px 8px;
+      padding: 6px 10px;
       border: 1px solid #8fa0b7;
       border-radius: 4px;
       background: #fff;
       font-size: 11px;
       cursor: pointer;
+      min-height: 32px;
     }
     .returns-report {
       width: max-content;
@@ -385,6 +446,11 @@
     .unitka-fulfillment { display: inline-flex; gap: 4px; font-size: 11px; margin-left: 6px; }
     .unitka-fulfillment button { padding: 2px 8px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; cursor: pointer; }
     .unitka-fulfillment button.active { background: #3b82f6; color: #fff; border-color: #2563eb; }
+    .unitka-fulfillment button {
+      min-height: 32px;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
     .unitka-ref { font-size: 10.5px; color: #64748b; padding: 0 6px 4px; }
     .unitka-search-dropdown {
       position: absolute; background: #fff; border: 1px solid #cbd5e1;
@@ -659,16 +725,100 @@
       letter-spacing: 0.5px;
       text-align: center;
       white-space: nowrap;
-      border-bottom: 2px solid #ccd5e0;
+      border-top: 1px solid #ccd5e0;
+      border-left: 1px solid #ccd5e0;
+      border-right: 1px solid #ccd5e0;
+      border-bottom: 0;
       vertical-align: middle;
       position: sticky;
       top: 0;
       z-index: 3;
     }
-    .accrual-unitka-table thead tr:nth-child(2) th {
+    .accrual-unitka-table .subgroup-row th {
+      writing-mode: horizontal-tb;
+      transform: none;
+      height: auto;
+      min-height: 0;
+      min-width: 0;
+      padding: 4px 6px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      text-align: center;
+      white-space: nowrap;
+      border-top: 1px solid #ccd5e0;
+      border-left: 1px solid #ccd5e0;
+      border-right: 1px solid #ccd5e0;
+      border-bottom: 0;
+      vertical-align: middle;
+      position: sticky;
+      top: 26px;
+      z-index: 3;
+    }
+    .accrual-unitka-table .subgroup-row th.sg-empty {
+      background: transparent;
+      border-top: 0;
+      border-left: 1px solid #ccd5e0;
+      border-right: 1px solid #ccd5e0;
+      border-bottom: 0;
+    }
+    .accrual-unitka-table .subgroup-row th.sg-cap {
+      background: #e8f0f8;
+      border-top: 1px solid #ccd5e0;
+      border-left: 1px solid #ccd5e0;
+      border-right: 1px solid #ccd5e0;
+      border-bottom: 0;
+    }
+    .accrual-unitka-table .subgroup-row th.sg-cap.sg-ozon-fee { background: #fef4e8; color: #7a5520; border-left-color: transparent; border-right: 1px solid #ccd5e0 !important; }
+    .accrual-unitka-table .subgroup-row th.sg-cap.sg-mp-expenses { background: #e8f0f8; color: #2a4a6a; border-left-color: transparent; border-right: 1px solid #ccd5e0 !important; }
+    .accrual-unitka-table .subgroup-row th.sg-cap.sg-delivery { background: #e8f0f8; color: #2a4a6a; border-left-color: transparent; border-right: 1px solid #ccd5e0 !important; }
+    .accrual-unitka-table .subgroup-row th.sg-cap.sg-partners { background: #f0e8f5; color: #5a3070; border-left-color: transparent; border-right: 1px solid #ccd5e0 !important; }
+    .accrual-unitka-table .subgroup-row th.sg-cap.sg-fbo { background: #e8f5f0; color: #1f5f51; border-left-color: transparent; border-right: 1px solid #ccd5e0 !important; }
+    .accrual-unitka-table .subgroup-row th.sg-cap.sg-promo { background: #fde8e8; color: #8b2020; border-left-color: transparent; border-right: 1px solid #ccd5e0 !important; }
+    .accrual-unitka-table .subgroup-row th.sg-cap.sg-other { background: #f0f0f0; color: #555; border-left-color: transparent; border-right: 1px solid #ccd5e0 !important; }
+    .accrual-unitka-table .subgroup-row th.sg-cap.sg-orders { background: #e8eef5; color: #3a5070; border-left-color: transparent; border-right: 1px solid #ccd5e0 !important; }
+    .accrual-unitka-table .subgroup-row th.sg-cap.sg-revenue { background: #edf2f8; color: #2c4a6e; border-left-color: transparent; border-right: 1px solid #ccd5e0 !important; }
+    .accrual-unitka-table .subgroup-row th.sg-cap.sg-comp { background: #f8efe4; color: #774c14; border-left-color: transparent; border-right: 1px solid #ccd5e0 !important; }
+    .accrual-unitka-table .subgroup-row th.sg-cap.sg-totals { background: #eaf5f1; color: #1f5f51; border-left-color: transparent; border-right: 1px solid #ccd5e0 !important; }
+    .accrual-unitka-table .subgroup-row th[data-sg-key] {
+      border-bottom: 0;
+      border-right: 1px solid #ccd5e0 !important;
+    }
+    .accrual-unitka-table .subgroup-row th[data-sg-cap="marketplace_expenses"] {
+      border-top: 1px solid #ccd5e0 !important;
+    }
+    .accrual-unitka-table .subgroup-row th.sg-orders { background: #e8eef5; color: #3a5070; border-left-color: transparent; border-right-color: transparent; }
+    .accrual-unitka-table .subgroup-row th.sg-revenue { background: #edf2f8; color: #2c4a6e; border-left-color: transparent; border-right-color: transparent; }
+    .accrual-unitka-table .subgroup-row th.sg-mp-expenses { background: #e8f0f8; color: #2a4a6a; border-left-color: transparent; border-right-color: transparent; }
+    .accrual-unitka-table .subgroup-row th.sg-ozon-fee { background: #fef4e8; color: #7a5520; border-left-color: transparent; border-right-color: transparent; }
+    .accrual-unitka-table .subgroup-row th.sg-delivery { background: #e8f0f8; color: #2a4a6a; border-left-color: transparent; border-right-color: transparent; }
+    .accrual-unitka-table .subgroup-row th.sg-partners { background: #f0e8f5; color: #5a3070; border-left-color: transparent; border-right-color: transparent; }
+    .accrual-unitka-table .subgroup-row th.sg-fbo { background: #e8f5f0; color: #1f5f51; border-left-color: transparent; border-right-color: transparent; }
+    .accrual-unitka-table .subgroup-row th.sg-promo { background: #fde8e8; color: #8b2020; border-left-color: transparent; border-right-color: transparent; }
+    .accrual-unitka-table .subgroup-row th.sg-other { background: #f0f0f0; color: #555; border-left-color: transparent; border-right-color: transparent; }
+    .accrual-unitka-table .subgroup-row th.sg-comp { background: #f8efe4; color: #774c14; border-left-color: transparent; border-right-color: transparent; }
+    .accrual-unitka-table .subgroup-row th.sg-totals { background: #eaf5f1; color: #1f5f51; border-left-color: transparent; border-right-color: transparent; }
+    .accrual-unitka-table thead tr:last-child th {
       position: sticky;
       top: 26px;
       z-index: 2;
+      border-top: 0;
+      border-left: 1px solid #ccd5e0;
+      border-right: 1px solid #ccd5e0;
+      border-bottom: 1px solid #ccd5e0;
+    }
+    .accrual-unitka-table.has-subgroup-row thead tr:last-child th {
+      top: 52px;
+    }
+    .accrual-unitka-table.has-subgroup-row thead tr:last-child th.subgroup-total-col {
+      border-top: 0 !important;
+    }
+    .accrual-unitka-table thead tr:nth-child(2) th.nested-head {
+      border-top: 1px solid #ccd5e0;
+    }
+    .accrual-unitka-table thead tr:nth-child(2) th.subgroup-toggle {
+      cursor: pointer;
     }
     .accrual-unitka-table .col-group-row .head-title {
       writing-mode: horizontal-tb;
@@ -687,6 +837,33 @@
     .accrual-unitka-table .col-group-row .cg-other { background: #f0f0f0; color: #555; }
     .accrual-unitka-table .col-group-row .cg-comp { background: #f8efe4; color: #774c14; }
     .accrual-unitka-table .col-group-row .cg-totals { background: #eaf5f1; color: #1f5f51; }
+    .accrual-unitka-table thead th.col-group-total[data-col-group-name="orders"] { background: #e8eef5 !important; color: #3a5070; }
+    .accrual-unitka-table thead th.col-group-total[data-col-group-name="revenue"] { background: #edf2f8 !important; color: #2c4a6e; }
+    .accrual-unitka-table thead th.col-group-total[data-col-group-name="mp-expenses"] { background: #e8f0f8 !important; color: #2a4a6a; }
+    .accrual-unitka-table thead th.col-group-total[data-col-group-name="ozon-fee"] { background: #fef4e8 !important; color: #7a5520; }
+    .accrual-unitka-table thead th.col-group-total[data-col-group-name="delivery"] { background: #e8f0f8 !important; color: #2a4a6a; }
+    .accrual-unitka-table thead th.col-group-total[data-col-group-name="partners"] { background: #f0e8f5 !important; color: #5a3070; }
+    .accrual-unitka-table thead th.col-group-total[data-col-group-name="fbo"] { background: #e8f5f0 !important; color: #1f5f51; }
+    .accrual-unitka-table thead th.col-group-total[data-col-group-name="promo"] { background: #fde8e8 !important; color: #8b2020; }
+    .accrual-unitka-table thead th.col-group-total[data-col-group-name="other"] { background: #f0f0f0 !important; color: #555; }
+    .accrual-unitka-table thead th.col-group-total[data-col-group-name="comp"] { background: #f8efe4 !important; color: #774c14; }
+    .accrual-unitka-table thead th.col-group-total[data-col-group-name="totals"] { background: #eaf5f1 !important; color: #1f5f51; }
+
+    /* Nested (expanded) columns use soft-tinted backgrounds by their group */
+    .accrual-unitka-table thead tr:last-child th.nested-head[data-col-group-name="orders"] { background: #f2f6fb !important; color: #4c607f; }
+    .accrual-unitka-table thead tr:last-child th.nested-head[data-col-group-name="revenue"] { background: #f4f7fc !important; color: #516384; }
+    .accrual-unitka-table thead tr:last-child th.nested-head[data-col-group-name="mp-expenses"] { background: #f1f6fc !important; color: #4c627f; }
+    .accrual-unitka-table thead tr:last-child th.nested-head[data-col-group-name="ozon-fee"],
+    .accrual-unitka-table thead tr:last-child th.nested-head[data-col-group-name="delivery"],
+    .accrual-unitka-table thead tr:last-child th.nested-head[data-col-group-name="partners"],
+    .accrual-unitka-table thead tr:last-child th.nested-head[data-col-group-name="fbo"],
+    .accrual-unitka-table thead tr:last-child th.nested-head[data-col-group-name="promo"],
+    .accrual-unitka-table thead tr:last-child th.nested-head[data-col-group-name="other"] {
+      background: #f1f6fc !important;
+      color: #4c627f;
+    }
+    .accrual-unitka-table thead tr:last-child th.nested-head[data-col-group-name="comp"] { background: #fcf5ec !important; color: #8a6438; }
+    .accrual-unitka-table thead tr:last-child th.nested-head[data-col-group-name="totals"] { background: #eff9f5 !important; color: #2d695e; }
     .accrual-unitka-table .col-group-row .head-perunit-toggle {
       display: inline-flex;
       align-items: center;
@@ -736,9 +913,22 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
       padding: 8px 12px;
       background: #f7faf9;
       border-bottom: 1px solid #dde4eb;
+    }
+    .accrual-action-toolbar .accrual-floating-tags {
+      position: static;
+      top: auto;
+      left: auto;
+      z-index: auto;
+      box-shadow: none;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      margin: 0;
     }
     .accrual-action-toolbar .toolbar-spacer { flex: 1; }
     .accrual-action-toolbar .accrual-export-btn {
@@ -761,6 +951,19 @@
     .accrual-unitka-table tbody tr:nth-child(even) td.col-group-total { background: #e8edf5 !important; }
     .accrual-unitka-table tbody tr:hover:not(:first-child) td.col-group-total { background: #dbe3ef !important; }
     .accrual-unitka-table tbody tr:first-child td.col-group-total { background: #d6dfec !important; }
+    .accrual-unitka-table .group-end { border-right: 2px solid #b8c5d4 !important; }
+    .accrual-unitka-table .col-group-row th[data-col-group-toggle="mp-expenses"] {
+      border-left: 2px solid #b8c5d4 !important;
+      border-right: 2px solid #b8c5d4 !important;
+      border-top: 2px solid #b8c5d4 !important;
+    }
+    .accrual-unitka-table .subgroup-row th.sg-mp-expenses,
+    .accrual-unitka-table .subgroup-row th.sg-cap.sg-mp-expenses {
+      border-top: 1px solid #b8c5d4 !important;
+    }
+    .accrual-unitka-table thead tr:last-child th[data-col-group-name="mp-expenses"] {
+      border-top: 1px solid #b8c5d4 !important;
+    }
     /* Zebra striping */
     .accrual-unitka-table tbody tr:nth-child(odd) td { background: #ffffff; }
     .accrual-unitka-table tbody tr:nth-child(even) td { background: #f7f8fb; }
@@ -1442,7 +1645,7 @@
       <label for="report_type">Report</label>
       <select id="report_type">
         <option value="finance_report">Finance Report</option>
-        <option value="finance_report_v2">Finance Report V2</option>
+        <option value="wb_finance">WB Finance</option>
         <option value="accruals_comp_by_article">Начисления по артикулам</option>
         <option value="returns_analytics">Возвраты и отмены</option>
         <!-- <option value="sales">Sales</option> -->
@@ -1458,6 +1661,8 @@
         <option value="reviews_report">Отзывы</option>
         <option value="unitka">Юнитка</option>
         <option value="rnp_report">РНП</option>
+        <option value="settings_costs">Себестоимость</option>
+        <option value="serp">🔍 Выдача</option>
       </select>
     </div>
     <div>
@@ -1538,6 +1743,7 @@
     </div>
     <div class="sync-progress-percent" id="sync_percent">0%</div>
     <div class="sync-progress-steps" id="sync_steps"></div>
+    <div class="sync-step-results" id="sync_step_results"></div>
   </div>
   
   <div class="table-wrap" id="generic_wrap">
@@ -1562,8 +1768,58 @@
     </div>
     <div class="unitka-compare-wrap" id="unitka_compare_wrap"></div>
   </div>
+  <div class="hidden settings-costs-wrap" id="settings_costs_wrap"></div>
+  <!-- SERP вкладка «Выдача» -->
+  <div class="hidden" id="serp_wrap">
+    <div style="padding:16px;max-width:1320px;margin:0 auto;">
+      <h2 style="margin-bottom:12px;">🔍 Поисковая выдача Ozon</h2>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <input id="serp-query-input" type="text" placeholder="Введите поисковый запрос..."
+               style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
+        <button id="serp-scrape-btn" onclick="serpScrape()"
+                style="padding:8px 16px;background:#005bff;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;">
+          🔄 Обновить выдачу
+        </button>
+        <button onclick="serpLoadCurrent()"
+                style="padding:8px 12px;background:#f0f4ff;color:#005bff;border:1px solid #c0d0ff;border-radius:6px;cursor:pointer;font-size:13px;">
+          📂 Загрузить
+        </button>
+      </div>
+      <div id="serp-status" style="font-size:13px;color:#888;margin-bottom:12px;min-height:18px;"></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="serp-filter-btn" data-filter="all" onclick="serpFilter('all')"
+                style="padding:4px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#e8f0fe;font-size:13px;">Все</button>
+        <button class="serp-filter-btn" data-filter="our" onclick="serpFilter('our')"
+                style="padding:4px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;font-size:13px;">Наши</button>
+        <button class="serp-filter-btn" data-filter="competitors" onclick="serpFilter('competitors')"
+                style="padding:4px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;font-size:13px;">Конкуренты</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:#f5f7fa;border-bottom:2px solid #e0e4eb;">
+              <th style="padding:8px;text-align:center;width:36px;">#</th>
+              <th style="padding:8px;width:48px;">Фото</th>
+              <th style="padding:8px;text-align:left;min-width:200px;">Название / SKU</th>
+              <th style="padding:8px;">Бренд</th>
+              <th style="padding:8px;text-align:right;">Цена</th>
+              <th style="padding:8px;text-align:right;">До скидки</th>
+              <th style="padding:8px;text-align:right;">Выручка 30д</th>
+              <th style="padding:8px;text-align:right;">Прод/день</th>
+              <th style="padding:8px;text-align:center;">Рейтинг</th>
+              <th style="padding:8px;text-align:right;">Отзывы</th>
+              <th style="padding:8px;">Акция</th>
+              <th style="padding:8px;text-align:center;min-width:110px;">Метка</th>
+            </tr>
+          </thead>
+          <tbody id="serp-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
   <div id="returns_analytics_wrap" style="display:none;margin:10px 0;"></div>
   <div id="finance_kpi_tiles" style="display:none;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0;"></div>
+  <div id="finance_chart_wrap" style="display:none;margin:10px 0;"></div>
   <div class="finance-mode-toggle" id="finance_mode_toggle" style="display:none;gap:4px;margin:8px 0;align-items:center;">
     <span style="color:#64748b;font-size:12px;margin-right:8px;">Режим:</span>
     <button type="button" class="finance-mode-btn" data-mode="cash" style="padding:6px 14px;border:1px solid #cbd5e1;background:#2563eb;color:#fff;cursor:pointer;border-radius:6px 0 0 6px;font-weight:600;font-size:13px;">Касса</button>
@@ -1614,7 +1870,9 @@
     const analyticsStocksWrap = document.getElementById("analytics_stocks_wrap");
     const stockBalancesWrap = document.getElementById("stock_balances_wrap");
     const advertisingReportWrap = document.getElementById("advertising_report_wrap");
+    const settingsCostsWrap = document.getElementById("settings_costs_wrap");
     const financeWrap = document.getElementById("finance_wrap");
+    const financeChartWrap = document.getElementById("finance_chart_wrap");
     const financeHead = document.querySelector("#finance_table thead");
     const financeBody = document.querySelector("#finance_table tbody");
     const financeKpiWrap = document.getElementById("finance_kpi_wrap");
@@ -1623,6 +1881,10 @@
     const reportFilterMenu = document.getElementById("report_filter_menu");
     const genericFilterBar = document.getElementById("generic_filterbar");
     let currentSupplyPlanItems = [];
+    let financeChartMode = (() => {
+      try { return localStorage.getItem("ozon-dashboard-finance-chart-mode") || "plan_vs_cumulative"; } catch(e) { return "plan_vs_cumulative"; }
+    })();
+    let financeMainChart = null;
     let supplyPlanSourceItems = [];
     let supplySkuToOfferMap = {};
     let supplySkuPriceMap = {};
@@ -1638,6 +1900,8 @@
     let stage2WarehouseItemOverrides = {};
     let stage2CompositionDirty = false;
     let openedPalletDetails = new Set();
+    let reviewsAutoSyncStarted = false;
+    let reviewsAutoSyncPollTimer = null;
     let supplyInputSaveTimers = {};
     const REPORT_FILTER_STORAGE_KEY = "ozon-dashboard-report-filters-v1";
     const ACCRUAL_TAX_RATE_STORAGE_KEY = "ozon-dashboard-accrual-tax-rate-v1";
@@ -2819,7 +3083,7 @@
       fbo_acceptance_services: ["fbo_cargo_processing", "fbo_booking_slot_staff"],
       fbo_delivery_to_warehouse: ["cross_docking"],
       fbo_storage_services: ["warehouse_placement", "valid_preparation", "ozon_delivery_to_pvz"],
-      promotion_total: ["review_points", "pay_per_click", "premium_plus_subscription"],
+      promotion_total: ["review_points", "pay_per_click", "premium_plus_subscription", "review_pin", "accelerated_reviews"],
       other_services: ["penalties_total", "loans_factoring", "other_accrual_adjustments", "shortage_retention", "other_services_misc"],
       penalties_total: ["penalty_non_recommended_slot"],
       other_services_misc: ["utilization", "packaging_materials", "operational_errors", "temporary_sc_storage"],
@@ -2834,6 +3098,7 @@
       "marketing_pct",
       "accrued",
       "material_cost",
+      "vat_5",
       "gross_profit",
       "gross_profit_pct_oz",
       "gross_profit_pct_accrued",
@@ -2852,20 +3117,22 @@
     const accrualAbcMenuState = { open: false };
     // accrualTagManagerOpen removed — now using tagManagerOpenByReport
     const ACCRUAL_COLUMN_GROUPS = {
-      revenue_sales: ["revenue", "returns_total", "returns_pct"],
+      revenue_sales: ["revenue", "returns_total", "returns_pct", "client_revenue"],
       returns_total: [],
-      marketplace_expenses: ["ozon_fee_total", "delivery_services_total", "agent_services_total", "fbo_services_total", "ad_spend", "other_grouped"],
+      marketplace_expenses: ["ozon_fee_total", "delivery_services_total", "agent_services_total", "fbo_services_total", "promotion_total", "other_services", "other_grouped"],
       ozon_fee_total: ["sale_commission", "return_commission"],
-      delivery_services_total: ["pickup_processing", "courier_departure", "dropoff_processing", "logistics", "reverse_logistics", "pickup_courier_delivery"],
-      agent_services_total: ["partner_returns_processing", "star_products", "temporary_partner_storage", "partner_dropoff_processing", "delivery_to_pickup", "acquiring"],
+      delivery_services_total: ["dropoff_processing", "logistics", "reverse_logistics", "courier_departure", "pickup_processing", "pickup_courier_delivery"],
+      agent_services_total: ["acquiring", "partner_returns_processing", "star_products", "delivery_to_pickup", "partner_dropoff_processing", "partner_packaging", "temporary_partner_storage"],
       fbo_services_total: ["fbo_acceptance_services", "fbo_delivery_to_warehouse", "fbo_storage_services"],
       fbo_acceptance_services: ["piece_acceptance", "zone_sorting", "excess_processing", "fbo_booking_slot_staff"],
       fbo_delivery_to_warehouse: ["cross_docking"],
-      fbo_storage_services: ["valid_preparation", "ozon_delivery_to_pvz", "warehouse_placement"],
-      promotion_total: ["ad_spend", "premium_plus_subscription", "pay_per_click", "review_pin", "review_points"],
+      fbo_storage_services: ["warehouse_placement", "valid_preparation", "ozon_delivery_to_pvz"],
+      promotion_total: ["ad_spend", "pay_per_click", "premium_plus_subscription", "review_points", "review_pin"],
+      other_services: ["penalties_total", "loans_factoring", "other_accrual_adjustments", "shortage_retention", "other_services_misc"],
+      penalties_total: ["penalty_non_recommended_slot"],
+      other_services_misc: ["utilization", "packaging_materials", "operational_errors", "temporary_sc_storage"],
       other_grouped: ["accelerated_reviews", "pickup_collection_total"],
     };
-    const ACCRUAL_HIDE_PARENT_WHEN_EXPANDED = new Set(["other_grouped", "fbo_services_total"]);
     const UNITKA_HEADERS = {
       article: "Артикул",
       revenue: "Выручка / продажи - возвраты",
@@ -2881,7 +3148,21 @@
     const COLUMNS = {
       cash_flow: ["date", "revenue", "return_cost", "commission", "other_costs", "delivery_cost", "net_amount"],
       finance_report: [],
-      finance_report_v2: [],
+      wb_finance: [
+        { key: "report_date", label: "Дата" },
+        { key: "seller_oper_name", label: "Операция (sellerOperName)" },
+        { key: "gross_revenue", label: "Продажи, руб" },
+        { key: "marketplace_commission", label: "Комиссия маркетплейса" },
+        { key: "logistics_direct", label: "Логистика прямая" },
+        { key: "logistics_reverse", label: "Логистика обратная" },
+        { key: "acquiring", label: "Эквайринг / платёжные услуги" },
+        { key: "penalties", label: "Штрафы" },
+        { key: "other_deductions", label: "Прочие удержания" },
+        { key: "marketplace_expenses_total", label: "Расходы маркетплейса (итого)" },
+        { key: "to_pay", label: "Начислено к выплате" },
+        { key: "rows_count", label: "Строк в дне" },
+        { key: "is_final_day", label: "День финализирован" },
+      ],
       finance_report_accrual: [],
       accruals_comp_by_article: [
         { key: "offer_id", label: "Артикул" },
@@ -2922,7 +3203,7 @@
     const ENDPOINTS = {
       cash_flow: "/api/cash-flow",
       finance_report: "/api/finance-report",
-      finance_report_v2: "/api/finance-report-v2",
+      wb_finance: "/api/wb/finance-report-daily",
       finance_report_accrual: "/api/finance-report-accrual",
       accruals_comp_by_article: "/api/accruals-comp-by-article",
       accruals_comp_by_article_accrual: "/api/accruals-comp-by-article-accrual",
@@ -2942,7 +3223,9 @@
       advertising_report: "/api/advertising-report",
       reviews_report: "/api/reviews-report",
       article_characteristics: "/api/article-characteristics",
+      settings_costs: "/api/settings/costs",
     };
+    const settingsCostsState = { sortKey: "article", sortDir: "asc", rows: [] };
 
     const now = new Date();
     const y = now.getFullYear();
@@ -2953,14 +3236,22 @@
 
     function renderReportTopMenu() {
       if (!reportTopMenu) return;
-      const options = Array.from(reportType.options || []);
+      const options = Array.from(reportType.options || []).filter((option) => option.value !== "settings_costs");
+      const settingsActive = reportType.value === "settings_costs";
       reportTopMenu.innerHTML = options.map((option) => `
         <button
           type="button"
           class="report-top-menu-btn ${option.value === reportType.value ? "active" : ""}"
           data-report-menu-value="${option.value}"
         >${option.textContent}</button>
-      `).join("");
+      `).join("") + `
+        <div class="report-top-menu-group" id="settings_menu_group">
+          <button type="button" class="report-top-menu-btn ${settingsActive ? "active" : ""}" id="settings_menu_btn">Настройки</button>
+          <div class="report-submenu" id="settings_submenu">
+            <button type="button" class="report-submenu-btn ${settingsActive ? "active" : ""}" data-report-menu-value="settings_costs">Себестоимость</button>
+          </div>
+        </div>
+      `;
       reportTopMenu.querySelectorAll("[data-report-menu-value]").forEach((button) => {
         button.addEventListener("click", () => {
           const nextValue = String(button.dataset.reportMenuValue || "");
@@ -2969,6 +3260,20 @@
           reportType.dispatchEvent(new Event("change"));
         });
       });
+      const settingsGroup = document.getElementById("settings_menu_group");
+      const settingsBtn = document.getElementById("settings_menu_btn");
+      if (settingsGroup && settingsBtn) {
+        settingsBtn.addEventListener("click", () => {
+          settingsGroup.classList.toggle("open");
+        });
+        if (window._settingsMenuOutsideHandler) {
+          document.removeEventListener("click", window._settingsMenuOutsideHandler);
+        }
+        window._settingsMenuOutsideHandler = (event) => {
+          if (!settingsGroup.contains(event.target)) settingsGroup.classList.remove("open");
+        };
+        document.addEventListener("click", window._settingsMenuOutsideHandler);
+      }
     }
 
     function fmt(v) {
@@ -4250,6 +4555,63 @@
       const hasReturnsTotal = cols.some((col) => String(col?.key || "") === "returns_total");
       const existingKeys = new Set(cols.map((col) => String(col?.key || "")));
       const colsByKey = new Map(cols.map((col) => [String(col?.key || ""), col]));
+      const SYNTHETIC_COL_LABELS = {
+        sale_commission: "Комиссия за продажу",
+        return_commission: "Комиссия за возврат",
+        logistics: "Логистика",
+        reverse_logistics: "Обратная логистика",
+        dropoff_processing: "Обработка возвратов, отмен и невыкупов партнёрами",
+        courier_departure: "Доставка до места выдачи",
+        pickup_processing: "Обработка отправления Drop-off партнёрами",
+        pickup_courier_delivery: "Доставка до места выдачи",
+        acquiring: "Эквайринг",
+        partner_returns_processing: "Обработка возвратов, отмен и невыкупов партнёрами",
+        star_products: "Звёздные товары",
+        delivery_to_pickup: "Доставка до пункта выдачи",
+        partner_dropoff_processing: "Обработка drop-off партнёрами",
+        temporary_partner_storage: "Временное размещение товара партнёрами",
+        piece_acceptance: "Услуги приемки",
+        zone_sorting: "Сортировка зоны",
+        excess_processing: "Обработка излишков",
+        fbo_booking_slot_staff: "Бронирование слота",
+        cross_docking: "Кросс-докинг",
+        warehouse_placement: "Размещение на складе",
+        valid_preparation: "Подготовка",
+        ozon_delivery_to_pvz: "Доставка до склада",
+        ad_spend: "−Реклама",
+        pay_per_click: "Оплата за клик",
+        premium_plus_subscription: "Подписка Premium Plus",
+        review_points: "Баллы за отзывы",
+        review_pin: "Оплата за заказ",
+        accelerated_reviews: "Ускоренные отзывы",
+        pickup_collection_total: "Сбор в ПВЗ",
+        ozon_fee_total: "−Вознаграждение Ozon",
+        delivery_services_total: "−Услуги доставки",
+        agent_services_total: "−Услуги партнёров",
+        fbo_services_total: "−Услуги FBO",
+        promotion_total: "−Реклама (НАЧ)",
+        other_grouped: "−Прочее (сгруппировано)",
+        marketplace_expenses: "−Расходы МП",
+        penalties_total: "Штрафы",
+        penalty_non_recommended_slot: "Отгрузка в нерекомендованный слот",
+        loans_factoring: "Займы и факторинг",
+        other_accrual_adjustments: "Корректировка стоимости",
+        shortage_retention: "Удержание за недовложение",
+        other_services_misc: "Другие услуги",
+      };
+      const ensureExpandedChildren = (parentKey) => {
+        const children = Array.isArray(ACCRUAL_COLUMN_GROUPS[parentKey]) ? ACCRUAL_COLUMN_GROUPS[parentKey] : [];
+        children.forEach((childKey) => {
+          const ckey = String(childKey || "");
+          if (!ckey) return;
+          if (!existingKeys.has(ckey)) {
+            existingKeys.add(ckey);
+            colsByKey.set(ckey, { key: ckey, label: SYNTHETIC_COL_LABELS[ckey] || ckey, format: "number", synthetic: true });
+          }
+          if (accrualColumnExpanded.has(ckey)) ensureExpandedChildren(ckey);
+        });
+      };
+      [...accrualColumnExpanded].forEach((expandedKey) => ensureExpandedChildren(String(expandedKey || "")));
       const groupedChildren = new Set();
       Object.values(ACCRUAL_COLUMN_GROUPS).forEach((children) => {
         (children || []).forEach((childKey) => groupedChildren.add(String(childKey)));
@@ -4257,20 +4619,32 @@
 
       const visibleCols = [];
       const emitted = new Set();
+      const totalsRowForHide = summary?.total_row || {};
+      const isZeroTotalColumn = (key) => {
+        const k = String(key || "");
+        if (!k) return false;
+        if (k === "offer_id") return false;
+        if (k === "tax") {
+          const rev = Number(totalsRowForHide.revenue_sales || 0);
+          return Math.abs((rev * getAccrualTaxRate()) / 100) < 1e-9;
+        }
+        const n = Number(totalsRowForHide[k] || 0);
+        return Number.isFinite(n) && Math.abs(n) < 1e-9;
+      };
       const appendVisible = (key) => {
         const normalizedKey = String(key || "");
         if (!normalizedKey || emitted.has(normalizedKey) || !existingKeys.has(normalizedKey)) return;
         if (hasReturnsTotal && normalizedKey === "returns_revenue") return;
+        // Avoid duplicate "other" totals: when detailed "other_services" is present,
+        // hide "other_grouped" because it already includes the same bucket.
+        if (normalizedKey === "other_grouped" && existingKeys.has("other_services")) return;
         const col = colsByKey.get(normalizedKey);
         if (!col) return;
+        if (isZeroTotalColumn(normalizedKey)) return;
         const children = Array.isArray(ACCRUAL_COLUMN_GROUPS[normalizedKey]) ? ACCRUAL_COLUMN_GROUPS[normalizedKey] : [];
-        const hideParentWhenExpanded = ACCRUAL_HIDE_PARENT_WHEN_EXPANDED.has(normalizedKey);
         if (children.length && accrualColumnExpanded.has(normalizedKey)) {
+          // Expanded group: show inner columns first, group total/value last.
           children.forEach((childKey) => appendVisible(childKey));
-          if (hideParentWhenExpanded) {
-            emitted.add(normalizedKey);
-            return;
-          }
         }
         visibleCols.push(col);
         emitted.add(normalizedKey);
@@ -4343,14 +4717,14 @@
 
       // Column group definitions for the group header row
       const COL_GROUP_MAP = {
-        ordered_units: "orders", returned_units: "orders", returns_pct: "orders",
+        ordered_units: "orders", returned_units: "orders", returns_pct: "revenue",
         revenue_sales: "revenue", client_revenue: "revenue", marketplace_expenses: "mp-expenses", revenue: "revenue", returns_total: "revenue", returns_revenue: "revenue",
         ozon_fee_total: "ozon-fee", sale_commission: "ozon-fee", return_commission: "ozon-fee",
         delivery_services_total: "delivery", pickup_processing: "delivery", courier_departure: "delivery",
         dropoff_processing: "delivery", logistics: "delivery", reverse_logistics: "delivery", pickup_courier_delivery: "delivery",
-        agent_services_total: "mp-expenses", partner_returns_processing: "mp-expenses", star_products: "mp-expenses",
-        temporary_partner_storage: "mp-expenses", partner_dropoff_processing: "mp-expenses", partner_packaging: "mp-expenses",
-        delivery_to_pickup: "mp-expenses", acquiring: "mp-expenses",
+        agent_services_total: "partners", partner_returns_processing: "partners", star_products: "partners",
+        temporary_partner_storage: "partners", partner_dropoff_processing: "partners", partner_packaging: "partners",
+        delivery_to_pickup: "partners", acquiring: "partners",
         fbo_services_total: "fbo", fbo_booking_slot_staff: "fbo", cross_docking: "fbo",
         fbo_acceptance_services: "fbo", fbo_delivery_to_warehouse: "fbo", fbo_storage_services: "fbo",
         valid_preparation: "fbo", ozon_delivery_to_pvz: "fbo", warehouse_placement: "fbo",
@@ -4360,18 +4734,18 @@
         seller_bonus_mailing: "promo", seller_bonus: "promo", premium_subscription: "promo",
         top_search: "promo", internet_ads: "promo",
         other_services: "mp-expenses", penalties_total: "mp-expenses", penalty_non_recommended_slot: "mp-expenses",
-        other_grouped: "mp-expenses", pickup_collection_total: "mp-expenses", accelerated_reviews: "mp-expenses",
-        other_services_misc: "mp-expenses", packaging_materials: "mp-expenses", operational_errors: "mp-expenses",
-        temporary_sc_storage: "mp-expenses", utilization: "mp-expenses", loans_factoring: "mp-expenses",
-        other_accrual_adjustments: "mp-expenses", shortage_retention: "mp-expenses",
+        other_grouped: "other", pickup_collection_total: "other", accelerated_reviews: "other",
+        other_services_misc: "other", packaging_materials: "other", operational_errors: "other",
+        temporary_sc_storage: "other", utilization: "other", loans_factoring: "other",
+        other_accrual_adjustments: "other", shortage_retention: "other",
         compensations: "comp",
         marketplace_expenses_pct: "totals", marketing_pct: "totals",
-        accrued: "totals", material_cost: "totals", gross_profit: "totals",
+        accrued: "totals", material_cost: "totals", vat_5: "totals", gross_profit: "totals",
         gross_profit_pct_oz: "totals", gross_profit_pct_accrued: "totals", tax: "totals",
       };
       const COL_GROUP_LABELS = {
         "orders": "Заказы", "revenue": "Выручка", "mp-expenses": "Расходы МП", "ozon-fee": "Вознагр. Ozon",
-        "delivery": "Доставка", "partners": "Партнёры", "fbo": "FBO",
+        "delivery": "Доставка", "partners": "Партнеры/Агентские", "fbo": "FBO услуги",
         "promo": "Реклама", "other": "Прочее", "comp": "Компенс.", "totals": "Итоги",
       };
       const COL_GROUP_CSS = {
@@ -4394,12 +4768,50 @@
         if (col?.isAbc && col?.abcParent) return COL_GROUP_MAP[col.abcParent] || "other";
         return COL_GROUP_MAP[String(col?.key || "")] || "other";
       };
+      const PARENT_BY_CHILD = (() => {
+        const out = {};
+        for (const [parentKey, children] of Object.entries(ACCRUAL_COLUMN_GROUPS)) {
+          (children || []).forEach((childKey) => {
+            const ck = String(childKey || "");
+            if (!ck) return;
+            if (!out[ck]) out[ck] = String(parentKey || "");
+          });
+        }
+        return out;
+      })();
+      const topLevelGroupOf = (col) => {
+        let key = col?.isAbc && col?.abcParent ? String(col.abcParent) : String(col?.key || "");
+        if (!key) return "other";
+        let guard = 0;
+        while (PARENT_BY_CHILD[key] && guard < 16) {
+          key = PARENT_BY_CHILD[key];
+          guard += 1;
+        }
+        if (key === "marketplace_expenses") return "mp-expenses";
+        const direct = COL_GROUP_MAP[key] || COL_GROUP_MAP[String(col?.key || "")] || "other";
+        if (["ozon-fee", "delivery", "partners", "fbo", "promo", "other"].includes(direct)) return "mp-expenses";
+        return direct;
+      };
+
+      // Track group boundaries by visible column index (used by all header rows)
+      const groupStartIndices = new Set();
+      const groupEndIndices = new Set();
+      let prevGroupIdx = null;
+      visibleCols.forEach((col, idx) => {
+        const group = topLevelGroupOf(col);
+        if (group !== prevGroupIdx) {
+          if (idx > 0) groupEndIndices.add(idx - 1);
+          groupStartIndices.add(idx);
+          prevGroupIdx = group;
+        }
+      });
+      if (visibleCols.length) groupEndIndices.add(visibleCols.length - 1);
 
       // Build group header spans
       const groupSpans = [];
       let prevGroup = null;
       for (const col of visibleCols) {
-        const group = colGroupOf(col);
+        const group = topLevelGroupOf(col);
         if (group === prevGroup && groupSpans.length) {
           groupSpans[groupSpans.length - 1].count++;
         } else {
@@ -4420,16 +4832,113 @@
         return `<th colspan="${span.count}" class="${COL_GROUP_CSS[span.group] || "cg-other"} group-start"${toggleAttr}${cursor}><span class="head-title">${COL_GROUP_LABELS[span.group] || ""}${indicator}</span>${perUnitBtn}</th>`;
       }).join("")}</tr>`;
 
-      // Track first column of each group for border
-      const groupStartIndices = new Set();
-      let prevGroupIdx = null;
-      visibleCols.forEach((col, idx) => {
-        const group = colGroupOf(col);
-        if (group !== prevGroupIdx) {
-          groupStartIndices.add(idx);
-          prevGroupIdx = group;
+      const normalizedKeyOf = (col) => (col?.isAbc && col?.abcParent ? String(col.abcParent) : String(col?.key || ""));
+      const subgroupKeyOfCol = (col) => {
+        const baseKey = normalizedKeyOf(col);
+        if (!baseKey) return null;
+        let topKey = baseKey;
+        let guard = 0;
+        while (PARENT_BY_CHILD[topKey] && guard < 16) {
+          topKey = PARENT_BY_CHILD[topKey];
+          guard += 1;
+        }
+        if (!topKey || !accrualColumnExpanded.has(topKey)) return null;
+        const directChildren = Array.isArray(ACCRUAL_COLUMN_GROUPS[topKey]) ? ACCRUAL_COLUMN_GROUPS[topKey] : [];
+        if (!directChildren.length) return null;
+        if (baseKey === topKey) return null;
+        if (directChildren.includes(baseKey)) return baseKey;
+        let cur = baseKey;
+        guard = 0;
+        while (PARENT_BY_CHILD[cur] && guard < 16) {
+          const parent = PARENT_BY_CHILD[cur];
+          if (parent === topKey) return cur;
+          cur = parent;
+          guard += 1;
+        }
+        return null;
+      };
+      const subgroupLabel = (key) => {
+        const raw = String(colsByKey.get(String(key || ""))?.label || key || "");
+        return raw.replace(/^[−-]\s*/, "");
+      };
+      const topAncestorKeyOf = (baseKey) => {
+        let k = String(baseKey || "");
+        let guard = 0;
+        while (PARENT_BY_CHILD[k] && guard < 16) {
+          k = PARENT_BY_CHILD[k];
+          guard += 1;
+        }
+        return k;
+      };
+      const childUnderTop = (baseKey, topKey) => {
+        const base = String(baseKey || "");
+        const top = String(topKey || "");
+        if (!base || !top || base === top) return null;
+        let cur = base;
+        let guard = 0;
+        while (PARENT_BY_CHILD[cur] && guard < 16) {
+          const parent = PARENT_BY_CHILD[cur];
+          if (parent === top) return cur;
+          cur = parent;
+          guard += 1;
+        }
+        if (top === "marketplace_expenses") {
+          const cat = COL_GROUP_MAP[base] || "other";
+          if (cat === "ozon-fee") return "ozon_fee_total";
+          if (cat === "delivery") return "delivery_services_total";
+          if (cat === "partners") return "agent_services_total";
+          if (cat === "fbo") return "fbo_services_total";
+          if (cat === "promo") return "promotion_total";
+          if (cat === "other") return "other_grouped";
+        }
+        return null;
+      };
+      const subgroupSlots = visibleCols.map((col) => {
+        const baseKey = normalizedKeyOf(col);
+        const topKey = topAncestorKeyOf(baseKey);
+        const topGroup = COL_GROUP_MAP[String(topKey || "")] || "other";
+        if (!topKey || !accrualColumnExpanded.has(topKey)) return { type: "empty", key: null, group: null };
+        const sgKey = childUnderTop(baseKey, topKey);
+        if (!sgKey) {
+          if (String(baseKey) === String(topKey)) return { type: "cap", key: topKey, group: topGroup };
+          return { type: "empty", key: null, group: null };
+        }
+        const isSubgroupTotal = String(baseKey) === String(sgKey);
+        // Keep subgroup header as one contiguous block over child columns + subgroup total.
+        if (isSubgroupTotal) return { type: "label", key: sgKey, group: topGroup };
+        return { type: "label", key: sgKey, group: topGroup };
+      });
+      const subgroupSpans = [];
+      let prevSlot = null;
+      subgroupSlots.forEach((slot) => {
+        const sig = `${slot.type}:${slot.key || ""}:${slot.group || ""}`;
+        if (prevSlot && prevSlot.sig === sig) {
+          prevSlot.count += 1;
+        } else {
+          const next = { ...slot, sig, count: 1 };
+          subgroupSpans.push(next);
+          prevSlot = next;
         }
       });
+      const hasAnySubgroupRow = subgroupSpans.some((s) => s.type === "label" || s.type === "cap");
+      const subgroupRowHtml = hasAnySubgroupRow
+        ? (() => {
+            let colCursor = 0;
+            const spansHtml = subgroupSpans.map((span) => {
+              const endIdx = colCursor + span.count - 1;
+              const endCls = groupEndIndices.has(endIdx) ? " group-end" : "";
+              colCursor += span.count;
+              if (span.type === "empty" || !span.key) return `<th colspan="${span.count}" class="sg-empty${endCls}"></th>`;
+            const css = `sg-${COL_GROUP_MAP[String(span.key || "")] || span.group || "other"}`;
+            if (span.type === "cap") {
+                return `<th colspan="${span.count}" class="sg-cap ${css}${endCls}" data-sg-cap="${span.key}"></th>`;
+            }
+            const sign = accrualColumnExpanded.has(span.key) ? " −" : " +";
+              return `<th colspan="${span.count}" class="${css} group-start${endCls}" data-sg-key="${span.key}" data-col-subgroup-toggle="${span.key}" style="cursor:pointer;"><span class="head-title">${subgroupLabel(span.key)}${sign}</span></th>`;
+            }).join("");
+            return `<tr class="subgroup-row"><th class="sg-empty"></th>${spansHtml}</tr>`;
+          })()
+        : "";
 
       // Set of keys that are group totals (have expandable children)
       const groupTotalKeys = new Set(Object.keys(ACCRUAL_COLUMN_GROUPS).filter((k) => {
@@ -4439,8 +4948,10 @@
 
       const colsHtml = visibleCols.map((col, idx) => {
         const key = String(col?.key || "");
-        const label = String(col?.label || key);
+        const rawLabel = String(col?.label || "");
+        const label = String((rawLabel && rawLabel !== key ? rawLabel : "") || SYNTHETIC_COL_LABELS[key] || key);
         const groupCls = groupStartIndices.has(idx) ? " group-start" : "";
+        const groupEndCls = groupEndIndices.has(idx) ? " group-end" : "";
         if (col?.isAbc) {
           const sortTools = `
             <span class="head-tools">
@@ -4448,7 +4959,7 @@
               <button type="button" class="head-sort${accrualSortState.column === key && accrualSortState.direction === "desc" ? " active" : ""}" data-col-sort="${key}" data-sort-dir="desc">↓</button>
             </span>
           `;
-          return `<th class="head-total vertical-head${groupCls}"><span class="head-title">${label}</span>${sortTools}</th>`;
+          return `<th class="head-total vertical-head${groupCls}${groupEndCls}"><span class="head-title">${label}</span>${sortTools}</th>`;
         }
         const hasChildren = groupTotalKeys.has(key);
         const cls =
@@ -4457,9 +4968,8 @@
           (key.includes("pct") ? "head-total" : "head-revenue");
         const fitCls = fitContentKeys.has(key) ? " fit-content-col" : "";
         const totalCls = groupTotalKeys.has(key) ? " col-group-total" : "";
-        const toggle = hasChildren
-          ? `<button type="button" class="head-toggle" data-col-group="${key}">${accrualColumnExpanded.has(key) ? "−" : "+"}</button>`
-          : "";
+        const nestedCls = groupedChildren.has(key) && !groupTotalKeys.has(key) ? " nested-head" : "";
+        const colGroupName = colGroupOf(col);
         const sortTools = `
           <span class="head-tools">
             <button type="button" class="head-sort${accrualSortState.column === key && accrualSortState.direction === "asc" ? " active" : ""}" data-col-sort="${key}" data-sort-dir="asc">↑</button>
@@ -4468,7 +4978,11 @@
         `;
         const taxAttr = key === "tax" ? ' data-tax-edit style="cursor:pointer"' : "";
         const colorActive = getCellColorRanges("accruals_comp_by_article", key) ? " ccr-active" : "";
-        return `<th class="${cls} vertical-head${fitCls}${groupCls}${totalCls}${colorActive}"${taxAttr} data-color-report="accruals_comp_by_article" data-color-col="${key}" data-color-label="${label}">${toggle}<span class="head-title">${label}</span>${sortTools}</th>`;
+        const subgroupToggleAttr = hasChildren ? ` data-col-subgroup-toggle="${key}"` : "";
+        const subgroupToggleCls = hasChildren ? " subgroup-toggle" : "";
+        const subgroupTotalCls = hasChildren ? " subgroup-total-col" : "";
+        const subgroupKeyAttr = hasChildren ? ` data-subgroup-key="${key}"` : "";
+        return `<th class="${cls} vertical-head${fitCls}${groupCls}${groupEndCls}${totalCls}${nestedCls}${subgroupToggleCls}${subgroupTotalCls}${colorActive}"${taxAttr}${subgroupToggleAttr}${subgroupKeyAttr} data-col-group-name="${colGroupName}" data-color-report="accruals_comp_by_article" data-color-col="${key}" data-color-label="${label}"><span class="head-title">${label}</span>${sortTools}</th>`;
       }).join("");
 
       const formatValueByColumn = (value, col) => {
@@ -4485,7 +4999,7 @@
         const revSales = Number(v.revenue_sales || 0);
         const accrued = Number(v.accrued || 0);
         v.gross_profit_pct_oz = revSales ? v.gross_profit / revSales : 0;
-        v.gross_profit_pct_accrued = accrued ? v.gross_profit / accrued : 0;
+        v.gross_profit_pct_accrued = v.gross_profit < 0 ? 0 : (accrued ? v.gross_profit / accrued : 0);
       }
       const totalRow = { ...(summary?.total_row || {}) };
       applyTaxRecalc(totalRow);
@@ -4503,15 +5017,16 @@
           ${visibleCols.map((col, idx) => {
             const key = String(col?.key || "");
             const gCls = groupStartIndices.has(idx) ? " group-start" : "";
+            const geCls = groupEndIndices.has(idx) ? " group-end" : "";
             if (col?.isAbc) {
-              return `<td class="num${gCls}"></td>`;
+              return `<td class="num${gCls}${geCls}"></td>`;
             }
             const rawCell = totalRow[col.key];
             const displayCell = adjustValueForPerUnit(key, rawCell, totalNetUnits);
             const rawVal = Number(rawCell || 0);
             const bgColor = cellColorForValue("accruals_comp_by_article", key, rawVal);
             const bgStyle = bgColor ? ` style="background-color:${bgColor} !important"` : "";
-            return `<td class="num${fitContentKeys.has(key) ? " fit-content-col" : ""}${gCls}${groupTotalKeys.has(key) ? " col-group-total" : ""}"${bgStyle}>${formatValueByColumn(displayCell, col)}</td>`;
+            return `<td class="num${fitContentKeys.has(key) ? " fit-content-col" : ""}${gCls}${geCls}${groupTotalKeys.has(key) ? " col-group-total" : ""}"${bgStyle}>${formatValueByColumn(displayCell, col)}</td>`;
           }).join("")}
         </tr>
       `;
@@ -4559,11 +5074,12 @@
             ${visibleCols.map((col, idx) => {
               const key = String(col?.key || "");
               const gCls = groupStartIndices.has(idx) ? " group-start" : "";
+              const geCls = groupEndIndices.has(idx) ? " group-end" : "";
               if (col?.isAbc) {
                 const cmap = abcClassByCol.get(col.abcParent);
                 const cls = cmap ? cmap.get(offerId) : null;
                 const badge = cls ? `<span class="abc-badge abc-${cls}">${cls}</span>` : `<span style="color:#aaa">—</span>`;
-                return `<td class="num${gCls}">${badge}</td>`;
+                return `<td class="num${gCls}${geCls}">${badge}</td>`;
               }
               const rawValue = Number(values?.[key] || 0);
               const isReturnsCell = key === "returned_units" || key === "returns_total";
@@ -4575,9 +5091,9 @@
               const bgColor = cellColorForValue("accruals_comp_by_article", key, rawVal);
               const bgStyle = bgColor ? ` style="background-color:${bgColor} !important"` : "";
               if (canDrill) {
-                return `<td class="num${fitContentKeys.has(key) ? " fit-content-col" : ""}${gCls}${tCls}"${bgStyle}><button type="button" class="returns-drill-link" data-returns-drill="${offerId.replace(/"/g, "&quot;")}">${formatted}</button></td>`;
+                return `<td class="num${fitContentKeys.has(key) ? " fit-content-col" : ""}${gCls}${geCls}${tCls}"${bgStyle}><button type="button" class="returns-drill-link" data-returns-drill="${offerId.replace(/"/g, "&quot;")}">${formatted}</button></td>`;
               }
-              return `<td class="num${fitContentKeys.has(key) ? " fit-content-col" : ""}${gCls}${tCls}"${bgStyle}>${formatted}</td>`;
+              return `<td class="num${fitContentKeys.has(key) ? " fit-content-col" : ""}${gCls}${geCls}${tCls}"${bgStyle}>${formatted}</td>`;
             }).join("")}
           </tr>`;
         if (isTreeOpen) {
@@ -4632,14 +5148,15 @@
               <button type="button" class="accrual-abc-btn${abcSelectedCount ? " active" : ""}" data-abc-btn title="Добавить колонки ABC-анализа (классы A/B/C по кумулятивной доле 80/15/5%)">📊 ${abcBtnLabel}</button>
               ${abcMenuHtml}
             </div>
+            <div class="accrual-floating-tags">${tagBarHtml}</div>
             <span class="toolbar-spacer"></span>
             <button type="button" class="accrual-export-btn" data-accrual-export title="Сохранить текущий отчёт в Excel (.xlsx)">📥 Сохранить в Excel</button>
           </div>
           <div class="accrual-table-wrap">
-            <div class="accrual-floating-tags">${tagBarHtml}</div>
-            <table class="accrual-unitka-table data-table">
+            <table class="accrual-unitka-table data-table${hasAnySubgroupRow ? " has-subgroup-row" : ""}">
               <thead>
                 ${groupRowHtml}
+                ${subgroupRowHtml}
                 <tr>
                   <th>
                     <span class="head-title column-filter-label ${articleFilterMeta.active ? "active" : ""}" data-report-filter="accruals_comp_by_article" data-column-key="offer_id">
@@ -4658,30 +5175,56 @@
           </div>
         </section>
       `;
-      accrualVisualWrap.querySelectorAll("[data-col-group]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const groupKey = String(button.dataset.colGroup || "");
-          if (!groupKey) return;
-          if (accrualColumnExpanded.has(groupKey)) {
-            accrualColumnExpanded.delete(groupKey);
-          } else {
-            accrualColumnExpanded.add(groupKey);
-          }
-          renderAccrualUnitkaVisual(rows, summary, cols);
-        });
-      });
       accrualVisualWrap.querySelectorAll("[data-col-group-toggle]").forEach((th) => {
         th.addEventListener("click", (e) => {
           if (e.target.closest("[data-totals-perunit]")) return;
           const groupName = String(th.dataset.colGroupToggle || "");
           if (!groupName) return;
           const expandKeys = COL_GROUP_EXPANDABLE_KEYS[groupName] || [];
+          const expandRootKeys = expandKeys.filter((k) => !PARENT_BY_CHILD[String(k || "")]);
           if (!expandKeys.length) return;
-          const anyExpanded = expandKeys.some((k) => accrualColumnExpanded.has(k));
-          expandKeys.forEach((k) => {
-            if (anyExpanded) accrualColumnExpanded.delete(k);
-            else accrualColumnExpanded.add(k);
+          if (!expandRootKeys.length) return;
+          const anyExpanded = expandRootKeys.some((k) => accrualColumnExpanded.has(k));
+          const collectDescendants = (rootKey) => {
+            const out = [];
+            const stack = [String(rootKey || "")];
+            const seen = new Set();
+            while (stack.length) {
+              const cur = stack.pop();
+              if (!cur || seen.has(cur)) continue;
+              seen.add(cur);
+              const children = Array.isArray(ACCRUAL_COLUMN_GROUPS[cur]) ? ACCRUAL_COLUMN_GROUPS[cur] : [];
+              children.forEach((child) => {
+                const ck = String(child || "");
+                if (!ck) return;
+                out.push(ck);
+                stack.push(ck);
+              });
+            }
+            return out;
+          };
+          expandRootKeys.forEach((k) => {
+            if (anyExpanded) {
+              accrualColumnExpanded.delete(k);
+            } else {
+              accrualColumnExpanded.add(k);
+              // On top-group expand, all nested subgroups must start collapsed.
+              collectDescendants(k).forEach((childKey) => accrualColumnExpanded.delete(childKey));
+            }
           });
+          renderAccrualUnitkaVisual(rows, summary, cols);
+        });
+      });
+      accrualVisualWrap.querySelectorAll("[data-col-subgroup-toggle]").forEach((th) => {
+        th.addEventListener("click", (e) => {
+          if (e.target.closest(".head-sort")) return;
+          if (e.target.closest("[data-totals-perunit]")) return;
+          const key = String(th.dataset.colSubgroupToggle || "");
+          if (!key) return;
+          const children = ACCRUAL_COLUMN_GROUPS[key];
+          if (!Array.isArray(children) || !children.length) return;
+          if (accrualColumnExpanded.has(key)) accrualColumnExpanded.delete(key);
+          else accrualColumnExpanded.add(key);
           renderAccrualUnitkaVisual(rows, summary, cols);
         });
       });
@@ -7297,6 +7840,48 @@
                   ${promoTableRowsHtml}
                 </tbody>
               </table>
+              <!-- Секция Поиск (SERP) -->
+              <div class="article-serp-section" data-sku="${item.sku}"
+                   style="margin-top:16px;padding:14px;border:1px solid #e0e4eb;border-radius:8px;background:#fafbfc;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                  <h3 style="margin:0;font-size:14px;">🔍 Поиск</h3>
+                  <button class="article-serp-refresh-btn"
+                          style="padding:3px 10px;background:#005bff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;">
+                    🔄 Обновить
+                  </button>
+                </div>
+                <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;">
+                  <span style="color:#555;">Главный запрос:</span>
+                  <strong class="article-serp-query">—</strong>
+                  <span class="article-serp-manual-badge" style="display:none;font-size:11px;background:#e8f0fe;color:#1a73e8;padding:2px 6px;border-radius:4px;">вручную</span>
+                  <select class="article-serp-query-select" style="font-size:12px;padding:3px;border:1px solid #ddd;border-radius:4px;display:none;"></select>
+                  <button class="article-serp-show-select-btn" style="font-size:12px;padding:2px 8px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;">Изменить</button>
+                  <button class="article-serp-save-query-btn" style="font-size:12px;padding:2px 8px;border:none;border-radius:4px;cursor:pointer;background:#005bff;color:#fff;display:none;">Сохранить</button>
+                </div>
+                <div style="font-size:13px;margin-bottom:6px;">
+                  <span style="color:#555;">Позиция:</span>
+                  <strong class="article-serp-our-pos" style="margin-left:6px;color:#1a8c3c;">—</strong>
+                  <span style="color:#888;margin-left:10px;font-size:12px;">Цена:</span>
+                  <strong class="article-serp-our-price" style="margin-left:4px;font-size:12px;">—</strong>
+                </div>
+                <div class="article-serp-date" style="font-size:11px;color:#aaa;margin-bottom:10px;"></div>
+                <div style="overflow-x:auto;">
+                  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                    <thead>
+                      <tr style="background:#f5f7fa;border-bottom:2px solid #e0e4eb;">
+                        <th style="padding:5px;text-align:center;">#</th>
+                        <th style="padding:5px;text-align:left;min-width:160px;">Название / SKU</th>
+                        <th style="padding:5px;">Бренд</th>
+                        <th style="padding:5px;text-align:right;">Цена</th>
+                        <th style="padding:5px;text-align:center;">Рейтинг</th>
+                        <th style="padding:5px;text-align:right;">Отзывы</th>
+                      </tr>
+                    </thead>
+                    <tbody class="article-serp-tbody"></tbody>
+                  </table>
+                </div>
+                <div class="article-serp-status" style="font-size:12px;color:#888;margin-top:6px;"></div>
+              </div>
             </div>
           </section>
         `;
@@ -7322,6 +7907,12 @@
             if (queryMatrix && item) {
               ensureArticleQueryMatrixLoaded(item, queryMatrix);
             }
+            // Инициализировать SERP-секцию при первом раскрытии
+            const serpSection = detail.querySelector(".article-serp-section");
+            if (serpSection && !serpSection._serpInited) {
+              serpSection._serpInited = true;
+              initArticleSerpSection(serpSection);
+            }
           }
         });
       });
@@ -7341,6 +7932,42 @@
 
     function renderRnpReport(items, summary = {}) {
       const rows = Array.isArray(items) ? items : [];
+      const postRnpSkuAction = async (url, sku, btn, okText) => {
+        if (!sku) return;
+        const prev = btn ? btn.textContent : "";
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "Выполняю...";
+        }
+        try {
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sku: Number(sku) }),
+          });
+          const raw = await resp.text();
+          let data = null;
+          try {
+            data = raw ? JSON.parse(raw) : null;
+          } catch (_) {
+            data = null;
+          }
+          if (!resp.ok || data?.error) {
+            const msg = (data && (data.error || data.message))
+              ? (data.error || data.message)
+              : (raw ? String(raw).slice(0, 300) : `HTTP ${resp.status}`);
+            throw new Error(msg);
+          }
+          alert(okText);
+        } catch (e) {
+          alert(`Ошибка: ${e.message || e}`);
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = prev || "Выполнить";
+          }
+        }
+      };
 
       // ─── График выручки по дням ──────────────────────────────────
       const _buildRevenueTrendChart = (daily) => {
@@ -7572,6 +8199,14 @@
         const stockSellable = Number(item.stock_fbo_available || 0) + Number(item.stock_fbs || 0);
         const oosNow = stockSellable <= 0;
         const viewsCollapsed = sViews.mean > 0 && lastViews < sViews.mean * 0.1;
+        const isAdEnabled = Number(item.ad_spend_30d || 0) > 0 || Number(lastAdViews || 0) > 0;
+        const promoList = Array.isArray(item.promos) ? item.promos : [];
+        const isInPromo = promoList.some((p) => p && p.is_participating === true);
+        const lowStockAdPromoAlert = stockSellable > 0 && stockSellable < 10 && isAdEnabled && isInPromo;
+        const daysToOos = Number(item.days_to_oos || 0);
+        const lowStock14dAlert = Number.isFinite(daysToOos) && daysToOos > 0 && daysToOos < 14;
+        const totalDrr = Number(item.drr || 0);
+        const highDrrAlert = totalDrr > 15;
 
         // Позиция слетела (≤ 2 при baseline > 5)
         const lastPos = Number(last.position_category || 0);
@@ -7594,6 +8229,15 @@
             : "Показы рухнули в ноль/около. Проверь остатки, статус карточки, рекламу.";
           diagColor = "#000";
         } else {
+          if (lowStockAdPromoAlert) {
+            diagParts.push("Остаток < 10 шт при активной рекламе и участии в акции — рекламу выключить");
+          }
+          if (lowStock14dAlert) {
+            diagParts.push(`Запаса хватит менее чем на 14 дней (≈ ${daysToOos.toFixed(1)} дн)`);
+          }
+          if (highDrrAlert) {
+            diagParts.push(`Высокий общий ДРР: ${totalDrr.toFixed(1)}% (> 15%)`);
+          }
           // 2) Позиция деградирует
           if (anomPos) {
             diagParts.push(`Позиция деградирует (${lastPos.toFixed(0)} vs ср. ${sPos.mean.toFixed(0)})`);
@@ -7629,6 +8273,8 @@
             diagnosis = diagParts.join(". ") + ".";
             // Цвет по первой (самой важной) проблеме
             if (anomPos) diagColor = "#1f1f1f";
+            else if (lowStockAdPromoAlert) diagColor = "#b91c1c";
+            else if (lowStock14dAlert || highDrrAlert) diagColor = "#b45309";
             else if (anomViews) diagColor = "#f59e0b";
             else if (anomClicks) diagColor = "#e67e22";
             else if (anomCart) diagColor = "#a855f7";
@@ -7643,12 +8289,12 @@
         }
 
         // Является ли SKU «критичным»? — показывается по дефолту
-        const isCritical = oosNow || isOOSDay || anomPos || anomViews || anomClicks || anomCart || anomOrders;
+        const isCritical = oosNow || isOOSDay || lowStockAdPromoAlert || lowStock14dAlert || highDrrAlert || anomPos || anomViews || anomClicks || anomCart || anomOrders;
 
         // Score для сортировки: чем меньше (отрицательнее) z по этапам воронки и больше |потеря|, тем выше
         const lossAbs = Math.max(0, sRev.mean - lastRev);
         const anomCount = [anomPos, anomViews, anomClicks, anomCart, anomOrders, anomRev].filter(Boolean).length;
-        const score = (oosNow ? 1000 : 0) + (isOOSDay ? 500 : 0) + (anomPos ? 200 : 0) + anomCount * 100 + Math.min(50, lossAbs / Math.max(1, sRev.mean) * 50);
+        const score = (oosNow ? 1000 : 0) + (isOOSDay ? 500 : 0) + (lowStockAdPromoAlert ? 350 : 0) + (lowStock14dAlert ? 220 : 0) + (highDrrAlert ? 180 : 0) + (anomPos ? 200 : 0) + anomCount * 100 + Math.min(50, lossAbs / Math.max(1, sRev.mean) * 50);
 
         // Серия по дням для heatmap — категориальная + per-метрика z-score
         const zd = (val, st) => (st.sd > 0 ? (val - st.mean) / st.sd : 0);
@@ -7746,6 +8392,12 @@
           oos_now: oosNow,
           oos_day: isOOSDay,
           position_collapsed: positionCollapsed,
+          low_stock_ad_promo_alert: lowStockAdPromoAlert,
+          low_stock_14d_alert: lowStock14dAlert,
+          high_drr_alert: highDrrAlert,
+          drr_total: totalDrr,
+          ad_enabled: isAdEnabled,
+          in_promo: isInPromo,
           is_critical: isCritical,
           skip_funnel: skipFunnel,
           diagnosis,
@@ -7777,7 +8429,7 @@
       const allCount = skuStats.length;
       const criticalSku = skuStats.filter((r) => r.is_critical);
       const normalSku = skuStats.filter((r) => !r.is_critical);
-      const visibleSku = (window.rnpShowAll ? skuStats : criticalSku).filter((r) => r.loss_abs >= 5000);
+      const visibleSku = (window.rnpShowAll ? skuStats : criticalSku).filter((r) => r.low_stock_ad_promo_alert || r.low_stock_14d_alert || r.high_drr_alert || r.loss_abs >= 5000);
       visibleSku.sort((a, b) => b.score - a.score);
 
       // Категориальные цвета heatmap
@@ -7811,6 +8463,15 @@
           badges.push(`<span class="rnp-badge" style="background:#1f1f1f;color:#fff;">аутофсток</span>`);
           return badges.join(" "); // при аутофстоке дальше не смотрим
         }
+        if (r.low_stock_ad_promo_alert) {
+          badges.push(`<span class="rnp-badge" style="background:#fee2e2;color:#991b1b;">остаток &lt; 10 + реклама + акция</span>`);
+        }
+        if (r.low_stock_14d_alert) {
+          badges.push(`<span class="rnp-badge" style="background:#ffedd5;color:#9a3412;">запас &lt; 14 дней</span>`);
+        }
+        if (r.high_drr_alert) {
+          badges.push(`<span class="rnp-badge" style="background:#fef3c7;color:#92400e;">ДРР &gt; 15%</span>`);
+        }
         if (r.position_collapsed) badges.push(`<span class="rnp-badge" style="background:#1f1f1f;color:#fff;">позиция↓↓</span>`);
         else if (r.oos_day) badges.push(`<span class="rnp-badge" style="background:#1f1f1f;color:#fff;">показы≈0</span>`);
         if (r.anom_pos && !r.position_collapsed) badges.push(`<span class="rnp-badge" style="background:#1f1f1f;color:#fff;">позиция↓</span>`);
@@ -7823,6 +8484,17 @@
         if (r.anom_cart) badges.push(`<span class="rnp-badge" style="background:#f3e8ff;color:#6b21a8;">CR корз↓</span>`);
         if (r.anom_orders) badges.push(`<span class="rnp-badge" style="background:#fee2e2;color:#991b1b;">заказы</span>`);
         return badges.join(" ");
+      };
+      const stageActionButtons = (r) => {
+        if (!r.low_stock_14d_alert) return "";
+        const parts = [];
+        if (r.ad_enabled) {
+          parts.push(`<button type="button" class="rnp-inline-action-btn rnp-inline-disable-ad rnp-badge" data-sku="${r.sku}" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;cursor:pointer;">откл. рекламу</button>`);
+        }
+        if (r.in_promo) {
+          parts.push(`<button type="button" class="rnp-inline-action-btn rnp-inline-remove-promos rnp-badge" data-sku="${r.sku}" style="background:#ffedd5;color:#9a3412;border:1px solid #fdba74;cursor:pointer;">убрать из акций</button>`);
+        }
+        return parts.join(" ");
       };
 
       // ─── АНАЛИЗ ВРЕМЕННЫХ РЯДОВ (5 методов из инструкции) ──────
@@ -8020,7 +8692,7 @@
               <div style="margin-top:2px;">${stockTxt}</div>
             </td>
             ${cells}
-            <td class="rnp-heat-badges">${stageBadges(r) || `<span style="color:#94a3b8;font-size:10px;">в норме</span>`}</td>
+            <td class="rnp-heat-badges">${stageBadges(r) || `<span style="color:#94a3b8;font-size:10px;">в норме</span>`} ${stageActionButtons(r)}</td>
             <td class="rnp-heat-loss" style="text-align:right;color:#d93025;font-weight:600;">${r.loss_abs > 0 ? fmtRub(-r.loss_abs) : "—"}</td>
           </tr>
           <tr class="rnp-ts-detail" data-sku-idx="${realIdx}" style="display:none;">
@@ -8054,6 +8726,9 @@
 
       // ─── СБОРКА ─────────────────────────────────────────────────
       const oosCount = skuStats.filter((r) => r.oos_now || r.oos_day).length;
+      const lowStockAdPromoCount = skuStats.filter((r) => r.low_stock_ad_promo_alert).length;
+      const lowStock14dCount = skuStats.filter((r) => r.low_stock_14d_alert).length;
+      const highDrrCount = skuStats.filter((r) => r.high_drr_alert).length;
       const posCount = skuStats.filter((r) => r.anom_pos && !r.oos_now && !r.oos_day).length;
       const showAllChecked = window.rnpShowAll ? "checked" : "";
 
@@ -8072,6 +8747,19 @@
           .rnp-heat-cell:hover { outline:2px solid #005bff; }
           .rnp-heat-badges { text-align:left !important; }
           .rnp-badge { display:inline-block;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-right:3px;white-space:nowrap; }
+          .rnp-heat-badges .rnp-inline-action-btn {
+            display: inline-block !important;
+            width: auto !important;
+            min-width: 0 !important;
+            padding: 2px 6px !important;
+            margin-right: 3px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.2;
+            vertical-align: middle;
+            white-space: nowrap;
+          }
 
           .rnp-funnel-row { display:grid;grid-template-columns: 90px 1fr 60px;gap:8px;align-items:center;margin-bottom:8px;font-size:12px; }
           .rnp-funnel-track { position:relative;height:26px;background:#f8fafc;border-radius:4px;overflow:hidden;border:1px solid #e2e8f0; }
@@ -8090,6 +8778,9 @@
             <div>Всего SKU: <b>${allCount}</b></div>
             <div>Критичных: <b style="color:#d93025;">${criticalSku.length}</b></div>
             <div>Аутофсток: <b style="color:#1f1f1f;">${oosCount}</b></div>
+            ${lowStockAdPromoCount > 0 ? `<div>Остаток&lt;10 + реклама + акция: <b style="color:#b91c1c;">${lowStockAdPromoCount}</b></div>` : ""}
+            ${lowStock14dCount > 0 ? `<div>Запас &lt; 14 дней: <b style="color:#b45309;">${lowStock14dCount}</b></div>` : ""}
+            ${highDrrCount > 0 ? `<div>ДРР &gt; 15%: <b style="color:#b45309;">${highDrrCount}</b></div>` : ""}
             ${posCount > 0 ? `<div>Позиция↓: <b style="color:#1f1f1f;">${posCount}</b></div>` : ""}
             <div>Потеря по критичным: <b style="color:#d93025;">${fmtRub(-totalLost)}</b></div>
             <label class="rnp-toggle">
@@ -8202,7 +8893,16 @@
           ${oosBadge ? `<div style="margin-bottom:10px;">${oosBadge}</div>` : ""}
           <div style="font-size:12px;color:#475569;margin-bottom:14px;padding:8px 10px;background:#f8fafc;border-radius:4px;">
             ${stockLine}
+            ${r.low_stock_ad_promo_alert ? `<div style="margin-top:4px;color:#991b1b;">⚠ Остаток &lt; 10 шт, реклама активна и товар в акции: рекомендуется выключить рекламу.</div>` : ""}
+            ${r.low_stock_14d_alert ? `<div style="margin-top:4px;color:#9a3412;">⚠ Запаса хватит менее чем на 14 дней: ≈ ${Number(r.days_to_oos || 0).toFixed(1)} дн.</div>` : ""}
+            ${r.high_drr_alert ? `<div style="margin-top:4px;color:#92400e;">⚠ Общий ДРР (с органикой) выше 15%: ${Number(r.drr_total || 0).toFixed(1)}%.</div>` : ""}
             ${r.oos_baseline_days > 0 ? `<div style="margin-top:4px;color:#92400e;">⚠ В baseline ${r.oos_baseline_days} дн. без показов — исключены из расчёта</div>` : ""}
+            ${r.low_stock_14d_alert ? `
+              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+                <button type="button" id="rnp_disable_ad_btn" style="padding:6px 10px;border:1px solid #b91c1c;background:#fee2e2;color:#991b1b;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">Отключить рекламу</button>
+                <button type="button" id="rnp_remove_promos_btn" style="padding:6px 10px;border:1px solid #b45309;background:#ffedd5;color:#9a3412;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">Убрать из акций</button>
+              </div>
+            ` : ""}
           </div>
           ${r.skip_funnel ? `
           <div style="font-size:13px;color:#64748b;margin-bottom:14px;padding:12px;background:#fef2f2;border-radius:6px;text-align:center;">
@@ -8243,6 +8943,18 @@
             } catch (_) {}
           });
         }
+        const disableAdBtn = document.getElementById("rnp_disable_ad_btn");
+        if (disableAdBtn) {
+          disableAdBtn.addEventListener("click", async () => {
+            await postRnpSkuAction("/api/rnp/sku/disable-ad", r.sku, disableAdBtn, `Реклама по SKU ${r.sku} отключена (все найденные кампании).`);
+          });
+        }
+        const removePromosBtn = document.getElementById("rnp_remove_promos_btn");
+        if (removePromosBtn) {
+          removePromosBtn.addEventListener("click", async () => {
+            await postRnpSkuAction("/api/rnp/sku/remove-promos", r.sku, removePromosBtn, `SKU ${r.sku} удален из всех найденных акций.`);
+          });
+        }
       };
 
       const closeDrawer = () => { drawer.style.right = "-520px"; };
@@ -8272,6 +8984,20 @@
           e.stopPropagation();
           const idx = Number(el.dataset.skuIdx ?? el.closest("[data-sku-idx]")?.dataset.skuIdx);
           if (!isNaN(idx)) openDrawer(idx);
+        });
+      });
+      analyticsStocksWrap.querySelectorAll(".rnp-inline-disable-ad").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const sku = Number(btn.dataset.sku || 0);
+          await postRnpSkuAction("/api/rnp/sku/disable-ad", sku, btn, `Реклама по SKU ${sku} отключена.`);
+        });
+      });
+      analyticsStocksWrap.querySelectorAll(".rnp-inline-remove-promos").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const sku = Number(btn.dataset.sku || 0);
+          await postRnpSkuAction("/api/rnp/sku/remove-promos", sku, btn, `SKU ${sku} удален из акций.`);
         });
       });
       // Кнопка «Открыть в диагностике SKU»
@@ -8400,7 +9126,7 @@
         // Валовая прибыль — «Только реклама» (ad_revenue, ad_orders)
         const adRev = it.ad_revenue || 0;
         const adMpExp = adRev * it._mpNoAdPct;
-        const adAccrued = adRev - adMpExp - it.spent;
+        const adAccrued = adRev - adMpExp;
         const adMatCost = (it.unit_cost || 0) * (it.ad_orders || 0);
         const adTax = adRev * (taxRate / 100);
         it.gross_profit = Math.round(adAccrued - adMatCost - adTax);
@@ -8408,7 +9134,7 @@
         // Валовая прибыль — «Итого» (total_revenue, total_qty)
         const totRev = it.total_revenue || 0;
         const totMpExp = totRev * it._mpNoAdPct;
-        const totAccrued = totRev - totMpExp - it.spent;
+        const totAccrued = totRev - totMpExp;
         const totMatCost = (it.unit_cost || 0) * (it.total_qty || 0);
         const totTax = totRev * (taxRate / 100);
         it.gross_profit_total = Math.round(totAccrued - totMatCost - totTax);
@@ -8425,6 +9151,7 @@
       // Columns: key, label, fn, ad-mode raw, total-mode raw
       // If rawTotal is defined, toggle switches between raw and rawTotal
       const cols = [
+        {key: 'stock_total',  label: 'Остатки',     fn: fmt,                raw: i => i.stock_total || 0},
         {key: 'views',       label: 'Показы',      fn: fmt,                raw: i => i.views},
         {key: 'clicks',      label: 'Клики',       fn: fmt,                raw: i => i.clicks},
         {key: 'ctr',         label: 'CTR %',       fn: v => fmt2(v),       raw: i => i.ctr},
@@ -8450,11 +9177,13 @@
         const totViews = items.reduce((a, i) => a + i.views, 0);
         const totClicks = items.reduce((a, i) => a + i.clicks, 0);
         const totAtc = items.reduce((a, i) => a + i.adds_to_cart, 0);
+        const totStock = items.reduce((a, i) => a + Number(i.stock_total || 0), 0);
         const totSpent = items.reduce((a, i) => a + i.spent, 0);
         const totOrders = mode === 'total' ? items.reduce((a, i) => a + i.total_qty, 0) : items.reduce((a, i) => a + i.ad_orders, 0);
         const totRevenue = mode === 'total' ? items.reduce((a, i) => a + i.total_revenue, 0) : items.reduce((a, i) => a + i.ad_revenue, 0);
         const totGp = mode === 'total' ? items.reduce((a, i) => a + (i.gross_profit_total || 0), 0) : items.reduce((a, i) => a + (i.gross_profit || 0), 0);
         return {
+          stock_total: totStock,
           views: totViews, clicks: totClicks, ctr: totViews > 0 ? (totClicks / totViews * 100) : 0,
           adds_to_cart: totAtc, cart_rate: totClicks > 0 ? (totAtc / totClicks * 100) : 0,
           cpb: totAtc > 0 ? (totSpent / totAtc) : 0,
@@ -8672,6 +9401,10 @@
         renderQuestionsTab(wrap);
         return;
       }
+      if (activeSubTab === "chats") {
+        renderChatsTab(wrap);
+        return;
+      }
 
       const sorted = sortReviewsItems(items);
       let html = renderReviewsSubTabsHeader("reviews") + `
@@ -8769,7 +9502,7 @@
         <div style="display:flex;gap:4px;justify-content:center;border-bottom:1px solid #d6dbe1;margin:0 auto 8px;max-width:max-content;">
           ${mk("reviews", "Отзывы", "")}
           ${mk("questions", "Вопросы", newBadge)}
-          <button type="button" class="reviews-subtab-btn" data-subtab="chats" style="${tabBtnS}" disabled title="Скоро">Чаты</button>
+          ${mk("chats", "Чаты", "")}
         </div>`;
     }
 
@@ -8778,15 +9511,273 @@
         if (btn.disabled) return;
         btn.addEventListener("click", () => {
           const target = btn.getAttribute("data-subtab");
-          if (!target || target === "chats") return;
+          if (!target) return;
           if (window._reviewsActiveSubTab === target) return;
           window._reviewsActiveSubTab = target;
           if (target === "questions") {
             renderQuestionsTab(wrap);
+          } else if (target === "chats") {
+            renderChatsTab(wrap);
           } else {
             renderReviewsReport({ items: window._lastReviewsReport || [] });
           }
         });
+      });
+    }
+
+    window._chatsState = window._chatsState || {
+      chat_status: "ALL",
+      offset: 0,
+      limit: 100,
+      has_next: false,
+      items: [],
+    };
+
+    async function renderChatsTab(wrap) {
+      wrap.innerHTML = renderReviewsSubTabsHeader("chats") + `
+        <div id="chats_root" style="padding:8px 0;">
+          <div style="padding:24px;text-align:center;color:#888;">Загрузка чатов…</div>
+        </div>`;
+      bindReviewsSubTabHandlers(wrap);
+
+      let serviceOk = false;
+      let serviceReason = "";
+      try {
+        const r = await fetch("/api/chats/service-status");
+        const sd = await r.json();
+        serviceOk = !!sd.enabled;
+        serviceReason = sd.reason || "";
+      } catch (e) {
+        serviceReason = e.message || String(e);
+      }
+
+      const root = wrap.querySelector("#chats_root");
+      if (!serviceOk) {
+        root.innerHTML = `
+          <div style="padding:32px;text-align:center;color:#666;background:#fffbe6;border:1px solid #ffe58f;border-radius:8px;">
+            <div style="font-size:16px;font-weight:600;margin-bottom:8px;">⚠ Раздел «Чаты» недоступен</div>
+            <div>${escapeHtml(serviceReason || "Chat API недоступен")}</div>
+          </div>`;
+        return;
+      }
+
+      const st = window._chatsState;
+      root.innerHTML = `
+        <div style="max-width:1400px;margin:0 auto 12px;">
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;padding:8px 12px;background:#f7f8fa;border-radius:8px;">
+          <label style="display:flex;flex-direction:column;font-size:12px;color:#666;">Статус чата
+            <select id="c_filter_status" style="padding:4px 8px;border:1px solid #d6dbe1;border-radius:6px;">
+              <option value="ALL"${st.chat_status === "ALL" ? " selected" : ""}>Все</option>
+              <option value="OPEN"${st.chat_status === "OPEN" ? " selected" : ""}>OPEN</option>
+              <option value="CLOSED"${st.chat_status === "CLOSED" ? " selected" : ""}>CLOSED</option>
+            </select>
+          </label>
+          <button id="c_filter_apply" style="padding:6px 16px;background:#1d7eeb;color:#fff;border:0;border-radius:6px;font-weight:600;cursor:pointer;width:auto;">Применить</button>
+          <span id="c_counts_summary" style="margin-left:auto;font-size:13px;color:#444;"></span>
+        </div>
+        </div>
+        <div id="c_list_wrap"><div style="padding:24px;text-align:center;color:#888;">Загрузка…</div></div>
+      `;
+      root.querySelector("#c_filter_apply").addEventListener("click", async () => {
+        st.chat_status = root.querySelector("#c_filter_status").value;
+        st.offset = 0;
+        st.has_next = false;
+        st.items = [];
+        await loadChatsList(root, { append: false });
+      });
+
+      st.offset = 0;
+      st.has_next = false;
+      st.items = [];
+      await loadChatsList(root, { append: false });
+    }
+
+    async function loadChatsList(root, opts = {}) {
+      const append = !!opts.append;
+      const listWrap = root.querySelector("#c_list_wrap");
+      if (!listWrap) return;
+      if (!append) listWrap.innerHTML = `<div style="padding:24px;text-align:center;color:#888;">Загрузка…</div>`;
+
+      const st = window._chatsState;
+      const params = new URLSearchParams();
+      params.set("chat_status", st.chat_status || "ALL");
+      params.set("limit", String(st.limit || 100));
+      params.set("offset", String(append ? st.offset : 0));
+      try {
+        const resp = await fetch(`/api/chats-report?${params.toString()}`);
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          throw new Error(data.error || `HTTP ${resp.status}`);
+        }
+        const data = await resp.json();
+        const incoming = Array.isArray(data.items) ? data.items : [];
+        st.items = append ? [...(st.items || []), ...incoming] : incoming;
+        st.has_next = !!data.has_next;
+        st.offset = append ? (st.offset + incoming.length) : incoming.length;
+        const cs = root.querySelector("#c_counts_summary");
+        if (cs) cs.innerHTML = `Чатов: <b>${st.items.length}</b>`;
+        renderChatsList(listWrap, { items: st.items, has_next: st.has_next });
+      } catch (e) {
+        listWrap.innerHTML = `<div style="padding:16px;color:#d62828;">Ошибка: ${escapeHtmlGlobal(e.message || e)}</div>`;
+      }
+    }
+
+    function chatStatusBadge(status) {
+      const s = String(status || "—").toUpperCase();
+      const map = {
+        OPEN: { color: "#1d7eeb", bg: "#eef5ff" },
+        CLOSED: { color: "#2a9d8f", bg: "#e8f7f4" },
+      };
+      const m = map[s] || { color: "#666", bg: "#f0f0f0" };
+      return `<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:${m.bg};color:${m.color};font-size:11px;font-weight:600;">${escapeHtmlGlobal(s)}</span>`;
+    }
+
+    function renderChatsList(listWrap, data) {
+      const items = data.items || [];
+      if (!items.length) {
+        listWrap.innerHTML = `<div style="padding:32px;text-align:center;color:#666;">Чаты не найдены.</div>`;
+        return;
+      }
+      let html = `
+        <div style="max-width:1400px;margin:0 auto;">
+        <div style="overflow-x:auto;display:flex;justify-content:center;">
+        <table class="accrual-unitka-table" style="width:auto;min-width:980px;max-width:1400px;table-layout:auto;">
+          <thead>
+            <tr>
+              <th style="position:static;">Chat ID</th>
+              <th style="position:static;">Последнее сообщение</th>
+              <th style="position:static;">Статус</th>
+              <th style="position:static;">Непрочит.</th>
+              <th style="position:static;">Обновлён</th>
+              <th style="position:static;text-align:center;">Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      for (const c of items) {
+        html += `
+          <tr>
+            <td>${escapeHtmlGlobal(c.chat_id || "—")}</td>
+            <td style="max-width:640px;">
+              <button type="button" class="c-open-modal" data-chat-id="${escapeHtmlGlobal(c.chat_id || "")}" style="all:unset;cursor:pointer;display:block;max-width:620px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1d7eeb;" title="${escapeHtmlGlobal(c.last_message_text || "")}">
+                ${escapeHtmlGlobal(c.last_message_text || "Открыть чат")}
+              </button>
+            </td>
+            <td>${chatStatusBadge(c.chat_status)}</td>
+            <td class="num">${Number(c.unread_count || 0)}</td>
+            <td>${fmtQuestionDate(c.last_message_at || c.updated_at || c.created_at)}</td>
+            <td style="text-align:center;">
+              <button type="button" class="c-reply-btn" data-chat-id="${escapeHtmlGlobal(c.chat_id || "")}" style="padding:4px 12px;background:#1d7eeb;color:#fff;border:0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;width:auto;">Ответить</button>
+            </td>
+          </tr>
+        `;
+      }
+      html += `</tbody></table></div>`;
+      if (data.has_next) {
+        html += `<div style="padding:12px 0;text-align:center;"><button type="button" id="c_load_more" style="padding:6px 16px;background:#f0f4fa;color:#234;border:1px solid #d6dbe1;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;width:auto;">Загрузить ещё</button></div>`;
+      }
+      html += `</div>`;
+      listWrap.innerHTML = html;
+
+      listWrap.querySelectorAll(".c-open-modal, .c-reply-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const chatId = btn.getAttribute("data-chat-id");
+          if (!chatId) return;
+          await openChatModal(chatId);
+        });
+      });
+      const loadMore = listWrap.querySelector("#c_load_more");
+      if (loadMore) {
+        loadMore.addEventListener("click", async () => {
+          const root = document.querySelector("#chats_root");
+          if (!root) return;
+          loadMore.disabled = true;
+          loadMore.textContent = "Загрузка…";
+          await loadChatsList(root, { append: true });
+        });
+      }
+    }
+
+    async function openChatModal(chatId) {
+      const existing = document.getElementById("c_modal_overlay");
+      if (existing) existing.remove();
+      const overlay = document.createElement("div");
+      overlay.id = "c_modal_overlay";
+      overlay.style.cssText = "position:fixed;inset:0;background:rgba(18,26,40,0.45);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;";
+      overlay.innerHTML = `
+        <div style="width:min(920px,96vw);max-height:92vh;overflow:auto;background:#fff;border-radius:12px;border:1px solid #d6dbe1;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+          <div style="position:sticky;top:0;background:#fff;padding:14px 16px;border-bottom:1px solid #e6ebf2;display:flex;align-items:center;gap:8px;z-index:1;">
+            <div style="font-size:15px;font-weight:700;color:#24324a;">Чат ${escapeHtmlGlobal(chatId)}</div>
+            <button type="button" id="c_modal_close" style="margin-left:auto;padding:4px 10px;border:1px solid #ccd5e0;border-radius:6px;background:#f7f9fc;cursor:pointer;width:auto;">Закрыть</button>
+          </div>
+          <div id="c_modal_body" style="padding:14px 16px;color:#444;">Загрузка…</div>
+        </div>`;
+      document.body.appendChild(overlay);
+      overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+      overlay.querySelector("#c_modal_close").addEventListener("click", () => overlay.remove());
+      const body = overlay.querySelector("#c_modal_body");
+      await renderChatDetail(body, chatId);
+    }
+
+    async function renderChatDetail(cell, chatId) {
+      let messages = [];
+      try {
+        const r = await fetch(`/api/chats-report/${encodeURIComponent(chatId)}/history?limit=100`);
+        const d = await r.json();
+        messages = Array.isArray(d.messages) ? d.messages : [];
+      } catch (_) {}
+      const msgHtml = messages.length
+        ? messages.map((m) => {
+            const text = m.text || m.message || m.body || "";
+            const author = m.author_name || m.author || m.user_type || "Участник";
+            const dt = m.created_at || m.sent_at || m.date || "";
+            return `<div style="padding:8px 10px;border:1px solid #e6ebf2;border-radius:8px;margin-bottom:8px;background:#fff;">
+              <div style="font-size:11px;color:#66758b;margin-bottom:4px;">${escapeHtmlGlobal(author)} · ${fmtQuestionDate(dt)}</div>
+              <div style="white-space:pre-wrap;word-break:break-word;">${escapeHtmlGlobal(text)}</div>
+            </div>`;
+          }).join("")
+        : `<div style="color:#888;font-size:12px;margin-bottom:8px;">Сообщений пока нет.</div>`;
+
+      cell.innerHTML = `
+        <div style="margin-bottom:10px;max-height:46vh;overflow:auto;padding-right:4px;">${msgHtml}</div>
+        <div style="margin-bottom:6px;font-weight:600;color:#444;">Новый ответ:</div>
+        <textarea class="c-reply-textarea" rows="4" placeholder="Текст сообщения (1–3000 символов)" style="width:100%;padding:8px;border:1px solid #d6dbe1;border-radius:6px;font-family:inherit;font-size:13px;resize:vertical;"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+          <button class="c-reply-submit" style="padding:6px 18px;background:#2a9d8f;color:#fff;border:0;border-radius:6px;font-weight:600;cursor:pointer;width:auto;">Отправить</button>
+          <span class="c-reply-status" style="margin-left:auto;font-size:12px;"></span>
+        </div>`;
+
+      const submit = cell.querySelector(".c-reply-submit");
+      submit.addEventListener("click", async () => {
+        const ta = cell.querySelector(".c-reply-textarea");
+        const statusEl = cell.querySelector(".c-reply-status");
+        const text = (ta.value || "").trim();
+        if (text.length < 1 || text.length > 3000) {
+          statusEl.textContent = "Длина сообщения: 1–3000 символов";
+          statusEl.style.color = "#d62828";
+          return;
+        }
+        submit.disabled = true;
+        statusEl.textContent = "Отправляю…";
+        statusEl.style.color = "#888";
+        try {
+          const resp = await fetch("/api/chats/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: chatId, text }),
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (!resp.ok || data.error) throw new Error(data.error || `HTTP ${resp.status}`);
+          statusEl.textContent = "Сообщение отправлено ✓";
+          statusEl.style.color = "#2a9d8f";
+          ta.value = "";
+          await renderChatDetail(cell, chatId);
+        } catch (e) {
+          statusEl.textContent = `Ошибка: ${e.message || e}`;
+          statusEl.style.color = "#d62828";
+        } finally {
+          submit.disabled = false;
+        }
       });
     }
 
@@ -8795,6 +9786,10 @@
       status: "ALL",
       date_from: "",
       date_to: "",
+      last_id: "",
+      has_next: false,
+      items: [],
+      selected_ids: [],
     };
 
     async function renderQuestionsTab(wrap) {
@@ -8829,7 +9824,8 @@
 
       const st = window._questionsState;
       root.innerHTML = `
-        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px;padding:8px 12px;background:#f7f8fa;border-radius:8px;">
+        <div style="max-width:1400px;margin:0 auto 12px;">
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;padding:8px 12px;background:#f7f8fa;border-radius:8px;">
           <label style="display:flex;flex-direction:column;font-size:12px;color:#666;">Статус
             <select id="q_filter_status" style="padding:4px 8px;border:1px solid #d6dbe1;border-radius:6px;">
               <option value="ALL"${st.status === "ALL" ? " selected" : ""}>Все</option>
@@ -8848,28 +9844,41 @@
           <button id="q_filter_apply" style="padding:6px 16px;background:#1d7eeb;color:#fff;border:0;border-radius:6px;font-weight:600;cursor:pointer;width:auto;">Применить</button>
           <span id="q_counts_summary" style="margin-left:auto;font-size:13px;color:#444;"></span>
         </div>
+        </div>
         <div id="q_list_wrap"><div style="padding:24px;text-align:center;color:#888;">Загрузка…</div></div>
       `;
       root.querySelector("#q_filter_apply").addEventListener("click", () => {
         st.status = root.querySelector("#q_filter_status").value;
         st.date_from = root.querySelector("#q_filter_from").value;
         st.date_to = root.querySelector("#q_filter_to").value;
-        loadQuestionsList(root);
+        st.last_id = "";
+        st.has_next = false;
+        st.items = [];
+        st.selected_ids = [];
+        loadQuestionsList(root, { append: false });
       });
 
-      await loadQuestionsList(root);
+      st.last_id = "";
+      st.has_next = false;
+      st.items = [];
+      st.selected_ids = [];
+      await loadQuestionsList(root, { append: false });
     }
 
-    async function loadQuestionsList(root) {
+    async function loadQuestionsList(root, opts = {}) {
+      const append = !!opts.append;
       const listWrap = root.querySelector("#q_list_wrap");
       if (!listWrap) return;
-      listWrap.innerHTML = `<div style="padding:24px;text-align:center;color:#888;">Загрузка…</div>`;
+      if (!append) {
+        listWrap.innerHTML = `<div style="padding:24px;text-align:center;color:#888;">Загрузка…</div>`;
+      }
 
       const st = window._questionsState;
       const params = new URLSearchParams();
       params.set("status", st.status || "ALL");
       params.set("limit", "100");
       params.set("sort_dir", "DESC");
+      if (append && st.last_id) params.set("last_id", st.last_id);
       if (st.date_from) params.set("date_from", `${st.date_from}T00:00:00Z`);
       if (st.date_to) params.set("date_to", `${st.date_to}T23:59:59Z`);
 
@@ -8881,11 +9890,19 @@
         }
         const data = await resp.json();
         if (data.counts) window._questionsCount = data.counts;
+        st.last_id = data.last_id || "";
+        st.has_next = !!data.has_next;
+        const incoming = Array.isArray(data.items) ? data.items : [];
+        st.items = append ? [...(st.items || []), ...incoming] : incoming;
         const cs = root.querySelector("#q_counts_summary");
         if (cs && data.counts) {
           cs.innerHTML = `Всего: <b>${data.counts.all || 0}</b> · Новых: <b style="color:#d62828;">${data.counts.new || 0}</b> · Необраб.: <b>${data.counts.unprocessed || 0}</b> · Обраб.: <b style="color:#2a9d8f;">${data.counts.processed || 0}</b>`;
         }
-        renderQuestionsList(listWrap, data);
+        renderQuestionsList(listWrap, {
+          items: st.items,
+          has_next: st.has_next,
+          counts: data.counts || {},
+        });
       } catch (e) {
         listWrap.innerHTML = `<div style="padding:16px;color:#d62828;">Ошибка: ${escapeHtmlGlobal(e.message || e)}</div>`;
       }
@@ -8922,70 +9939,159 @@
         listWrap.innerHTML = `<div style="padding:32px;text-align:center;color:#666;">Вопросов не найдено.</div>`;
         return;
       }
+      const st = window._questionsState;
+      const selectedSet = new Set((st.selected_ids || []).map(String));
       let html = `
-        <table class="accrual-unitka-table" style="width:100%;">
+        <div style="max-width:1400px;margin:0 auto;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px;">
+          <button type="button" id="q_mark_viewed" style="padding:5px 12px;background:#1d7eeb;color:#fff;border:0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;width:auto;">Отметить просмотренными</button>
+          <button type="button" id="q_mark_processed" style="padding:5px 12px;background:#2a9d8f;color:#fff;border:0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;width:auto;">Отметить обработанными</button>
+          <span id="q_bulk_status" style="font-size:12px;color:#666;">Выбрано: ${selectedSet.size}</span>
+        </div>
+        <div style="overflow-x:auto;display:flex;justify-content:center;">
+        <table class="accrual-unitka-table" style="width:auto;min-width:980px;max-width:1400px;table-layout:auto;">
           <thead>
             <tr>
-              <th style="width:130px;">Артикул</th>
-              <th>Название</th>
-              <th>Вопрос</th>
-              <th style="width:130px;">Автор</th>
-              <th style="width:130px;">Дата</th>
-              <th style="width:120px;">Статус</th>
-              <th style="width:60px;text-align:center;">Отв.</th>
-              <th style="width:120px;text-align:center;">Действия</th>
+              <th style="width:34px;text-align:center;position:static;top:auto;z-index:auto;"><input type="checkbox" id="q_select_all"></th>
+              <th style="width:130px;position:static;top:auto;z-index:auto;">Артикул</th>
+              <th style="position:static;top:auto;z-index:auto;">Название</th>
+              <th style="position:static;top:auto;z-index:auto;">Вопрос</th>
+              <th style="width:130px;position:static;top:auto;z-index:auto;">Автор</th>
+              <th style="width:130px;position:static;top:auto;z-index:auto;">Дата</th>
+              <th style="width:120px;position:static;top:auto;z-index:auto;">Статус</th>
+              <th style="width:60px;text-align:center;position:static;top:auto;z-index:auto;">Отв.</th>
+              <th style="width:120px;text-align:center;position:static;top:auto;z-index:auto;">Действия</th>
             </tr>
           </thead>
           <tbody>
       `;
       for (const q of items) {
         const linkHtml = q.question_link
-          ? `<a href="${escapeHtmlGlobal(q.question_link)}" target="_blank" rel="noopener" style="color:#1d7eeb;">${escapeHtmlGlobal(q.text || "")}</a>`
-          : escapeHtmlGlobal(q.text || "");
+          ? `<a href="${escapeHtmlGlobal(q.question_link)}" target="_blank" rel="noopener" style="color:#1d7eeb;text-decoration:none;">↗</a>`
+          : "";
         html += `
           <tr class="question-row" data-qid="${escapeHtmlGlobal(q.id)}" data-sku="${q.sku || ""}">
+            <td style="text-align:center;"><input type="checkbox" class="q-select" data-qid="${escapeHtmlGlobal(q.id)}"${selectedSet.has(String(q.id)) ? " checked" : ""}></td>
             <td>${escapeHtmlGlobal(q.offer_id || "—")}</td>
-            <td>${escapeHtmlGlobal(q.product_name || "—")}</td>
-            <td>${linkHtml}</td>
+            <td style="max-width:260px;white-space:normal;word-break:break-word;">${escapeHtmlGlobal(q.product_name || "—")}</td>
+            <td style="max-width:520px;">
+              <button type="button" class="q-open-modal" data-qid="${escapeHtmlGlobal(q.id)}" data-sku="${q.sku || ""}" data-qtext="${escapeHtmlGlobal(q.text || "")}" data-qlink="${escapeHtmlGlobal(q.question_link || "")}" style="all:unset;cursor:pointer;display:block;max-width:500px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1d7eeb;" title="${escapeHtmlGlobal(q.text || "")}">
+                ${escapeHtmlGlobal(q.text || "")}
+              </button>
+              <span style="margin-left:6px;">${linkHtml}</span>
+            </td>
             <td>${escapeHtmlGlobal(q.author_name || "—")}</td>
             <td>${fmtQuestionDate(q.published_at)}</td>
             <td>${questionStatusBadge(q.status)}</td>
             <td style="text-align:center;">${q.answers_count || 0}</td>
             <td style="text-align:center;">
-              <button class="q-reply-btn" data-qid="${escapeHtmlGlobal(q.id)}" data-sku="${q.sku || ""}" style="padding:4px 12px;background:#1d7eeb;color:#fff;border:0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;width:auto;">Ответить</button>
+              <button class="q-reply-btn" data-qid="${escapeHtmlGlobal(q.id)}" data-sku="${q.sku || ""}" data-qtext="${escapeHtmlGlobal(q.text || "")}" data-qlink="${escapeHtmlGlobal(q.question_link || "")}" style="padding:4px 12px;background:#1d7eeb;color:#fff;border:0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;width:auto;">Ответить</button>
             </td>
-          </tr>
-          <tr class="q-detail-row hidden" id="q_detail_${escapeHtmlGlobal(q.id)}">
-            <td colspan="8" style="background:#fafafa;padding:0;"></td>
           </tr>
         `;
       }
-      html += `</tbody></table>`;
+      html += `</tbody></table></div></div>`;
+      if (data.has_next) {
+        html += `<div style="padding:12px 0;text-align:center;"><button type="button" id="q_load_more" style="padding:6px 16px;background:#f0f4fa;color:#234;border:1px solid #d6dbe1;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;width:auto;">Загрузить ещё</button></div>`;
+      }
       listWrap.innerHTML = html;
-      bindQuestionsHandlers(listWrap);
+      bindQuestionsHandlers(listWrap, data);
     }
 
-    function bindQuestionsHandlers(listWrap) {
-      listWrap.querySelectorAll(".q-reply-btn").forEach(btn => {
+    function bindQuestionsHandlers(listWrap, data) {
+      const st = window._questionsState;
+      const updateBulkCounter = () => {
+        const el = listWrap.querySelector("#q_bulk_status");
+        if (el) el.textContent = `Выбрано: ${(st.selected_ids || []).length}`;
+      };
+
+      listWrap.querySelectorAll(".q-select").forEach(cb => {
+        cb.addEventListener("change", () => {
+          const qid = String(cb.getAttribute("data-qid") || "");
+          const s = new Set((st.selected_ids || []).map(String));
+          if (cb.checked) s.add(qid);
+          else s.delete(qid);
+          st.selected_ids = Array.from(s);
+          updateBulkCounter();
+        });
+      });
+      const selectAll = listWrap.querySelector("#q_select_all");
+      if (selectAll) {
+        selectAll.checked = listWrap.querySelectorAll(".q-select:checked").length === listWrap.querySelectorAll(".q-select").length;
+        selectAll.addEventListener("change", () => {
+          const s = new Set((st.selected_ids || []).map(String));
+          listWrap.querySelectorAll(".q-select").forEach(cb => {
+            cb.checked = selectAll.checked;
+            const qid = String(cb.getAttribute("data-qid") || "");
+            if (selectAll.checked) s.add(qid);
+            else s.delete(qid);
+          });
+          st.selected_ids = Array.from(s);
+          updateBulkCounter();
+        });
+      }
+
+      const markViewedBtn = listWrap.querySelector("#q_mark_viewed");
+      if (markViewedBtn) {
+        markViewedBtn.addEventListener("click", async () => {
+          await bulkChangeQuestionsStatus("VIEWED", listWrap);
+        });
+      }
+      const markProcessedBtn = listWrap.querySelector("#q_mark_processed");
+      if (markProcessedBtn) {
+        markProcessedBtn.addEventListener("click", async () => {
+          await bulkChangeQuestionsStatus("PROCESSED", listWrap);
+        });
+      }
+
+      const loadMoreBtn = listWrap.querySelector("#q_load_more");
+      if (loadMoreBtn) {
+        loadMoreBtn.addEventListener("click", async () => {
+          const root = document.querySelector("#questions_root");
+          if (!root) return;
+          loadMoreBtn.disabled = true;
+          loadMoreBtn.textContent = "Загрузка…";
+          await loadQuestionsList(root, { append: true });
+        });
+      }
+
+      listWrap.querySelectorAll(".q-open-modal, .q-reply-btn").forEach(btn => {
         btn.addEventListener("click", async (e) => {
           e.stopPropagation();
           const qid = btn.getAttribute("data-qid");
           const sku = btn.getAttribute("data-sku");
-          const detailRow = document.getElementById(`q_detail_${qid}`);
-          if (!detailRow) return;
-          if (!detailRow.classList.contains("hidden")) {
-            detailRow.classList.add("hidden");
-            return;
-          }
-          const cell = detailRow.querySelector("td");
-          cell.innerHTML = `<div style="padding:12px;color:#888;">Загрузка существующих ответов…</div>`;
-          detailRow.classList.remove("hidden");
-          await renderQuestionDetail(cell, qid, sku);
+          const qText = btn.getAttribute("data-qtext") || "";
+          const qLink = btn.getAttribute("data-qlink") || "";
+          await openQuestionModal({ questionId: qid, sku, questionText: qText, questionLink: qLink });
         });
       });
     }
 
-    async function renderQuestionDetail(cell, questionId, sku) {
+    async function openQuestionModal({ questionId, sku, questionText, questionLink }) {
+      const existing = document.getElementById("q_modal_overlay");
+      if (existing) existing.remove();
+      const overlay = document.createElement("div");
+      overlay.id = "q_modal_overlay";
+      overlay.style.cssText = "position:fixed;inset:0;background:rgba(18,26,40,0.45);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;";
+      overlay.innerHTML = `
+        <div style="width:min(920px,96vw);max-height:92vh;overflow:auto;background:#fff;border-radius:12px;border:1px solid #d6dbe1;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+          <div style="position:sticky;top:0;background:#fff;padding:14px 16px;border-bottom:1px solid #e6ebf2;display:flex;align-items:center;gap:8px;z-index:1;">
+            <div style="font-size:15px;font-weight:700;color:#24324a;">Вопрос покупателя</div>
+            <button type="button" id="q_modal_close" style="margin-left:auto;padding:4px 10px;border:1px solid #ccd5e0;border-radius:6px;background:#f7f9fc;cursor:pointer;width:auto;">Закрыть</button>
+          </div>
+          <div id="q_modal_body" style="padding:14px 16px;color:#444;">Загрузка…</div>
+        </div>`;
+      document.body.appendChild(overlay);
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) overlay.remove();
+      });
+      overlay.querySelector("#q_modal_close").addEventListener("click", () => overlay.remove());
+
+      const body = overlay.querySelector("#q_modal_body");
+      await renderQuestionDetail(body, questionId, sku, questionText, questionLink);
+    }
+
+    async function renderQuestionDetail(cell, questionId, sku, questionText, questionLink) {
       let answers = [];
       try {
         const r = await fetch(`/api/questions-report/${encodeURIComponent(questionId)}/answers?sku=${encodeURIComponent(sku)}`);
@@ -9003,8 +10109,18 @@
             </div>`).join("")
         : `<div style="color:#888;font-size:12px;margin-bottom:8px;">Ответов пока нет.</div>`;
 
+      const fullQuestion = escapeHtmlGlobal(questionText || "");
+      const linkLine = questionLink
+        ? `<a href="${escapeHtmlGlobal(questionLink)}" target="_blank" rel="noopener" style="color:#1d7eeb;">Открыть вопрос на Ozon ↗</a>`
+        : "";
+
       cell.innerHTML = `
-        <div style="padding:12px 16px;">
+        <div>
+          <div style="margin-bottom:8px;padding:10px 12px;background:#f7f9fc;border:1px solid #e1e7ef;border-radius:8px;">
+            <div style="font-size:12px;color:#666;margin-bottom:4px;">Текст вопроса</div>
+            <div style="white-space:pre-wrap;word-break:break-word;color:#1f2b40;">${fullQuestion || "—"}</div>
+            <div style="margin-top:6px;font-size:12px;">${linkLine}</div>
+          </div>
           <div style="margin-bottom:8px;font-weight:600;color:#444;">Существующие ответы:</div>
           <div style="margin-bottom:12px;">${answersHtml}</div>
           <div style="margin-bottom:6px;font-weight:600;color:#444;">Новый ответ:</div>
@@ -9394,8 +10510,8 @@
       const acc = data._accruals || {};
       const taxRate = getAccrualTaxRate();
 
-      // ── Экономика на основе Начислений ──
-      // Расходы МП % (без рекламы) из Начислений
+      // ── Экономика на основе Начислений (30 дней) ──
+      // Расходы МП % (без рекламы) из Начислений за 30 дней
       const accRevenue = Number(acc.revenue_sales || acc.sales_total || 0);
       const accMpExpenses = Number(acc.marketplace_expenses || 0);
       const accAdSpend = Number(acc.ad_spend || acc.pay_per_click || 0);
@@ -9412,7 +10528,7 @@
       // Выручка = кол-во * средняя цена (= total_revenue)
       // Расходы МП (без рекламы) = выручка * mp_no_ad_pct
       const mpExpensesCalc = totalRevenue * mpNoAdPct;
-      // Начисленные = выручка - расходы_мп - расход_на_рекламу
+      // Начислено (net) = выручка - расходы_мп(без рекламы) - расход РК
       const accrued = totalRevenue - mpExpensesCalc - adSpent;
       // Налог = выручка * ставка% (как в Начислениях по артикулам)
       const taxAmount = totalRevenue * (taxRate / 100);
@@ -9624,7 +10740,7 @@
           </tr></tfoot>
         </table>
       </div>`;
-      html += `<div style="font-size:11px;color:#888780;margin-top:6px;">Расходы МП ${fmt1(mpNoAdPct * 100)}% от выручки (из Начислений, без рекламы). Себестоимость ${fmt(unitCost)} &#8381;/шт.</div>`;
+      html += `<div style="font-size:11px;color:#888780;margin-top:6px;">Расходы МП ${fmt1(mpNoAdPct * 100)}% от выручки (из Начислений за 30 дней, без рекламы). Себестоимость ${fmt(unitCost)} &#8381;/шт.</div>`;
       html += `<div style="font-size:11px;color:#888780;margin-top:2px;">Заказы и выручка — из Performance API (заказы, не выкупы). Расходы МП % — из Начислений (выкупы). Расход РК — из статистики кампаний.</div>`;
       html += `<div style="font-size:11px;color:#888780;margin-top:2px;">В таблице: «Заказы шт / Продажи РК» = CPC, «Заказы CPO / Продажи CPO» = оплата за заказ (models/modelsMoney).</div>`;
 
@@ -9930,7 +11046,7 @@
         const scRev = totalRevenue * sc.f;
         const scMp = scRev * mpNoAdPct;
         const scDrr = scRev > 0 ? (scSpent / scRev * 100) : 0;
-        const scAccrued = scRev - scMp - scSpent;
+        const scAccrued = scRev - scMp;
         const scMatCost = unitCost * scQty;
         const scTax = scRev * (taxRate / 100);
         const scGp = scAccrued - scMatCost - scTax;
@@ -10683,6 +11799,16 @@
       const fbsWarehouses = data.fbs_warehouses || [];
       const summary = data.summary || {};
       const accruals = data._accruals || {};
+      const stockColumns = [
+        { key: "offer_id", label: "Артикул", accessor: "offer_id", kind: "text", values: [] },
+        { key: "name", label: "Наименование", accessor: "name", kind: "text", values: [] },
+        { key: "total", label: "Всего", accessor: "total", kind: "number", values: [] },
+        { key: "fbo_total", label: "FBO", accessor: "fbo_total", kind: "number", values: [] },
+        { key: "fbs_total", label: "FBS", accessor: "fbs_total", kind: "number", values: [] },
+        { key: "_potRevenue", label: "Потенц. выручка", accessor: "_potRevenue", kind: "number", values: [] },
+        { key: "_potAccrued", label: "Потенц. начислено", accessor: "_potAccrued", kind: "number", values: [] },
+        { key: "last_synced_at", label: "Синхр.", accessor: "last_synced_at", kind: "text", values: [] },
+      ];
 
       if (!items.length) {
         stockBalancesWrap.innerHTML = `<div style="padding:24px;color:#888;">Нет данных об остатках</div>`;
@@ -10691,7 +11817,6 @@
 
       // Calculate potential revenue/accrued for each item
       // revenue_per_unit = revenue_sales / net_sold_units, then × stock
-      let totalPotRevenue = 0, totalPotAccrued = 0;
       const noDataMark = `<span style="color:#bbb;font-size:11px;" title="Нет данных о продажах за 60 дней">—</span>`;
       for (const item of items) {
         const acc = accruals[item.offer_id] || {};
@@ -10702,24 +11827,33 @@
           item._potRevenue = item._revPerUnit * item.total;
           item._potAccrued = item._accPerUnit * item.total;
           item._hasAccruals = true;
-          totalPotRevenue += item._potRevenue;
-          totalPotAccrued += item._potAccrued;
         } else {
           item._hasAccruals = false;
           item._potRevenue = 0;
           item._potAccrued = 0;
         }
       }
+      const taggedItems = applyDynamicTagsToRows(items, "stock_balances");
+      const filteredItems = applyReportFilters("stock_balances", taggedItems, stockColumns);
+      const totalPotRevenue = filteredItems.reduce((sum, item) => sum + Number(item._potRevenue || 0), 0);
+      const totalPotAccrued = filteredItems.reduce((sum, item) => sum + Number(item._potAccrued || 0), 0);
+      const filteredTotal = filteredItems.reduce((sum, item) => sum + Number(item.total || 0), 0);
+      const filteredFboTotal = filteredItems.reduce((sum, item) => sum + Number(item.fbo_total || 0), 0);
+      const filteredFbsTotal = filteredItems.reduce((sum, item) => sum + Number(item.fbs_total || 0), 0);
+      const lastSyncedAt = filteredItems.map((item) => item.last_synced_at).filter(Boolean).sort().at(-1);
+      const stockAsOfLabel = lastSyncedAt
+        ? new Date(lastSyncedAt).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+        : "—";
 
       const summaryHtml = `
         <div class="analytics-summary" style="grid-template-columns: repeat(4, 1fr);">
           <div class="analytics-summary-card">
             <div class="label">Артикулов</div>
-            <div class="value">${formatMetric(summary.articles || 0)}</div>
+            <div class="value">${formatMetric(filteredItems.length)}</div>
           </div>
           <div class="analytics-summary-card">
             <div class="label">Всего шт.</div>
-            <div class="value">${formatMetric(summary.total || 0)}</div>
+            <div class="value">${formatMetric(filteredTotal)}</div>
           </div>
           <div class="analytics-summary-card">
             <div class="label">Потенц. выручка</div>
@@ -10731,10 +11865,18 @@
           </div>
         </div>
       `;
+      const stockColumnMeta = Object.fromEntries(
+        stockColumns.map((column) => [column.key, getColumnFilterMeta("stock_balances", column)])
+      );
+      const filterbarHtml = `
+        <div style="display:grid;gap:8px;padding:0 20px;">
+          <div style="font-size:12px;color:#64748b;">Остатки на: <strong style="color:#334155;">${stockAsOfLabel}</strong></div>
+        </div>
+      `;
 
       let bodyHtml = "";
-      for (let idx = 0; idx < items.length; idx++) {
-        const item = items[idx];
+      for (let idx = 0; idx < filteredItems.length; idx++) {
+        const item = filteredItems[idx];
         const synced = item.last_synced_at ? new Date(item.last_synced_at).toLocaleString("ru-RU", {day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}) : "";
         const nameShort = (item.name || "").length > 50 ? (item.name || "").slice(0, 48) + "…" : (item.name || "");
         const detailId = `sb_detail_${idx}`;
@@ -10794,9 +11936,9 @@
       // Totals row
       const totalsRow = `<tr style="font-weight:700;background:#f0f4f8;">
         <td style="padding:4px 8px;"></td><td style="padding:4px 8px;">ИТОГО</td>
-        <td style="text-align:right;padding:4px 8px;">${formatMetric(summary.total || 0)}</td>
-        <td style="color:#1a73e8;text-align:right;padding:4px 8px;">${formatMetric(summary.fbo_total || 0)}</td>
-        <td style="color:#e67700;text-align:right;padding:4px 8px;">${formatMetric(summary.fbs_total || 0)}</td>
+        <td style="text-align:right;padding:4px 8px;">${formatMetric(filteredTotal)}</td>
+        <td style="color:#1a73e8;text-align:right;padding:4px 8px;">${formatMetric(filteredFboTotal)}</td>
+        <td style="color:#e67700;text-align:right;padding:4px 8px;">${formatMetric(filteredFbsTotal)}</td>
         <td style="text-align:right;padding:4px 8px;color:#2a6;">${formatMetric(Math.round(totalPotRevenue))}</td>
         <td style="text-align:right;padding:4px 8px;color:${totalPotAccrued >= 0 ? '#2a6' : '#c33'};">${formatMetric(Math.round(totalPotAccrued))}</td>
         <td style="padding:4px 8px;"></td>
@@ -10805,18 +11947,19 @@
       stockBalancesWrap.innerHTML = `
         ${_renderStockBalancesToggle()}
         ${summaryHtml}
+        ${filterbarHtml}
         <div style="overflow-x:auto;display:flex;justify-content:center;">
           <table class="data-table report-table" style="font-size:13px;width:auto;min-width:700px;max-width:1100px;">
             <thead>
               <tr>
-                <th>Артикул</th>
-                <th>Наименование</th>
-                <th style="text-align:right;">Всего</th>
-                <th style="text-align:right;">FBO</th>
-                <th style="text-align:right;">FBS</th>
-                <th style="text-align:right;" title="Выручка за 1 шт (60д) × остатки">Потенц. выручка</th>
-                <th style="text-align:right;" title="Начислено за 1 шт (60д) × остатки">Потенц. начислено</th>
-                <th>Синхр.</th>
+                <th data-report-filter="stock_balances" data-column-key="offer_id"><span class="column-filter-label ${stockColumnMeta.offer_id?.active ? "active" : ""}">Артикул</span></th>
+                <th data-report-filter="stock_balances" data-column-key="name"><span class="column-filter-label ${stockColumnMeta.name?.active ? "active" : ""}">Наименование</span></th>
+                <th style="text-align:right;" data-report-filter="stock_balances" data-column-key="total"><span class="column-filter-label ${stockColumnMeta.total?.active ? "active" : ""}">Всего</span></th>
+                <th style="text-align:right;" data-report-filter="stock_balances" data-column-key="fbo_total"><span class="column-filter-label ${stockColumnMeta.fbo_total?.active ? "active" : ""}">FBO</span></th>
+                <th style="text-align:right;" data-report-filter="stock_balances" data-column-key="fbs_total"><span class="column-filter-label ${stockColumnMeta.fbs_total?.active ? "active" : ""}">FBS</span></th>
+                <th style="text-align:right;" title="Выручка за 1 шт (60д) × остатки" data-report-filter="stock_balances" data-column-key="_potRevenue"><span class="column-filter-label ${stockColumnMeta._potRevenue?.active ? "active" : ""}">Потенц. выручка</span></th>
+                <th style="text-align:right;" title="Начислено за 1 шт (60д) × остатки" data-report-filter="stock_balances" data-column-key="_potAccrued"><span class="column-filter-label ${stockColumnMeta._potAccrued?.active ? "active" : ""}">Потенц. начислено</span></th>
+                <th data-report-filter="stock_balances" data-column-key="last_synced_at"><span class="column-filter-label ${stockColumnMeta.last_synced_at?.active ? "active" : ""}">Синхр.</span></th>
               </tr>
             </thead>
             <tbody>
@@ -10836,6 +11979,20 @@
           const isOpen = details.length > 0 && details[0].style.display !== "none";
           details.forEach((r) => r.style.display = isOpen ? "none" : "");
           if (arrow) arrow.style.transform = isOpen ? "" : "rotate(90deg)";
+        });
+      });
+      stockBalancesWrap.querySelectorAll('[data-report-filter="stock_balances"]').forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const column = stockColumns.find((item) => item.key === button.dataset.columnKey);
+          if (!column) return;
+          openReportFilterMenu(
+            event.currentTarget,
+            "stock_balances",
+            column,
+            taggedItems,
+            () => _renderStockBalancesStocksView(stockBalancesState.data)
+          );
         });
       });
       _bindStockBalancesToggle();
@@ -13363,26 +14520,28 @@
     }
 
     function updateFilterVisibility() {
-      const financeMode = reportType.value === "finance_report" || reportType.value === "finance_report_v2" || reportType.value === "finance_report_accrual";
+      const financeMode = reportType.value === "finance_report" || reportType.value === "finance_report_accrual";
       const accrualByArticleMode = reportType.value === "accruals_comp_by_article";
       const analyticsStocksMode = reportType.value === "analytics_stocks" || reportType.value === "supply_plan" || reportType.value === "article_analytics" || reportType.value === "rnp_report" || reportType.value === "actions" || reportType.value === "stock_balances" || reportType.value === "advertising_report";
       const characteristicsMode = reportType.value === "article_characteristics";
-      const useOffer = reportType.value === "sales" || reportType.value === "returns" || reportType.value === "warehouse_stock" || reportType.value === "analytics_stocks" || reportType.value === "article_analytics" || reportType.value === "rnp_report" || reportType.value === "supply_plan" || reportType.value === "realization_v2" || reportType.value === "accruals_comp_by_article" || reportType.value === "stock_balances" || reportType.value === "advertising_report";
+      const settingsMode = reportType.value === "settings_costs";
+      const useOffer = reportType.value === "sales" || reportType.value === "returns" || reportType.value === "warehouse_stock" || reportType.value === "analytics_stocks" || reportType.value === "article_analytics" || reportType.value === "supply_plan" || reportType.value === "realization_v2" || reportType.value === "accruals_comp_by_article" || reportType.value === "stock_balances" || reportType.value === "advertising_report";
       const useSchema = reportType.value === "sales" || reportType.value === "returns";
       reportMonth.disabled = false;
-      dateFrom.disabled = financeMode || characteristicsMode;
-      dateTo.disabled = financeMode || characteristicsMode;
+      dateFrom.disabled = financeMode || characteristicsMode || settingsMode;
+      dateTo.disabled = financeMode || characteristicsMode || settingsMode;
       offerId.disabled = !useOffer;
       schema.disabled = !useSchema;
       isKgtFilter.disabled = !characteristicsMode;
       allocateNoArticle.disabled = !accrualByArticleMode;
       accrualModeWrap.style.display = accrualByArticleMode ? "" : "none";
       // Hide irrelevant filters for Finance Report tabs
-      dateFrom.parentElement.style.display = financeMode ? "none" : "";
-      dateTo.parentElement.style.display = financeMode ? "none" : "";
+      dateFrom.parentElement.style.display = (financeMode || settingsMode) ? "none" : "";
+      dateTo.parentElement.style.display = (financeMode || settingsMode) ? "none" : "";
       offerId.parentElement.style.display = (financeMode || !useOffer) ? "none" : "";
       schema.parentElement.style.display = (financeMode || !useSchema) ? "none" : "";
       isKgtFilter.parentElement.style.display = (financeMode || !characteristicsMode) ? "none" : "";
+      reportMonth.parentElement.style.display = settingsMode ? "none" : "";
       if (!useOffer) {
         offerId.value = "";
       }
@@ -13405,8 +14564,10 @@
       advertisingReportWrap.classList.toggle("hidden", !advertisingMode);
       const reviewsReportWrap = document.getElementById("reviews_report_wrap");
       if (reviewsReportWrap) reviewsReportWrap.classList.toggle("hidden", !reviewsMode);
+      if (settingsCostsWrap) settingsCostsWrap.classList.toggle("hidden", !settingsMode);
       financeWrap.classList.toggle("hidden", !financeMode);
       financeKpiWrap.classList.toggle("hidden", !financeMode);
+      if (financeChartWrap) financeChartWrap.style.display = financeMode ? "block" : "none";
       // Тумблер Касса/По заказам — для finance_report и начислений по артикулам
       const financeModeToggle = document.getElementById("finance_mode_toggle");
       if (financeModeToggle) {
@@ -13426,7 +14587,10 @@
       accrualVisualWrap.classList.toggle("hidden", !accrualByArticleMode);
       const unitkaWrap = document.getElementById("unitka_wrap");
       if (unitkaWrap) unitkaWrap.classList.toggle("hidden", !unitkaMode);
-      genericWrap.classList.toggle("hidden", financeMode || analyticsStocksMode || accrualByArticleMode || unitkaMode || reviewsMode || reportType.value === "returns_analytics");
+      const serpMode = reportType.value === "serp";
+      const serpWrap = document.getElementById("serp_wrap");
+      if (serpWrap) serpWrap.classList.toggle("hidden", !serpMode);
+      genericWrap.classList.toggle("hidden", financeMode || analyticsStocksMode || accrualByArticleMode || unitkaMode || reviewsMode || settingsMode || serpMode || reportType.value === "returns_analytics");
       genericFilterBar.classList.add("hidden");
       genericFilterBar.innerHTML = "";
     }
@@ -13487,6 +14651,287 @@
       return `${String(parsed.getDate()).padStart(2, "0")}.${String(parsed.getMonth() + 1).padStart(2, "0")}`;
     }
 
+    function toNum(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function buildFinanceRowsMap(data) {
+      const map = {};
+      for (const row of (data.rows || [])) {
+        map[row.key] = row;
+      }
+      return map;
+    }
+
+    function projectCumulativeSeriesByAverage(baseSeries, sourceSeries, days, forecastDays, todayIso) {
+      const projected = (baseSeries || []).map((v) => toNum(v));
+      const source = (sourceSeries || []).map((v) => toNum(v));
+      const factIndices = days
+        .map((d, idx) => ({ d, idx }))
+        .filter((x) => !forecastDays.has(x.d))
+        .filter((x) => x.d !== todayIso)
+        .map((x) => x.idx)
+        .filter((idx) => Math.abs(toNum(source[idx])) > 0);
+      if (!factIndices.length) return projected;
+      const lastFactIdx = factIndices[factIndices.length - 1];
+      let prev = toNum(projected[lastFactIdx]);
+      const sourceFactSum = factIndices.reduce((sum, idx) => sum + toNum(source[idx]), 0);
+      const avgStep = sourceFactSum / Math.max(1, factIndices.length);
+      for (let i = lastFactIdx + 1; i < projected.length; i++) {
+        if (!forecastDays.has(days[i])) {
+          prev = toNum(projected[i]);
+          continue;
+        }
+        prev += avgStep;
+        projected[i] = prev;
+      }
+      return projected;
+    }
+
+    function financeChartModeButton(label, key, activeMode) {
+      const base = "padding:6px 12px;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;cursor:pointer;font-weight:600;font-size:12px;";
+      const active = "background:#2563eb;color:#fff;";
+      const radius = key === "plan_vs_cumulative" ? "border-radius:6px 0 0 6px;" : "border-radius:0 6px 6px 0;border-left:0;";
+      return `<button type="button" data-fin-chart-mode="${key}" style="${base}${radius}${activeMode === key ? active : ""}">${label}</button>`;
+    }
+
+    function renderFinanceChart(data) {
+      if (!financeChartWrap) return;
+      const days = Array.isArray(data.days) ? data.days : [];
+      const todayIso = (() => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      })();
+      const rawForecastDays = Array.isArray(data.forecast_days) ? data.forecast_days : [];
+      const forecastDays = rawForecastDays.length
+        ? new Set([...(rawForecastDays || []), ...(days.includes(todayIso) ? [todayIso] : [])])
+        : new Set((days || []).filter((d) => d >= todayIso));
+      const labels = days.map((d) => {
+        const dt = new Date(`${d}T00:00:00`);
+        if (Number.isNaN(dt.getTime())) return d;
+        return `${String(dt.getDate()).padStart(2, "0")}.${String(dt.getMonth() + 1).padStart(2, "0")}`;
+      });
+      const rowsMap = buildFinanceRowsMap(data);
+      const hasRows = days.length > 0 && Object.keys(rowsMap).length > 0;
+      if (!hasRows || typeof Chart === "undefined") {
+        financeChartWrap.innerHTML = `<div style="padding:10px 12px;background:#fff;border:1px solid rgba(0,0,0,0.12);border-radius:8px;color:#6b7280;font-size:12px;">Нет данных для графика</div>`;
+        return;
+      }
+
+      const revenuePlan = (rowsMap.revenue_plan?.daily || []).map(toNum);
+      const revenueCumulativeSrc = (rowsMap.revenue_cumulative?.daily || []).map(toNum);
+      const grossPlan = (rowsMap.gross_profit_plan?.daily || []).map(toNum);
+      const grossCumulativeSrc = (rowsMap.gross_profit_cumulative?.daily || []).map(toNum);
+      const salesDaily = (rowsMap.sales_total?.daily || []).map(toNum);
+      const revenueSalesDaily = ((rowsMap.revenue_sales?.daily || rowsMap.sales_total?.daily) || []).map(toNum);
+      const expensesDaily = (rowsMap.marketplace_expenses?.daily || []).map(toNum);
+      const grossDaily = (rowsMap.gross_profit?.daily || []).map(toNum);
+
+      const revenueCumulative = projectCumulativeSeriesByAverage(revenueCumulativeSrc, revenueSalesDaily, days, forecastDays, todayIso);
+      const grossCumulative = projectCumulativeSeriesByAverage(grossCumulativeSrc, grossDaily, days, forecastDays, todayIso);
+      const forecastMask = days.map((d) => forecastDays.has(d));
+
+      const chartId = "finance_main_chart";
+      financeChartWrap.innerHTML = `
+        <div style="font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;color:#888780;margin:0 0 8px;">Динамика Finance Report</div>
+        <div style="display:flex;gap:0;padding-left:8px;">
+          ${financeChartModeButton("Выручка/Валовая", "plan_vs_cumulative", financeChartMode)}
+          ${financeChartModeButton("Продажи/Расходы/Валовая", "ops_lines", financeChartMode)}
+        </div>
+        <div style="background:#fff;border:1px solid rgba(0,0,0,0.15);border-radius:0 8px 8px 8px;padding:12px;">
+          <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#5f5e5a;margin-bottom:8px;" id="finance_chart_legend"></div>
+          <div style="position:relative;height:250px;"><canvas id="${chartId}"></canvas></div>
+        </div>
+      `;
+
+      const legendEl = document.getElementById("finance_chart_legend");
+      const kpiRows = Array.isArray(data.kpi_summary) ? data.kpi_summary : [];
+      const kpiByKey = kpiRows.reduce((acc, row) => {
+        acc[row.key] = row;
+        return acc;
+      }, {});
+      const forecastRevenueTotal = toNum(kpiByKey.revenue_mp?.forecast);
+      const forecastMoneyTotal = toNum(kpiByKey.money_on_account?.forecast);
+      const forecastGrossTotal = toNum(kpiByKey.gross_profit?.forecast);
+      legendEl.innerHTML = `
+        <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;display:inline-block;background:#378ADD;"></span>Выручка МП: ${formatFinanceDecimal(forecastRevenueTotal, 0)}</span>
+        <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;display:inline-block;background:#1D9E75;"></span>Деньги на счет: ${formatFinanceDecimal(forecastMoneyTotal, 0)}</span>
+        <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;display:inline-block;background:#BA7517;"></span>Валовая прибыль: ${formatFinanceDecimal(forecastGrossTotal, 0)}</span>
+      `;
+      const lastFactIdx = (() => {
+        for (let i = days.length - 1; i >= 0; i--) {
+          if (!forecastMask[i]) return i;
+        }
+        return -1;
+      })();
+      const deltaMeta = (fact, plan) => {
+        const f = toNum(fact);
+        const p = toNum(plan);
+        const pct = p !== 0 ? ((f - p) / p) * 100 : 0;
+        const over = pct >= 0;
+        const state = over ? "перевыполняем" : "недовыполняем";
+        const color = over ? "#0f766e" : "#b91c1c";
+        return { pct: Math.abs(pct), state, color };
+      };
+      const revenueDelta = (financeChartMode === "plan_vs_cumulative" && lastFactIdx >= 0)
+        ? deltaMeta(revenueCumulative[lastFactIdx], revenuePlan[lastFactIdx])
+        : null;
+      const grossDelta = (financeChartMode === "plan_vs_cumulative" && lastFactIdx >= 0)
+        ? deltaMeta(grossCumulative[lastFactIdx], grossPlan[lastFactIdx])
+        : null;
+
+      const canvas = document.getElementById(chartId);
+      if (!canvas) return;
+      if (financeMainChart) financeMainChart.destroy();
+      const ctx = canvas.getContext("2d");
+      const factOnly = (series) => {
+        const src = (series || []).map((v) => (v == null ? null : v));
+        const masked = src.map((v, idx) => (forecastMask[idx] ? null : v));
+        const hasFactPoint = masked.some((v) => v != null);
+        return hasFactPoint ? masked : src;
+      };
+      const datasets = financeChartMode === "plan_vs_cumulative"
+        ? [
+          { label: "Выручка план", data: factOnly(revenuePlan), borderColor: "#378ADD", backgroundColor: "rgba(55,138,221,0.08)", tension: 0.3, pointRadius: 0, borderWidth: 2, fill: false },
+          { label: "Выручка накопительно", data: factOnly(revenueCumulative), borderColor: "#D4537E", backgroundColor: "rgba(212,83,126,0.08)", tension: 0.3, pointRadius: 0, borderWidth: 2, fill: false },
+          { label: "Валовая план", data: factOnly(grossPlan), borderColor: "#1D9E75", backgroundColor: "rgba(29,158,117,0.08)", tension: 0.3, pointRadius: 0, borderWidth: 2, fill: false },
+          { label: "Валовая накопительно", data: factOnly(grossCumulative), borderColor: "#BA7517", backgroundColor: "rgba(186,117,23,0.08)", tension: 0.3, pointRadius: 0, borderWidth: 2, fill: false },
+        ]
+        : [
+          { label: "Продажи", data: factOnly(salesDaily), borderColor: "#378ADD", backgroundColor: "rgba(55,138,221,0.08)", tension: 0.3, pointRadius: 0, borderWidth: 2, fill: false },
+          { label: "Расходы МП", data: factOnly(expensesDaily), borderColor: "#D4537E", backgroundColor: "rgba(212,83,126,0.08)", tension: 0.3, pointRadius: 0, borderWidth: 2, fill: false },
+          { label: "Валовая прибыль", data: factOnly(grossDaily), borderColor: "#1D9E75", backgroundColor: "rgba(29,158,117,0.08)", tension: 0.3, pointRadius: 0, borderWidth: 2, fill: false },
+        ];
+      const deltaOverlayPlugin = {
+        id: "financeDeltaOverlay",
+        afterDatasetsDraw(chart) {
+          if (financeChartMode !== "plan_vs_cumulative" || lastFactIdx < 0 || !revenueDelta || !grossDelta) return;
+          const xScale = chart.scales.x;
+          const yScale = chart.scales.y;
+          if (!xScale || !yScale) return;
+          const ctx2 = chart.ctx;
+          const x = xScale.getPixelForValue(lastFactIdx) + 14;
+          const revY = (yScale.getPixelForValue(revenueCumulative[lastFactIdx]) + yScale.getPixelForValue(revenuePlan[lastFactIdx])) / 2;
+          const grossY = (yScale.getPixelForValue(grossCumulative[lastFactIdx]) + yScale.getPixelForValue(grossPlan[lastFactIdx])) / 2;
+          const drawLabel = (text, yPos, color) => {
+            ctx2.save();
+            ctx2.font = "600 12px Segoe UI, sans-serif";
+            ctx2.fillStyle = color;
+            ctx2.strokeStyle = "rgba(255,255,255,0.9)";
+            ctx2.lineWidth = 3;
+            ctx2.strokeText(text, x, yPos);
+            ctx2.fillText(text, x, yPos);
+            ctx2.restore();
+          };
+          drawLabel(`${revenueDelta.state} ${formatFinanceDecimal(revenueDelta.pct, 1)}%`, revY - 4, revenueDelta.color);
+          drawLabel(`${grossDelta.state} ${formatFinanceDecimal(grossDelta.pct, 1)}%`, grossY + 14, grossDelta.color);
+        }
+      };
+
+      financeMainChart = new Chart(ctx, {
+        plugins: [deltaOverlayPlugin],
+        type: "line",
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(c) {
+                  const val = formatFinanceDecimal(c.raw, 0);
+                  const phase = forecastMask[c.dataIndex] ? "прогноз" : "факт";
+                  return `${c.dataset.label}: ${val} (${phase})`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: { ticks: { font: { size: 10 } } },
+            x: { ticks: { font: { size: 10 }, maxRotation: 0 } }
+          },
+          elements: { line: { segment: {} } }
+        }
+      });
+
+      financeChartWrap.querySelectorAll("[data-fin-chart-mode]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          financeChartMode = btn.dataset.finChartMode || "plan_vs_cumulative";
+          try { localStorage.setItem("ozon-dashboard-finance-chart-mode", financeChartMode); } catch(e) {}
+          renderFinanceChart(data);
+        });
+      });
+    }
+
+    async function bulkChangeQuestionsStatus(status, listWrap) {
+      const st = window._questionsState;
+      const ids = (st.selected_ids || []).filter(Boolean);
+      const statusEl = listWrap.querySelector("#q_bulk_status");
+      if (!ids.length) {
+        if (statusEl) {
+          statusEl.textContent = "Выберите хотя бы один вопрос";
+          statusEl.style.color = "#d62828";
+        }
+        return;
+      }
+      if (statusEl) {
+        statusEl.textContent = "Обновляю статус…";
+        statusEl.style.color = "#666";
+      }
+      try {
+        const resp = await fetch("/api/questions/change-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question_ids: ids, status }),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.error) throw new Error(data.error || `HTTP ${resp.status}`);
+        st.selected_ids = [];
+        if (statusEl) {
+          statusEl.textContent = "Статус обновлён";
+          statusEl.style.color = "#2a9d8f";
+        }
+        const root = document.querySelector("#questions_root");
+        if (root) await loadQuestionsList(root, { append: false });
+      } catch (e) {
+        if (statusEl) {
+          statusEl.textContent = `Ошибка: ${e.message || e}`;
+          statusEl.style.color = "#d62828";
+        }
+      }
+    }
+
+    async function triggerReviewsAutoSyncOnce() {
+      if (reviewsAutoSyncStarted) return;
+      reviewsAutoSyncStarted = true;
+      try {
+        const resp = await fetch("/api/sync-ozon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profile: "reviews_only" }),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.status === "error") return;
+
+        if (reviewsAutoSyncPollTimer) clearInterval(reviewsAutoSyncPollTimer);
+        reviewsAutoSyncPollTimer = setInterval(async () => {
+          try {
+            const s = await fetch("/api/sync-status");
+            const sd = await s.json();
+            if (!sd || !sd.is_running) {
+              clearInterval(reviewsAutoSyncPollTimer);
+              reviewsAutoSyncPollTimer = null;
+              if (reportType.value === "reviews_report") {
+                await loadReport();
+              }
+            }
+          } catch (_) {}
+        }, 5000);
+      } catch (_) {}
+    }
+
     function renderFinanceReport(data) {
       const dayHeaders = (data.days || []).map((day) => {
         const d = new Date(day);
@@ -13498,7 +14943,55 @@
       const rows = data.rows || [];
       const planIdx = rows.findIndex(r => r.key === "revenue_plan");
       const days = data.days || [];
-      const forecastDays = new Set(data.forecast_days || []);
+      const todayIso = (() => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      })();
+      const rawForecastDays = Array.isArray(data.forecast_days) ? data.forecast_days : [];
+      const forecastDays = rawForecastDays.length
+        ? new Set([...(rawForecastDays || []), ...(days.includes(todayIso) ? [todayIso] : [])])
+        : new Set((data.days || []).filter((d) => d >= todayIso));
+      const projectedCumulative = (() => {
+        const out = {};
+        const rowsByKey = rows.reduce((acc, row) => {
+          acc[row.key] = row;
+          return acc;
+        }, {});
+        const projectRow = (cumulativeKey, sourceKeys) => {
+          const row = rowsByKey[cumulativeKey];
+          const sourceKeyList = Array.isArray(sourceKeys) ? sourceKeys : [sourceKeys];
+          const sourceRow = sourceKeyList.map((k) => rowsByKey[k]).find((r) => r && Array.isArray(r.daily));
+          if (!row || !Array.isArray(row.daily) || !row.daily.length || !sourceRow || !Array.isArray(sourceRow.daily)) return;
+          const projected = row.daily.map((v) => toNum(v));
+          const sourceSeries = sourceRow.daily.map((v) => toNum(v));
+          const factIndices = days
+            .map((d, idx) => ({ d, idx }))
+            .filter((x) => !forecastDays.has(x.d))
+            .filter((x) => x.d !== todayIso)
+            .map((x) => x.idx)
+            .filter((idx) => Math.abs(toNum(sourceSeries[idx])) > 0);
+          if (!factIndices.length) {
+            out[cumulativeKey] = projected;
+            return;
+          }
+          const lastFactIdx = factIndices[factIndices.length - 1];
+          let prev = toNum(projected[lastFactIdx]);
+          const sourceFactSum = factIndices.reduce((sum, idx) => sum + toNum(sourceSeries[idx]), 0);
+          const avgStep = sourceFactSum / Math.max(1, factIndices.length);
+          for (let i = lastFactIdx + 1; i < projected.length; i++) {
+            if (!forecastDays.has(days[i])) {
+              prev = toNum(projected[i]);
+              continue;
+            }
+            prev += avgStep;
+            projected[i] = prev;
+          }
+          out[cumulativeKey] = projected;
+        };
+        projectRow("revenue_cumulative", ["revenue_sales", "sales_total"]);
+        projectRow("gross_profit_cumulative", ["gross_profit"]);
+        return out;
+      })();
       const revenueArticles = Array.isArray(data.revenue_breakdown?.articles) ? data.revenue_breakdown.articles : [];
       
       financeBody.innerHTML = "";
@@ -13534,7 +15027,8 @@
           let dailyCells;
           if (row.key === "revenue_cumulative" && planIdx >= 0) {
             const planRow = rows[planIdx];
-            dailyCells = (row.daily || []).map((value, idx) => {
+            const displaySeries = projectedCumulative[row.key] || row.daily || [];
+            dailyCells = displaySeries.map((value, idx) => {
               const dayKey = days[idx];
               const planValue = planRow.daily?.[idx] || 0;
               // Если факт меньше плана - красный, если больше - зелёный
@@ -13542,6 +15036,13 @@
               const forecastClass = forecastDays.has(dayKey) ? "forecast-cell" : "";
               const cellClass = [trendClass, forecastClass].filter(Boolean).join(" ");
               return `<td class="${cellClass}">${formatFinanceValue(value, row.format)}</td>`;
+            }).join("");
+          } else if (row.key === "gross_profit_cumulative") {
+            const displaySeries = projectedCumulative[row.key] || row.daily || [];
+            dailyCells = displaySeries.map((value, idx) => {
+              const dayKey = days[idx];
+              const forecastClass = forecastDays.has(dayKey) ? "forecast-cell" : "";
+              return `<td class="${forecastClass}">${formatFinanceValue(value, row.format)}</td>`;
             }).join("");
           } else {
             dailyCells = (row.daily || []).map((value, idx) => {
@@ -13605,6 +15106,8 @@
           renderFinanceReport(data);
         });
       });
+
+      renderFinanceChart(data);
 
     }
 
@@ -14749,6 +16252,103 @@
       }
     });
 
+    function renderSettingsCostsTable() {
+      if (!settingsCostsWrap) return;
+      const state = settingsCostsState;
+      const rows = [...(state.rows || [])];
+      const key = state.sortKey || "article";
+      const dir = state.sortDir === "desc" ? -1 : 1;
+      rows.sort((a, b) => {
+        const av = a?.[key];
+        const bv = b?.[key];
+        if (key === "unit_cost" || key === "sku") {
+          const an = Number(av || 0);
+          const bn = Number(bv || 0);
+          return (an - bn) * dir;
+        }
+        const as = String(av || "").toLowerCase();
+        const bs = String(bv || "").toLowerCase();
+        return as.localeCompare(bs, "ru") * dir;
+      });
+      const sortMark = (k) => (state.sortKey === k ? (state.sortDir === "asc" ? " ↑" : " ↓") : "");
+      settingsCostsWrap.innerHTML = `
+        <div class="table-wrap">
+          <table class="data-table report-table settings-costs-table">
+            <thead>
+              <tr>
+                <th data-sort-key="article">Артикул${sortMark("article")}</th>
+                <th data-sort-key="sku">SKU${sortMark("sku")}</th>
+                <th data-sort-key="name">Название${sortMark("name")}</th>
+                <th data-sort-key="unit_cost" class="num">Себестоимость${sortMark("unit_cost")}</th>
+                <th>Действие</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((row, idx) => `
+                <tr>
+                  <td>${fmt(row.article || "")}</td>
+                  <td class="num">${fmt(row.sku || "")}</td>
+                  <td>${fmt(row.name || "")}</td>
+                  <td class="num">
+                    <input type="number" min="0" step="0.01" data-cost-input="${idx}" value="${row.unit_cost == null ? "" : Number(row.unit_cost).toFixed(2)}" />
+                  </td>
+                  <td><button type="button" class="settings-save-btn" data-cost-save="${idx}">Сохранить</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+      settingsCostsWrap.querySelectorAll("[data-sort-key]").forEach((th) => {
+        th.addEventListener("click", () => {
+          const next = th.dataset.sortKey;
+          if (!next) return;
+          if (state.sortKey === next) state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+          else { state.sortKey = next; state.sortDir = "asc"; }
+          renderSettingsCostsTable();
+        });
+      });
+      settingsCostsWrap.querySelectorAll("[data-cost-save]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const idx = Number(btn.dataset.costSave || -1);
+          const row = rows[idx];
+          if (!row) return;
+          const input = settingsCostsWrap.querySelector(`[data-cost-input="${idx}"]`);
+          const value = Number(input?.value || 0);
+          if (!Number.isFinite(value) || value < 0) {
+            meta.textContent = "Ошибка: себестоимость должна быть числом >= 0";
+            return;
+          }
+          btn.disabled = true;
+          try {
+            const saved = await fetchJson("/api/settings/costs", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ article: row.article, sku: row.sku, unit_cost: value }),
+            });
+            const target = settingsCostsState.rows.find((it) => it.article === row.article);
+            if (target) {
+              target.unit_cost = Number(saved.unit_cost || value);
+              target.updated_at = new Date().toISOString();
+            }
+            meta.textContent = `Себестоимость обновлена: ${row.article}`;
+            renderSettingsCostsTable();
+          } catch (e) {
+            meta.textContent = `Ошибка сохранения: ${e.message || e}`;
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+
+    async function loadSettingsCostsReport() {
+      const data = await fetchJson("/api/settings/costs");
+      settingsCostsState.rows = Array.isArray(data.items) ? data.items : [];
+      renderSettingsCostsTable();
+      meta.textContent = `Себестоимость: ${settingsCostsState.rows.length} товаров`;
+    }
+
     async function loadReport() {
       meta.textContent = "Loading...";
       const genericTagBar = document.getElementById("generic_tagbar");
@@ -14760,11 +16360,19 @@
           meta.textContent = "Юнитка: 2 блока · данные не сохраняются";
           return;
         }
+        if (report === "settings_costs") {
+          await loadSettingsCostsReport();
+          return;
+        }
+        if (report === "serp") {
+          meta.textContent = "Выдача: введите запрос и нажмите «Обновить выдачу»";
+          return;
+        }
         reportTable.classList.toggle("accrual-report", report === "accruals_comp_by_article");
         reportTable.classList.toggle("returns-report", report === "returns");
         genericWrap.classList.toggle("returns-centered", report === "returns");
         const q = new URLSearchParams();
-        if (report === "finance_report" || report === "finance_report_v2" || report === "finance_report_accrual") {
+        if (report === "finance_report" || report === "finance_report_accrual") {
           q.set("month", reportMonth.value || `${y}-${pad(now.getMonth() + 1)}`);
         } else if (report === "returns_analytics") {
           // Default last 30 days; user can set dates via filters
@@ -14791,9 +16399,9 @@
         }
         // Supply plan has its own local filter UI; applying the global Offer ID
         // field here too makes the report look like it contains only one article.
-        if ((report === "sales" || report === "returns" || report === "warehouse_stock" || report === "analytics_stocks" || report === "article_analytics" || report === "rnp_report" || report === "realization_v2" || report === "accruals_comp_by_article" || report === "stock_balances" || report === "advertising_report") && offerId.value.trim()) q.set("offer_id", offerId.value.trim());
+        if ((report === "sales" || report === "returns" || report === "warehouse_stock" || report === "analytics_stocks" || report === "article_analytics" || report === "realization_v2" || report === "accruals_comp_by_article" || report === "stock_balances" || report === "advertising_report") && offerId.value.trim()) q.set("offer_id", offerId.value.trim());
         if ((report === "sales" || report === "returns") && schema.value) q.set("schema", schema.value);
-        if (report !== "finance_report" && report !== "finance_report_v2" && limit.value) q.set("limit", limit.value);
+        if (report !== "finance_report" && report !== "wb_finance" && limit.value) q.set("limit", limit.value);
         if (report === "accruals_comp_by_article") q.set("distribute_no_article", allocateNoArticle.checked ? "1" : "0");
         if (report === "advertising_report" && !offerId.value.trim()) {
           // Без offer_id — загружаем сводную таблицу + начисления для расчёта прибыли
@@ -14830,12 +16438,21 @@
         const endpoint = ENDPOINTS[effectiveReport] || ENDPOINTS.sales;
         const data = await fetchJson(`${endpoint}?${q.toString()}`);
 
-        if (report === "finance_report" || report === "finance_report_v2" || report === "finance_report_accrual") {
+        if (report === "finance_report" || report === "finance_report_accrual") {
           renderFinanceReport(data);
           renderKpiSummary(data);
           renderFinanceSettlementBadge(data);
           renderFinanceKpiTiles(data);
           meta.textContent = `Loaded finance report for ${data.month}`;
+        } else if (report === "wb_finance") {
+          const cols = COLUMNS[report] || COLUMNS.sales;
+          renderHeader(cols);
+          drawRows(data.items || [], cols);
+          const t = data.totals || {};
+          const sales = Number(t.gross_revenue || 0).toLocaleString("ru-RU");
+          const expenses = Number(t.marketplace_expenses_total || 0).toLocaleString("ru-RU");
+          const payout = Number(t.to_pay || 0).toLocaleString("ru-RU");
+          meta.textContent = `WB Finance: продажи ${sales} ₽ · расходы МП ${expenses} ₽ · начислено к выплате ${payout} ₽`;
         } else if (report === "returns_analytics") {
           renderReturnsAnalytics(data);
           meta.textContent = `Возвраты и отмены · ${data.count || 0} событий · ${(data.repeat_clients||[]).length} повторных клиентов`;
@@ -14894,22 +16511,89 @@
           financeKpiWrap.classList.add("hidden");
           const alertsCount = (data.items || []).filter(it => it.has_alert).length;
           meta.textContent = `Загружено: ${(data.items || []).length} артикулов · алертов: ${alertsCount}`;
+          triggerReviewsAutoSyncOnce();
         } else if (report === "advertising_report") {
-          // Подгрузить accruals за тот же период для расчёта расходов МП
+          // Подгрузить accruals за 30 дней для расчёта расходов МП
           let accrualValues = {};
           try {
+            const endDateStr = data.date_to || dateTo.value;
+            let accDateFrom = dateFrom.value;
+            let accDateTo = endDateStr;
+            if (endDateStr) {
+              const end = new Date(`${endDateStr}T00:00:00Z`);
+              if (!Number.isNaN(end.getTime())) {
+                const start = new Date(end);
+                start.setUTCDate(start.getUTCDate() - 29);
+                accDateFrom = start.toISOString().slice(0, 10);
+                accDateTo = end.toISOString().slice(0, 10);
+              }
+            }
             const accQ = new URLSearchParams({
-              date_from: data.date_from || dateFrom.value,
-              date_to: data.date_to || dateTo.value,
+              date_from: accDateFrom,
+              date_to: accDateTo,
               distribute_no_article: "1",
               limit: "5000",
             });
+            const normOffer = (v) => String(v || "").toLowerCase().replace(/\s+/g, " ").trim();
+            const compactOffer = (v) => normOffer(v).replace(/\s+/g, "");
+            const extractSku = (v) => {
+              const s = String(v || "").toLowerCase().trim();
+              const m = s.match(/(?:^sku:|^)(\d+)$/);
+              return m ? String(m[1]) : "";
+            };
+            const targetSkuSet = new Set((Array.isArray(data.skus) ? data.skus : []).map((v) => String(v)));
+            const aggregateValues = (rows) => {
+              const out = {};
+              for (const row of (rows || [])) {
+                const vals = row?.values || {};
+                for (const [k, v] of Object.entries(vals)) {
+                  const num = Number(v || 0);
+                  if (!Number.isFinite(num)) continue;
+                  out[k] = Number(out[k] || 0) + num;
+                }
+              }
+              return out;
+            };
+            const findAccrualItem = (items, offerId) => {
+              const tNorm = normOffer(offerId);
+              const tCompact = compactOffer(offerId);
+              const skuMatches = (items || []).filter((it) => {
+                const a = it.offer_id_normalized || it.offer_id || "";
+                const aNorm = normOffer(a);
+                const itemSku = extractSku(it.sku || it.sku_id || it.fbo_sku_id || it.fbs_sku_id || aNorm);
+                return itemSku && targetSkuSet.has(itemSku);
+              });
+              if (skuMatches.length === 1) return skuMatches[0];
+              if (skuMatches.length > 1) return { values: aggregateValues(skuMatches) };
+              return (items || []).find((it) => {
+                const a = it.offer_id_normalized || it.offer_id || "";
+                const aNorm = normOffer(a);
+                const aCompact = compactOffer(a);
+                return (
+                  aNorm === tNorm ||
+                  aCompact === tCompact ||
+                  aNorm.includes(tNorm) ||
+                  tNorm.includes(aNorm) ||
+                  aCompact.includes(tCompact) ||
+                  tCompact.includes(aCompact)
+                );
+              }) || null;
+            };
+
             if (data.offer_id) accQ.set("offer_id", data.offer_id);
             const accData = await fetchJson(`/api/accruals-comp-by-article?${accQ.toString()}`);
-            const matchItem = (accData.items || []).find(it => {
-              const norm = (it.offer_id_normalized || it.offer_id || "").toLowerCase().trim();
-              return norm === (data.offer_id || "").toLowerCase().trim();
-            });
+            let items = accData.items || [];
+            let matchItem = findAccrualItem(items, data.offer_id || "");
+
+            // fallback: если фильтр offer_id не сработал, ищем по полному списку
+            if (!matchItem) {
+              const accQ2 = new URLSearchParams(accQ.toString());
+              accQ2.delete("offer_id");
+              const accDataAll = await fetchJson(`/api/accruals-comp-by-article?${accQ2.toString()}`);
+              items = accDataAll.items || [];
+              matchItem = findAccrualItem(items, data.offer_id || "") || (items.length === 1 ? items[0] : null);
+            }
+
             if (matchItem) accrualValues = matchItem.values || {};
           } catch (e) { console.warn("accruals fetch for advertising:", e); }
           data._accruals = accrualValues;
@@ -15084,7 +16768,10 @@
         dateFrom.value = `${from.getFullYear()}-${pad(from.getMonth() + 1)}-${pad(from.getDate())}`;
         dateTo.value = `${yesterday.getFullYear()}-${pad(yesterday.getMonth() + 1)}-${pad(yesterday.getDate())}`;
       }
-      if (!reportMonth.value && reportType.value === "rnp_report") {
+      if (reportType.value === "rnp_report") {
+        // РНП смотрим только на полные дни: последние 7 дней до вчера.
+        if (reportMonth.value) reportMonth.value = "";
+        offerId.value = "";
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const from = new Date(yesterday);
@@ -15130,19 +16817,19 @@
     dateFrom.addEventListener("change", () => {
       if (quick7d) quick7d.checked = false;
       if (quick30d) quick30d.checked = false;
-      if (reportType.value !== "finance_report" && reportType.value !== "finance_report_v2" && reportType.value !== "finance_report_accrual" && reportType.value !== "article_characteristics") {
+      if (reportType.value !== "finance_report" && reportType.value !== "finance_report_accrual" && reportType.value !== "wb_finance" && reportType.value !== "article_characteristics") {
         loadReport();
       }
     });
     dateTo.addEventListener("change", () => {
       if (quick7d) quick7d.checked = false;
       if (quick30d) quick30d.checked = false;
-      if (reportType.value !== "finance_report" && reportType.value !== "finance_report_v2" && reportType.value !== "finance_report_accrual" && reportType.value !== "article_characteristics") {
+      if (reportType.value !== "finance_report" && reportType.value !== "finance_report_accrual" && reportType.value !== "wb_finance" && reportType.value !== "article_characteristics") {
         loadReport();
       }
     });
     limit.addEventListener("change", () => {
-      if (reportType.value !== "finance_report" && reportType.value !== "finance_report_v2" && reportType.value !== "finance_report_accrual") {
+      if (reportType.value !== "finance_report" && reportType.value !== "finance_report_accrual" && reportType.value !== "wb_finance") {
         loadReport();
       }
     });
@@ -15178,7 +16865,7 @@
       }
     });
     offerId.addEventListener("change", () => {
-      if (reportType.value === "accruals_comp_by_article" || reportType.value === "sales" || reportType.value === "returns" || reportType.value === "warehouse_stock" || reportType.value === "analytics_stocks" || reportType.value === "article_analytics" || reportType.value === "rnp_report" || reportType.value === "supply_plan" || reportType.value === "realization_v2" || reportType.value === "advertising_report") {
+      if (reportType.value === "accruals_comp_by_article" || reportType.value === "sales" || reportType.value === "returns" || reportType.value === "warehouse_stock" || reportType.value === "analytics_stocks" || reportType.value === "article_analytics" || reportType.value === "supply_plan" || reportType.value === "realization_v2" || reportType.value === "advertising_report") {
         loadReport();
       }
     });
@@ -15191,6 +16878,7 @@
     const syncStage = document.getElementById("sync_stage");
     const syncPercent = document.getElementById("sync_percent");
     const syncSteps = document.getElementById("sync_steps");
+    const syncStepResults = document.getElementById("sync_step_results");
     let syncInterval = null;
 
     function startSyncPolling() {
@@ -15228,6 +16916,24 @@
         .join("");
       syncSteps.scrollTop = syncSteps.scrollHeight;
     }
+
+    function renderSyncStepResults(stepResults) {
+      const items = Array.isArray(stepResults) ? stepResults : [];
+      if (!items.length) {
+        syncStepResults.innerHTML = '<div class="sync-step-result">Результаты этапов появятся после выполнения шагов.</div>';
+        return;
+      }
+      syncStepResults.innerHTML = items.map((item) => {
+        const stage = String(item?.stage || "");
+        const statusRaw = String(item?.status || "OK").toUpperCase();
+        const details = String(item?.details || "");
+        const error = String(item?.error || "");
+        const statusClass = statusRaw === "OK" ? "ok" : (statusRaw === "SKIPPED" ? "skipped" : "error");
+        const errorHtml = error ? `<div style="color:#c0392b;">${error}</div>` : "";
+        return `<div class="sync-step-result"><span>${stage}</span><span class="sync-step-status ${statusClass}">${statusRaw}</span>${details ? ` — ${details}` : ""}${errorHtml}</div>`;
+      }).join("");
+      syncStepResults.scrollTop = syncStepResults.scrollHeight;
+    }
     
     async function checkSyncStatus() {
       try {
@@ -15236,6 +16942,7 @@
         if (data.is_running || data.progress > 0 || data.error) {
           updateProgressBar(data.progress, data.stage);
           renderSyncStages(data.stages, data.stage);
+          renderSyncStepResults(data.step_results);
           syncProgressWrap.classList.remove("hidden");
 
           if (data.is_running) {
@@ -15273,6 +16980,7 @@
       syncProgressWrap.classList.remove("hidden");
       updateProgressBar(0, "Инициализация...");
       renderSyncStages([{ stage: "Инициализация", progress: 0 }], "Инициализация");
+      renderSyncStepResults([]);
       
       try {
         const data = await fetchJson("/api/sync-ozon", {
@@ -15642,6 +17350,295 @@
       e.preventDefault();
       window.scrollBy(0, e.deltaY);
     }, {passive: false});
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Plugin Bridge — проксирует вызовы backend → Chrome-плагин
+    // ═══════════════════════════════════════════════════════════════════════
+    (function startPluginBridge() {
+      let bridgeActive = true;
+
+      async function callPlugin(action, payload) {
+        return new Promise((resolve, reject) => {
+          const requestId = crypto.randomUUID();
+          const timeout = setTimeout(() => {
+            window.removeEventListener("ozon-unitka:response", handler);
+            reject(new Error("Plugin timeout"));
+          }, 55000);
+
+          function handler(e) {
+            if (e.detail?.requestId === requestId) {
+              clearTimeout(timeout);
+              window.removeEventListener("ozon-unitka:response", handler);
+              resolve(e.detail.response);
+            }
+          }
+          window.addEventListener("ozon-unitka:response", handler);
+          window.dispatchEvent(new CustomEvent("ozon-unitka:request", {
+            detail: { requestId, action, payload }
+          }));
+        });
+      }
+
+      async function pollLoop() {
+        while (bridgeActive) {
+          try {
+            const task = await fetch("/api/plugin/poll").then(r => r.json());
+            if (!task.requestId) continue;
+
+            const { requestId, action, payload } = task;
+            let response;
+            try {
+              response = await callPlugin(action, payload);
+            } catch (e) {
+              response = { ok: false, error: e.message };
+            }
+
+            await fetch("/api/plugin/result", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ requestId, response }),
+            });
+          } catch (e) {
+            await new Promise(r => setTimeout(r, 2000));
+          }
+        }
+      }
+
+      pollLoop();
+    })();
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Вкладка «Выдача» (SERP)
+    // ═══════════════════════════════════════════════════════════════════════
+    let _serpCurrentFilter = "all";
+    let _serpPositions = [];
+
+    async function serpScrape() {
+      const query = (document.getElementById("serp-query-input")?.value || "").trim();
+      if (!query) { alert("Введите поисковый запрос"); return; }
+      const btn = document.getElementById("serp-scrape-btn");
+      const status = document.getElementById("serp-status");
+      if (btn) btn.disabled = true;
+      if (status) status.textContent = "⏳ Собираем выдачу... (до 60 сек)";
+      try {
+        const res = await fetch("/api/serp/scrape", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query_text: query, limit: 20 }),
+        }).then(r => r.json());
+        if (res.error) throw new Error(res.error);
+        if (status) status.textContent = `✓ Снимок #${res.snapshot_id} — ${res.position_count} позиций`;
+        await serpLoadSnapshot(query);
+      } catch (e) {
+        if (status) status.textContent = "❌ " + e.message;
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function serpLoadCurrent() {
+      const query = (document.getElementById("serp-query-input")?.value || "").trim();
+      if (!query) { alert("Введите поисковый запрос"); return; }
+      await serpLoadSnapshot(query);
+    }
+
+    async function serpLoadSnapshot(query) {
+      const status = document.getElementById("serp-status");
+      try {
+        const res = await fetch("/api/serp/snapshot?query=" + encodeURIComponent(query)).then(r => r.json());
+        if (!res.snapshot || !res.snapshot.positions) { serpRenderTable([]); return; }
+        _serpPositions = res.snapshot.positions;
+        const ts = new Date(res.snapshot.scraped_at).toLocaleString("ru-RU");
+        if (status) status.textContent = `Снимок от ${ts} — ${_serpPositions.length} позиций`;
+        serpRenderTable(_serpPositions);
+      } catch (e) {
+        if (status) status.textContent = "❌ " + e.message;
+      }
+    }
+
+    function serpFilter(filter) {
+      _serpCurrentFilter = filter;
+      document.querySelectorAll(".serp-filter-btn").forEach(b => {
+        b.style.background = b.dataset.filter === filter ? "#e8f0fe" : "";
+        b.style.borderColor = b.dataset.filter === filter ? "#c0d0ff" : "#ddd";
+      });
+      serpRenderTable(_serpPositions);
+    }
+
+    function serpRenderTable(positions) {
+      const tbody = document.getElementById("serp-tbody");
+      if (!tbody) return;
+      let filtered = positions;
+      if (_serpCurrentFilter === "our") filtered = positions.filter(p => p.is_our_product);
+      if (_serpCurrentFilter === "competitors") filtered = positions.filter(p => p.is_competitor);
+
+      tbody.innerHTML = filtered.map(p => {
+        const rowStyle = p.is_our_product
+          ? "background:#f0fff4;"
+          : p.is_competitor ? "background:#fff8f0;" : "";
+        const priceStr = p.price ? Number(p.price).toLocaleString("ru-RU") + " ₽" : "—";
+        const priceBeforeStr = p.price_before ? Number(p.price_before).toLocaleString("ru-RU") + " ₽" : "—";
+        const revenueStr = p.revenue_30d ? Number(p.revenue_30d).toLocaleString("ru-RU") + " ₽" : "—";
+        const salesStr = p.sales_per_day ? Number(p.sales_per_day).toFixed(1) : "—";
+        const ratingStr = p.rating ? Number(p.rating).toFixed(1) : "—";
+        const reviewStr = p.review_count ? Number(p.review_count).toLocaleString("ru-RU") : "—";
+        const promoStr = p.promo_label || "—";
+        const thumb = p.thumbnail_url
+          ? `<img src="${p.thumbnail_url}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" loading="lazy">`
+          : `<div style="width:40px;height:40px;background:#eee;border-radius:4px;"></div>`;
+        const ourBadge = p.is_our_product ? ` <span style="font-size:10px;color:#1a8c3c;font-weight:600;">●НАШ</span>` : "";
+        const compBtn = p.is_competitor
+          ? `<button onclick="serpToggleCompetitor(${p.sku},false)" style="padding:2px 8px;background:#ff9500;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;">★ Конкурент</button>`
+          : `<button onclick="serpToggleCompetitor(${p.sku},true)" style="padding:2px 8px;background:#eee;border:none;border-radius:4px;cursor:pointer;font-size:11px;">Пометить</button>`;
+        return `<tr style="${rowStyle}border-bottom:1px solid #f0f0f0;">
+          <td style="padding:7px;text-align:center;font-weight:600;">${p.position}</td>
+          <td style="padding:4px;">${thumb}</td>
+          <td style="padding:7px;">
+            <div style="font-weight:500;font-size:12px;">${(p.title||"").slice(0,60)}${ourBadge}</div>
+            <div style="color:#aaa;font-size:11px;">SKU: ${p.sku||"—"}</div>
+          </td>
+          <td style="padding:7px;font-size:12px;">${p.brand||"—"}</td>
+          <td style="padding:7px;text-align:right;font-weight:600;">${priceStr}</td>
+          <td style="padding:7px;text-align:right;color:#999;text-decoration:line-through;font-size:12px;">${priceBeforeStr}</td>
+          <td style="padding:7px;text-align:right;font-size:12px;">${revenueStr}</td>
+          <td style="padding:7px;text-align:right;font-size:12px;">${salesStr}</td>
+          <td style="padding:7px;text-align:center;">${ratingStr}</td>
+          <td style="padding:7px;text-align:right;">${reviewStr}</td>
+          <td style="padding:7px;font-size:12px;">${promoStr}</td>
+          <td style="padding:7px;text-align:center;">${compBtn}</td>
+        </tr>`;
+      }).join("");
+    }
+
+    async function serpToggleCompetitor(sku, isCompetitor) {
+      await fetch("/api/serp/competitor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sku, is_competitor: isCompetitor }),
+      });
+      _serpPositions = _serpPositions.map(p => p.sku == sku ? { ...p, is_competitor: isCompetitor } : p);
+      serpRenderTable(_serpPositions);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Секция «Поиск» в отчёте по артикулу
+    // ═══════════════════════════════════════════════════════════════════════
+
+    async function initArticleSerpSection(section) {
+      const sku = Number(section.dataset.sku);
+      if (!sku) return;
+      const statusEl = section.querySelector(".article-serp-status");
+
+      // Загружаем отчёт
+      try {
+        statusEl.textContent = "Загрузка...";
+        const res = await fetch("/api/serp/article-report?sku=" + sku).then(r => r.json());
+        _renderArticleSerpSection(section, res, sku);
+      } catch (e) {
+        statusEl.textContent = "❌ " + e.message;
+      }
+
+      // Топ запросов для dropdown
+      try {
+        const pqRes = await fetch("/api/serp/primary-query?sku=" + sku).then(r => r.json());
+        section._topQueries = pqRes.top_queries || [];
+      } catch (e) { /* не критично */ }
+
+      // Кнопка «Обновить»
+      const refreshBtn = section.querySelector(".article-serp-refresh-btn");
+      if (refreshBtn) {
+        refreshBtn.onclick = async () => {
+          refreshBtn.disabled = true;
+          statusEl.textContent = "⏳ Обновляем...";
+          try {
+            await fetch("/api/serp/scrape-by-sku", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ sku }),
+            }).then(r => r.json());
+            const res2 = await fetch("/api/serp/article-report?sku=" + sku).then(r => r.json());
+            _renderArticleSerpSection(section, res2, sku);
+          } catch (e) {
+            statusEl.textContent = "❌ " + e.message;
+          } finally {
+            refreshBtn.disabled = false;
+          }
+        };
+      }
+
+      // Кнопка «Изменить» запрос
+      const showSelectBtn = section.querySelector(".article-serp-show-select-btn");
+      if (showSelectBtn) {
+        showSelectBtn.onclick = () => {
+          const sel = section.querySelector(".article-serp-query-select");
+          const saveBtn = section.querySelector(".article-serp-save-query-btn");
+          const topQ = section._topQueries || [];
+          sel.innerHTML = topQ.map(q =>
+            `<option value="${q.query_text.replace(/"/g,'&quot;')}">${q.query_text} (${Math.round(q.score)})</option>`
+          ).join("") || '<option value="">— нет данных —</option>';
+          sel.style.display = "inline";
+          if (saveBtn) saveBtn.style.display = "inline";
+        };
+      }
+
+      // Кнопка «Сохранить» запрос
+      const saveQueryBtn = section.querySelector(".article-serp-save-query-btn");
+      if (saveQueryBtn) {
+        saveQueryBtn.onclick = async () => {
+          const sel = section.querySelector(".article-serp-query-select");
+          const qt = sel?.value;
+          if (!qt) return;
+          await fetch("/api/serp/primary-query", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sku, query_text: qt }),
+          });
+          sel.style.display = "none";
+          saveQueryBtn.style.display = "none";
+          const qEl = section.querySelector(".article-serp-query");
+          if (qEl) qEl.textContent = qt;
+          const badge = section.querySelector(".article-serp-manual-badge");
+          if (badge) badge.style.display = "inline";
+        };
+      }
+    }
+
+    function _renderArticleSerpSection(section, data, sku) {
+      const qEl = section.querySelector(".article-serp-query");
+      const badge = section.querySelector(".article-serp-manual-badge");
+      const posEl = section.querySelector(".article-serp-our-pos");
+      const priceEl = section.querySelector(".article-serp-our-price");
+      const dateEl = section.querySelector(".article-serp-date");
+      const statusEl = section.querySelector(".article-serp-status");
+      const tbody = section.querySelector(".article-serp-tbody");
+
+      if (qEl) qEl.textContent = data.primary_query || "— не задан";
+      if (badge) badge.style.display = data.set_manually ? "inline" : "none";
+      if (posEl) posEl.textContent = data.our_position ? `#${data.our_position}` : "—";
+      if (priceEl) priceEl.textContent = data.our_price
+        ? Number(data.our_price).toLocaleString("ru-RU") + " ₽" : "—";
+      if (dateEl) dateEl.textContent = data.scraped_at
+        ? "Снимок от " + new Date(data.scraped_at).toLocaleString("ru-RU") : "";
+      if (statusEl) statusEl.textContent = "";
+
+      if (tbody) {
+        tbody.innerHTML = (data.positions || []).map(p => {
+          const rowStyle = p.is_our_product
+            ? "background:#f0fff4;font-weight:600;"
+            : p.is_competitor ? "background:#fff8f0;" : "";
+          const priceStr = p.price ? Number(p.price).toLocaleString("ru-RU") + " ₽" : "—";
+          const badge2 = p.is_our_product ? " <span style='color:#1a8c3c;font-size:10px;'>●НАШ</span>" : "";
+          return `<tr style="${rowStyle}border-bottom:1px solid #f0f0f0;">
+            <td style="padding:5px;text-align:center;">${p.position}</td>
+            <td style="padding:5px;">${(p.title||"").slice(0,50)}${badge2}<br><span style="color:#aaa;font-size:10px;">SKU: ${p.sku||"—"}</span></td>
+            <td style="padding:5px;">${p.brand||"—"}</td>
+            <td style="padding:5px;text-align:right;">${priceStr}</td>
+            <td style="padding:5px;text-align:center;">${p.rating ? Number(p.rating).toFixed(1) : "—"}</td>
+            <td style="padding:5px;text-align:right;">${p.review_count ? Number(p.review_count).toLocaleString("ru-RU") : "—"}</td>
+          </tr>`;
+        }).join("");
+      }
+    }
 
     // Global right-click handler for cell color ranges on any table header
     document.addEventListener("contextmenu", (e) => {

@@ -26,34 +26,57 @@ function isSearchPage() {
 // ─── scraping search results ────────────────────────────────
 function scrapeSearchResults() {
   const cards = [];
-  const selectors = [
-    'a[href*="/product/"]',
-  ];
-  const anchors = document.querySelectorAll(selectors.join(","));
   const seen = new Set();
 
-  for (const a of anchors) {
+  function parsePrice(text) {
+    if (!text) return null;
+    const m = text.replace(/\s/g, "").match(/(\d+)/);
+    return m ? Number(m[1]) : null;
+  }
+
+  for (const a of document.querySelectorAll('a[href*="/product/"]')) {
     const sku = extractSkuFromUrl(a.getAttribute("href") || "");
     if (!sku || seen.has(sku)) continue;
 
-    const card = a.closest('[class*="tile"], [class*="product-card"], article, li, div');
+    const card = a.closest('[class*="tile"], [class*="product-card"], [class*="widget"], article, li');
     if (!card) continue;
 
-    const text = card.innerText || "";
-    // цена: ищем подстроку вида "1 557 ₽" / "15 120 ₽"
-    const priceMatch = text.match(/([\d\s]+)\s*₽/);
-    const price = priceMatch ? Number(priceMatch[1].replace(/\s/g, "")) : null;
+    const position = cards.length + 1;
 
-    // название — первый текст-заголовок
-    const nameEl = card.querySelector('span, h3, h2, [class*="title"], [class*="name"]');
-    const name = (nameEl?.innerText || "").trim().slice(0, 200);
+    const nameEl = card.querySelector('h3, h2, [class*="title"], [class*="name"], span');
+    const title = (nameEl?.innerText || "").trim().slice(0, 200);
 
-    // бренд
     const brandEl = card.querySelector('[class*="brand"]');
     const brand = (brandEl?.innerText || "").trim() || null;
 
+    // Цены: ищем элементы с ₽
+    const priceEls = [...card.querySelectorAll("*")].filter(el => {
+      const t = el.childElementCount === 0 ? el.innerText?.trim() : "";
+      return t && t.includes("₽") && t.length < 20;
+    });
+    let price = null, price_before = null;
+    for (const el of priceEls) {
+      const t = el.innerText.trim();
+      const isStrike = getComputedStyle(el).textDecoration.includes("line-through")
+        || el.closest("[class*='old'],[class*='cross'],[class*='before']");
+      if (isStrike) { price_before = parsePrice(t); }
+      else if (!price) { price = parsePrice(t); }
+    }
+
+    const ratingEl = card.querySelector('[class*="rating"] span, [class*="star"] span');
+    const rating = ratingEl ? parseFloat(ratingEl.innerText.replace(",", ".")) || null : null;
+
+    const reviewEl = card.querySelector('[class*="review"], [class*="comment"]');
+    const review_count = reviewEl ? parseInt(reviewEl.innerText.replace(/\D/g, "")) || null : null;
+
+    const promoEl = card.querySelector('[class*="badge"], [class*="label"], [class*="tag"], [class*="promo"]');
+    const promo_label = promoEl ? promoEl.innerText.trim().slice(0, 100) || null : null;
+
+    const imgEl = card.querySelector("img");
+    const thumbnail_url = imgEl?.src || imgEl?.dataset?.src || null;
+
     seen.add(sku);
-    cards.push({ sku, name, brand, price_buyer: price });
+    cards.push({ position, sku, title, brand, price, price_before, rating, review_count, promo_label, thumbnail_url });
     if (cards.length >= 50) break;
   }
   return cards;
@@ -196,16 +219,15 @@ async function scrapeAndSend(btn) {
       `).join("")}</table>`;
     }
 
-    const items = cards.map(c => ({
-      sku: c.sku, name: c.name, brand: c.brand,
-      price: c.price_buyer,  // как price для сохранения
-    }));
-
     const base = await getDashboardUrl();
-    const save = await fetch(`${base}/api/unitka/import/competitor`, {
+    // Определяем запрос из URL страницы
+    const urlParams = new URLSearchParams(location.search);
+    const queryText = urlParams.get("text") || urlParams.get("search") || document.title || "поиск";
+
+    const save = await fetch(`${base}/api/serp/save-from-overlay`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items }),
+      body: JSON.stringify({ items: cards, query_text: queryText }),
     }).then(r => r.json());
 
     if (save.error) throw new Error(save.error);
