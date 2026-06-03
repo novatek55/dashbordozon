@@ -192,6 +192,132 @@ async function fetchBestsellers({ period = "monthly", limit = 50, search = "", c
   return { items: raw.items || raw.data || [] };
 }
 
+// ─── SERP scraping ──────────────────────────────────────────────────────────
+
+async function scrapeSerpPage({ query_text, limit = 20 }) {
+  if (!query_text || !query_text.trim()) throw new Error("query_text is required");
+  const url = "https://www.ozon.ru/search/?text=" + encodeURIComponent(query_text.trim()) + "&sorting=score";
+
+  // Используем или открываем вкладку в текущем профиле (НЕ новый профиль)
+  const tab = await _ensureTab("https://www.ozon.ru/search/");
+
+  // Навигируем к нужному запросу
+  await chrome.tabs.update(tab.id, { url });
+
+  // Ждём загрузки страницы + появления карточек (SPA)
+  await new Promise(r => setTimeout(r, 2500));
+  for (let i = 0; i < 20; i++) {
+    await new Promise(r => setTimeout(r, 500));
+    const [check] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      world: "MAIN",
+      func: () => document.querySelectorAll('a[href*="/product/"]').length,
+    });
+    if ((check && check.result) >= 3) break;
+  }
+
+  // Скрейпим карточки
+  const [result] = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    world: "MAIN",
+    func: (limitArg) => {
+      function extractSku(href) {
+        const m = (href || "").match(/\/product\/[^\/]*?-(\d{6,})\/?/);
+        return m ? m[1] : null;
+      }
+      function parsePrice(text) {
+        if (!text) return null;
+        const m = text.replace(/\s/g, "").match(/(\d+)/);
+        return m ? Number(m[1]) : null;
+      }
+
+      const cards = [];
+      const seen = new Set();
+      const anchors = document.querySelectorAll('a[href*="/product/"]');
+
+      for (const a of anchors) {
+        const sku = extractSku(a.getAttribute("href") || "");
+        if (!sku || seen.has(sku)) continue;
+
+        const card = a.closest('[class*="tile"], [class*="product-card"], [class*="widget"], article, li');
+        if (!card) continue;
+
+        const position = cards.length + 1;
+
+        const nameEl = card.querySelector('h3, h2, [class*="title"], [class*="name"], span');
+        const title = (nameEl?.innerText || "").trim().slice(0, 200);
+
+        const brandEl = card.querySelector('[class*="brand"]');
+        const brand = (brandEl?.innerText || "").trim() || null;
+
+        // Цены
+        const priceEls = [...card.querySelectorAll("*")].filter(el => {
+          const t = el.childElementCount === 0 ? el.innerText?.trim() : "";
+          return t && t.includes("₽") && t.length < 20;
+        });
+        let price = null, price_before = null;
+        for (const el of priceEls) {
+          const t = el.innerText.trim();
+          const isStrike = el.style.textDecoration === "line-through"
+            || getComputedStyle(el).textDecoration.includes("line-through")
+            || el.closest("[class*='old'],[class*='cross'],[class*='before']");
+          if (isStrike) { price_before = parsePrice(t); }
+          else if (!price) { price = parsePrice(t); }
+        }
+
+        const ratingEl = card.querySelector('[class*="rating"] span, [class*="star"] span');
+        const rating = ratingEl ? parseFloat(ratingEl.innerText.replace(",", ".")) || null : null;
+
+        const reviewEl = card.querySelector('[class*="review"], [class*="comment"]');
+        const review_count = reviewEl ? parseInt(reviewEl.innerText.replace(/\D/g, "")) || null : null;
+
+        const promoEl = card.querySelector('[class*="badge"], [class*="label"], [class*="tag"], [class*="promo"]');
+        const promo_label = promoEl ? promoEl.innerText.trim().slice(0, 100) || null : null;
+
+        const imgEl = card.querySelector("img");
+        const thumbnail_url = imgEl?.src || imgEl?.dataset?.src || null;
+
+        seen.add(sku);
+        cards.push({ position, sku, title, brand, price, price_before, rating, review_count, promo_label, thumbnail_url });
+        if (cards.length >= limitArg) break;
+      }
+      return cards;
+    },
+    args: [limit],
+  });
+
+  const positions = (result && result.result) || [];
+  if (!positions.length) throw new Error("Не удалось собрать карточки из выдачи ozon.ru");
+  return { positions, query_text };
+}
+
+
+async function enrichWithBestsellers(skus) {
+  // Обогащает массив SKU данными из bestsellers (выручка, продажи в день).
+  // Возвращает объект: sku (string) → { revenue_30d, sales_per_day }
+  if (!skus || !skus.length) return {};
+  const result = {};
+  for (const sku of skus) {
+    try {
+      const resp = await fetchBestsellers({ search: String(sku), limit: 5 });
+      const item = (resp.items || []).find(i =>
+        String(i.sku || i.id || i.item_id) === String(sku)
+      );
+      if (item) {
+        result[String(sku)] = {
+          revenue_30d: item.sum_gmv || item.revenue || item.gmv || null,
+          sales_per_day: item.orders_per_day || item.sales_per_day || null,
+        };
+      }
+    } catch (e) {
+      // Конкретный SKU не найден — не критично
+    }
+  }
+  return result;
+}
+
+// ─── Message listener ───────────────────────────────────────────────────────
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     try {
@@ -200,6 +326,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse({ ok: true, data });
       } else if (msg.action === "fetch_bestsellers") {
         const data = await fetchBestsellers(msg.options || {});
+        sendResponse({ ok: true, data });
+      } else if (msg.action === "scrape_serp") {
+        const data = await scrapeSerpPage(msg.options || {});
+        sendResponse({ ok: true, data });
+      } else if (msg.action === "enrich_with_bestsellers") {
+        const data = await enrichWithBestsellers(msg.skus || []);
         sendResponse({ ok: true, data });
       } else if (msg.action === "ping") {
         sendResponse({ ok: true, version: chrome.runtime.getManifest().version });
