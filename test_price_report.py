@@ -25,6 +25,14 @@ def test_build_price_report_item_marks_beneficial_when_current_price_is_not_abov
     assert item["price_recommended"] == 1000.0
     assert item["recommended_price_link"] == "https://example.test/p/1"
     assert item["is_beneficial_price"] is True
+    assert item["price_index"] == 0.99
+    assert item["ozon_competitor_prices"]["status"] == "missing"
+    assert item["own_other_marketplace_prices"]["index"] == 0.99
+    assert item["own_other_marketplace_prices"]["price"] == 1000.0
+    assert item["own_other_marketplace_prices"]["source"] == "example.test"
+    assert item["other_marketplace_competitor_prices"]["index"] == 0.99
+    assert item["other_marketplace_competitor_prices"]["price"] == 1000.0
+    assert item["other_marketplace_competitor_prices"]["source"] == "example.test"
     assert item["beneficial_price_status"] == "Да"
 
 

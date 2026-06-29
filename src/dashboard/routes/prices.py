@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from typing import Any, Dict, Optional
+from urllib.parse import urlparse
 
 import asyncpg
 from aiohttp import web
@@ -19,12 +20,30 @@ def _to_float(value: Any) -> Optional[float]:
         return None
 
 
+def _source_from_url(url: str) -> str:
+    host = urlparse(url).netloc.lower()
+    if host.startswith("www."):
+        host = host[4:]
+    return host
+
+
 def build_price_report_item(row: Any) -> Dict[str, Any]:
     current_price = _to_float(row["price_current"])
     recommended_price = _to_float(row["price_recommended"])
+    recommended_price_link = row["recommended_price_link"] or ""
     is_beneficial: Optional[bool] = None
     if current_price is not None and recommended_price is not None and recommended_price > 0:
         is_beneficial = current_price <= recommended_price
+    price_index = None
+    if current_price is not None and recommended_price is not None and recommended_price > 0:
+        price_index = round(current_price / recommended_price, 2)
+    other_marketplace = {
+        "status": "ok" if recommended_price is not None else "missing",
+        "index": price_index,
+        "price": recommended_price,
+        "source": _source_from_url(recommended_price_link) if recommended_price_link else "",
+        "link": recommended_price_link,
+    }
 
     return {
         "offer_id": row["offer_id"],
@@ -35,7 +54,12 @@ def build_price_report_item(row: Any) -> Dict[str, Any]:
         "price_current": current_price,
         "price_base": _to_float(row["price_base"]),
         "price_recommended": recommended_price,
-        "recommended_price_link": row["recommended_price_link"] or "",
+        "recommended_price_link": recommended_price_link,
+        "price_index": price_index,
+        "price_index_status": "beneficial" if is_beneficial is True else "not_beneficial" if is_beneficial is False else "no_index",
+        "ozon_competitor_prices": {"status": "missing", "index": None, "price": None, "source": "", "link": ""},
+        "own_other_marketplace_prices": other_marketplace,
+        "other_marketplace_competitor_prices": other_marketplace.copy(),
         "is_beneficial_price": is_beneficial,
         "beneficial_price_status": "Да" if is_beneficial is True else "Нет" if is_beneficial is False else "",
         "last_synced_at": row["last_synced_at"].isoformat() if row["last_synced_at"] else None,

@@ -1,11 +1,11 @@
 # Graph Report - ozonapi  (2026-06-29)
 
 ## Corpus Check
-- 237 files · ~551,634 words
+- 237 files · ~551,910 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2993 nodes · 6478 edges · 195 communities (160 shown, 35 thin omitted)
+- 2997 nodes · 6492 edges · 176 communities (141 shown, 35 thin omitted)
 - Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 676 edges (avg confidence: 0.53)
 - Token cost: 0 input · 0 output
 
@@ -83,7 +83,6 @@
 - [[_COMMUNITY_run dashboard.ps1|run dashboard.ps1]]
 - [[_COMMUNITY_Sync Log|Sync Log]]
 - [[_COMMUNITY_set warehouses for draft()|set warehouses for draft()]]
-- [[_COMMUNITY_normalize bestsellers percent()|normalize bestsellers percent()]]
 - [[_COMMUNITY_scan all storage timeslots.py|scan all storage timeslots.py]]
 - [[_COMMUNITY_scan dropoff points availability.py|scan dropoff points availability.py]]
 - [[_COMMUNITY_test|test]]
@@ -95,7 +94,6 @@
 - [[_COMMUNITY_codex browser relay|codex browser relay]]
 - [[_COMMUNITY_restart dashboard.ps1|restart dashboard.ps1]]
 - [[_COMMUNITY_export wb finance report.py|export wb finance report.py]]
-- [[_COMMUNITY_. get performance token()|. get performance token()]]
 - [[_COMMUNITY_parse devtools har.py|parse devtools har.py]]
 - [[_COMMUNITY_supply crossdock test.py|supply crossdock test.py]]
 - [[_COMMUNITY_analyze wb simple.js|analyze wb simple.js]]
@@ -105,7 +103,6 @@
 - [[_COMMUNITY_.get action products()|.get action products()]]
 - [[_COMMUNITY_.get cash flow statement()|.get cash flow statement()]]
 - [[_COMMUNITY_.get chat list()|.get chat list()]]
-- [[_COMMUNITY_.get postings list()|.get postings list()]]
 - [[_COMMUNITY_.get postings fbo list()|.get postings fbo list()]]
 - [[_COMMUNITY_.get product prices()|.get product prices()]]
 - [[_COMMUNITY_.get product stocks()|.get product stocks()]]
@@ -113,7 +110,6 @@
 - [[_COMMUNITY_Community 95|Community 95]]
 - [[_COMMUNITY_.get reviews list()|.get reviews list()]]
 - [[_COMMUNITY_.get transaction list()|.get transaction list()]]
-- [[_COMMUNITY_Community 98|Community 98]]
 - [[_COMMUNITY_.get analytics stocks()|.get analytics stocks()]]
 - [[_COMMUNITY_supply api flow.py|supply api flow.py]]
 - [[_COMMUNITY_sync now.py|sync now.py]]
@@ -170,32 +166,17 @@
 - [[_COMMUNITY_Community 169|Community 169]]
 - [[_COMMUNITY_Community 170|Community 170]]
 - [[_COMMUNITY_Community 171|Community 171]]
-- [[_COMMUNITY_Community 172|Community 172]]
-- [[_COMMUNITY_Community 173|Community 173]]
 - [[_COMMUNITY_Community 174|Community 174]]
 - [[_COMMUNITY_Community 175|Community 175]]
 - [[_COMMUNITY_Community 176|Community 176]]
-- [[_COMMUNITY_Community 177|Community 177]]
-- [[_COMMUNITY_Community 178|Community 178]]
-- [[_COMMUNITY_Community 180|Community 180]]
 - [[_COMMUNITY_Community 181|Community 181]]
-- [[_COMMUNITY_Community 182|Community 182]]
 - [[_COMMUNITY_Community 183|Community 183]]
 - [[_COMMUNITY_Community 184|Community 184]]
-- [[_COMMUNITY_Community 185|Community 185]]
-- [[_COMMUNITY_Community 186|Community 186]]
 - [[_COMMUNITY_Community 187|Community 187]]
-- [[_COMMUNITY_Community 188|Community 188]]
-- [[_COMMUNITY_Community 189|Community 189]]
-- [[_COMMUNITY_Community 190|Community 190]]
-- [[_COMMUNITY_Community 191|Community 191]]
-- [[_COMMUNITY_Community 192|Community 192]]
-- [[_COMMUNITY_Community 193|Community 193]]
-- [[_COMMUNITY_Community 194|Community 194]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `OzonClient` - 202 edges
-2. `SyncManager` - 187 edges
+2. `SyncManager` - 191 edges
 3. `SyncLog` - 64 edges
 4. `OzonClient` - 60 edges
 5. `BaseException` - 60 edges
@@ -238,31 +219,31 @@
 - 1-file cycle: `src/services/returns_analytics.py -> src/services/returns_analytics.py`
 - 1-file cycle: `src/supply_scan_warehouses_ui.py -> src/supply_scan_warehouses_ui.py`
 
-## Communities (195 total, 35 thin omitted)
+## Communities (176 total, 35 thin omitted)
 
 ### Community 0 - "Ozon Client"
 Cohesion: 0.04
-Nodes (40): Any, Poluchenie upravlenija ostatkami., Poluchenie spiska skladov prodavca (FBO/FBS)., Poluchenie spiska klastero., Poluchenie metodov dostavki., Poluchenie svodki po reitingu prodavca., Poluchenie informacii ob otzyve. review_id — string (UUID)., Poluchenie kolichestva otzyvov. (+32 more)
+Nodes (42): Any, Poluchenie upravlenija ostatkami., Poluchenie spiska skladov prodavca (FBO/FBS)., Poluchenie spiska klastero., Poluchenie metodov dostavki., Poluchenie svodki po reitingu prodavca., Poluchenie informacii ob otzyve. review_id — string (UUID)., Poluchenie kommentariev k otzyvu. (+34 more)
 
 ### Community 1 - "models.py"
-Cohesion: 0.07
-Nodes (103): Base, PromoProduct, Модуль для аналитики и построения отчетов на основе данных Ozon., AnalyticsAverageDeliveryTime, AnalyticsData, AnalyticsProductQueryDetail, AnalyticsProductQuerySummary, AnalyticsStock (+95 more)
+Cohesion: 0.09
+Nodes (94): Base, PromoProduct, ArgumentParser, Namespace, AnalyticsAverageDeliveryTime, AnalyticsData, AnalyticsProductQueryDetail, AnalyticsProductQuerySummary (+86 more)
 
 ### Community 2 - ". update sync log()"
 Cohesion: 0.04
-Nodes (58): Создаёт таблицу заказов CPO-отчёта, если её ещё нет., Dobavljaet kolонки klasterov dostavki v fact_orders, esli ih net., Obogashhaet fact_orders klasterami otgruzki/dostavki iz posting API.         Is, Sinhronizacija /v3/finance/transaction/list v tablicu transactions., Синхронизирует CPO-отчёт заказов (Оплата за заказ) в campaign_cpo_orders., Razlozhit' uzhe zagruzhennye JSON-polja po strukturirovannym tablicam., Sinhronizacija tovarov., Sinhronizacija ostatkov. (+50 more)
+Nodes (52): Return True for Performance API's one-active-report limit., Mininal'naja migracija tablicy analytics_data dlja PostgreSQL., Создаёт таблицу заказов CPO-отчёта, если её ещё нет., Dobavljaet kolонки klasterov dostavki v fact_orders, esli ih net., Obogashhaet fact_orders klasterami otgruzki/dostavki iz posting API.         Is, Sinhronizacija /v3/finance/transaction/list v tablicu transactions., Синхронизирует CPO-отчёт заказов (Оплата за заказ) в campaign_cpo_orders., Razlozhit' uzhe zagruzhennye JSON-polja po strukturirovannym tablicam. (+44 more)
 
 ### Community 3 - "app.py"
-Cohesion: 0.16
-Nodes (23): activate_action_products(), deactivate_action_products(), _fetch_accruals_for_period(), _find_accrual_item(), get_action_products(), get_actions(), get_actions_report(), _index_accrual_items_by_offer() (+15 more)
+Cohesion: 0.08
+Nodes (38): activate_action_products(), deactivate_action_products(), _fetch_accruals_for_period(), _find_accrual_item(), get_action_products(), get_actions(), get_actions_report(), _index_accrual_items_by_offer() (+30 more)
 
 ### Community 4 - "main.py"
-Cohesion: 0.07
-Nodes (60): _download_swagger_json(), full_sync(), json_dumps_pretty(), main(), normalize_finance(), OzonClient, Path, Glavnyj modul' dlja zapuska sinhronizacii Ozon API. (+52 more)
+Cohesion: 0.06
+Nodes (70): _download_swagger_json(), full_sync(), json_dumps_pretty(), main(), normalize_finance(), normalize_wb_finance(), OzonClient, Path (+62 more)
 
 ### Community 5 - "serp.py"
-Cohesion: 0.13
-Nodes (23): get_serp_all_primary_queries(), get_serp_article_report(), get_serp_competitors(), get_serp_snapshot(), _json_dumps(), plugin_poll(), plugin_result(), post_serp_competitor() (+15 more)
+Cohesion: 0.06
+Nodes (77): Exception, _apply_serp_enrichment(), _call_plugin(), _enrich_via_fetch_bestsellers(), get_serp_all_primary_queries(), get_serp_article_report(), get_serp_competitors(), get_serp_primary_query() (+69 more)
 
 ### Community 6 - "article abc report.py"
 Cohesion: 0.05
@@ -273,24 +254,24 @@ Cohesion: 0.16
 Nodes (20): ensure_reviews_report_tables(), get_reviews_report(), get_reviews_report_detail(), get_reviews_service_status(), _ozon_review_request(), _parse_raw(), _photo_urls_from_raw(), post_review_reply() (+12 more)
 
 ### Community 8 - "supply stage2 warehouses.py"
-Cohesion: 0.05
-Nodes (72): Этап 2 (Playwright CDP): установить способ доставки и склад для выбранных класте, supply_stage2_set_warehouses(), bff_fetch(), Выполнить POST-запрос к BFF API seller.ozon.ru в контексте страницы.     Куки п, _check_availability_for_cluster(), check_warehouse_availability(), _create_draft_via_ui(), _find_common_warehouse() (+64 more)
+Cohesion: 0.11
+Nodes (37): bff_fetch(), Выполнить POST-запрос к BFF API seller.ozon.ru в контексте страницы.     Куки п, _check_availability_for_cluster(), check_warehouse_availability(), _find_common_warehouse(), _fmt_slot(), _format_warehouse(), get_allowed_types() (+29 more)
 
 ### Community 9 - "api.py"
-Cohesion: 0.15
-Nodes (18): check(), Proverka summu kompensaciy za fevral 2026, check(), Proverka dannyh za predydushchiy mesyac (fevral) dlya rascheta plana mart, main(), Планировщик для автоматической синхронизации., Задача синхронизации., Запуск асинхронной задачи. (+10 more)
+Cohesion: 0.12
+Nodes (22): BaseSettings, check(), Proverka summu kompensaciy za fevral 2026, check(), Proverka dannyh za predydushchiy mesyac (fevral) dlya rascheta plana mart, main(), Планировщик для автоматической синхронизации., Задача синхронизации. (+14 more)
 
 ### Community 10 - "system.py"
 Cohesion: 0.07
-Nodes (52): _acquire_sync_lock(), append_sync_log_line(), build_finance_sync_steps(), build_ozon_sync_reports_payload(), build_sync_status_response(), build_wb_finance_sync_steps(), close_pool(), _date_lag_days() (+44 more)
+Nodes (50): _acquire_sync_lock(), append_sync_log_line(), build_finance_sync_steps(), build_ozon_sync_reports_payload(), build_sync_status_response(), build_wb_finance_sync_steps(), _date_lag_days(), get_ozon_sync_report_specs() (+42 more)
 
 ### Community 11 - "supply.py"
-Cohesion: 0.11
-Nodes (38): _normalize_cluster_name(), _normalize_text_key(), filter_small_pallets(), Убрать паллеты с высотой < min_height_any (0.4м).     Если у кластера не остало, build_supply_plan_acceptance(), calculate_supply_plan_pallets(), _estimate_crossdock_costs_for_pallet_clusters(), export_supply_plan_pallets() (+30 more)
+Cohesion: 0.10
+Nodes (44): _get_env_from_dotenv(), _normalize_cluster_name(), _normalize_text_key(), Dashboard mutable state — global variables shared across route modules., filter_small_pallets(), Убрать паллеты с высотой < min_height_any (0.4м).     Если у кластера не остало, build_supply_acceptance_report(), build_supply_plan_acceptance() (+36 more)
 
 ### Community 12 - "palletization routes.py"
-Cohesion: 0.27
-Nodes (21): build_accept_slots_html(), extract_current_dropoff_map_from_events(), extract_dropoff_rows_from_events(), fetch_draft_structure(), fetch_dropoff_availability(), fetch_dropoff_points_for_cluster_storage(), fetch_dropoff_points_v4(), fetch_orchestrator_result() (+13 more)
+Cohesion: 0.17
+Nodes (20): _api_post(), create_draft_via_api(), load_supply_plan_from_dashboard(), _normalize_cluster_name(), parse_args(), Any, ClientSession, Namespace (+12 more)
 
 ### Community 13 - "supply bff.py"
 Cohesion: 0.09
@@ -305,8 +286,8 @@ Cohesion: 0.05
 Nodes (41): 1. `analytics_stocks`, 1. Missing ids were not missing from API, 2. `public.transactions` is enough for ids and money, but not enough alone for quantity/cost, 2. `supply_plan`, 3. Why `ordered_units` did not match, 4. Boundary-month issue, �� ��� ������������, ��� ������� � ��������� ������ (���������) (+33 more)
 
 ### Community 16 - "supply chrome.py"
-Cohesion: 0.10
-Nodes (36): _extract_supply_clusters(), _get_env_from_dotenv(), _ozon_supply_post(), Dashboard mutable state — global variables shared across route modules., build_supply_acceptance_report(), chrome_auth_init(), chrome_auth_status(), Dashboard routes/supply_chrome.py handlers. (+28 more)
+Cohesion: 0.11
+Nodes (35): _ozon_supply_post(), chrome_auth_init(), chrome_auth_status(), Dashboard routes/supply_chrome.py handlers., POST /api/supply-plan/reconcile-draft-quantities — сверка количеств в черновике, POST /api/supply-plan/check-drafts — проверка статуса поставок.      Body (все, POST /api/supply-plan/set-vehicle-pass — заполнить данные автомобиля и водителя., POST /api/supply-plan/multi-cluster-api — создать мультикластерный черновик чере (+27 more)
 
 ### Community 17 - "Any"
 Cohesion: 0.29
@@ -318,23 +299,23 @@ Nodes (24): calculatePallets(), clearShipment(), closeModal(), currentProducts, 
 
 ### Community 19 - "month bounds()"
 Cohesion: 0.26
-Nodes (6): RuntimeError, CdpRelayClient, discover_runtime_context(), parse_company_id(), parse_draft_id_from_url(), RuntimeContext
+Nodes (9): to_asyncpg_dsn(), create_report_pool(), main(), _run(), main(), _run(), main(), _run() (+1 more)
 
 ### Community 20 - "Client Session"
-Cohesion: 0.17
-Nodes (22): apply_change_marks(), compare_methods(), download_spec(), ensure_dir(), format_report(), load_spec(), main(), normalize_parameters() (+14 more)
+Cohesion: 0.05
+Nodes (83): apply_change_marks(), compare_methods(), download_spec(), ensure_dir(), format_report(), load_spec(), main(), normalize_parameters() (+75 more)
 
 ### Community 21 - "chrome browser.py"
 Cohesion: 0.12
-Nodes (26): _chrome_auth_background(), Фоновая задача: запускает Chrome и ждёт авторизации пользователя., bff_get(), calc_item_search(), connect_cdp(), ensure_chrome(), _find_chrome_exe(), get_or_create_page() (+18 more)
+Nodes (24): _chrome_auth_background(), Фоновая задача: запускает Chrome и ждёт авторизации пользователя., bff_get(), calc_item_search(), connect_cdp(), ensure_chrome(), _find_chrome_exe(), get_or_create_page() (+16 more)
 
 ### Community 22 - "Product Economics Base"
-Cohesion: 0.07
-Nodes (27): add_shipment(), add_shipment_bulk(), calculate_pallets(), clear_shipment_data(), create_product(), get_missing(), get_products(), get_shipment() (+19 more)
+Cohesion: 0.06
+Nodes (40): add_shipment(), add_shipment_bulk(), calculate_pallets(), clear_shipment_data(), create_product(), get_missing(), get_products(), get_shipment() (+32 more)
 
 ### Community 23 - "database.py"
-Cohesion: 0.42
-Nodes (10): _extract_result(), get_chat_history(), get_chats_report(), get_chats_service_status(), _ozon_request(), post_chat_send_message(), Chats report: spisok chatov + istorija + otpravka soobshhenij cherez Ozon API., Any (+2 more)
+Cohesion: 0.29
+Nodes (11): extract_all_slots(), format_slot(), get_alternative_drop_off_points(), get_warehouse_availability(), main(), print_overview_table(), Сканер доступности складов для поставки (cross-dock).  Работает через Chrome C, Получает список всех альтернативных точек сдачи (через Chrome). (+3 more)
 
 ### Community 24 - "validate database source()"
 Cohesion: 0.15
@@ -349,40 +330,40 @@ Cohesion: 0.05
 Nodes (41): 10. Риски и митигации, 11. Что НЕ входит в scope (YAGNI), 12. Связанные файлы, 1. Цель, 2. Общая архитектура, 3.1 Новая таблица `logistics_tariffs`, 3.2 Новая таблица `product_dimensions`, 3. Данные (+33 more)
 
 ### Community 27 - "unitka.py"
-Cohesion: 0.11
-Nodes (36): _cluster_alias(), _extract_bestseller_row(), _fetch_accruals_for_offer(), _fetch_article_analytics_metrics(), get_unitka_clusters(), get_unitka_competitors_recent(), get_unitka_fetch_dimensions(), get_unitka_load_fact() (+28 more)
+Cohesion: 0.09
+Nodes (42): normalize_bestsellers_percent(), Return bestsellers percentage metrics as a fraction in the 0..1 range., _to_number(), _cluster_alias(), _extract_bestseller_row(), _fetch_accruals_for_offer(), _fetch_article_analytics_metrics(), get_unitka_clusters() (+34 more)
 
 ### Community 28 - "Database Manager"
 Cohesion: 0.12
 Nodes (13): close_database(), DatabaseManager, init_database(), AsyncSession, Модуль для работы с базой данных SQLite (для быстрого старта без PostgreSQL)., Менеджер базы данных SQLite., Инициализация подключения к БД., Создание всех таблиц. (+5 more)
 
 ### Community 29 - "Connection"
-Cohesion: 0.19
-Nodes (17): _calc_ad_kpis(), _get_ozon_credentials(), CTR/CPC/CPO/DRR из базовых рекламных метрик., Return (client_id, api_key) from env/settings/.env., disable_ad_for_sku(), get_advertising_report(), get_wb_advertising_report(), Dashboard routes/advertising.py handlers. (+9 more)
+Cohesion: 0.13
+Nodes (28): _calc_ad_kpis(), _get_ozon_credentials(), CTR/CPC/CPO/DRR из базовых рекламных метрик., Return (client_id, api_key) from env/settings/.env., disable_ad_for_sku(), get_advertising_report(), get_advertising_summary(), Dashboard routes/advertising.py handlers. (+20 more)
 
 ### Community 30 - "datetime"
-Cohesion: 0.10
-Nodes (42): _normalize_column_name(), _pick_df_column(), _to_int(), add_shipment_item(), clear_shipment(), get_all_products(), get_connection(), get_missing_products_in_catalog() (+34 more)
+Cohesion: 0.13
+Nodes (39): as_float(), normalize_offer_id(), _ozon_post_json(), _to_int(), add_shipment_item(), get_shipment_by_cluster(), get_shipment_items(), Добавить позицию в поставку (+31 more)
 
 ### Community 31 - "finance.py"
-Cohesion: 0.40
-Nodes (9): get_contexts_from_page(), parse_args(), post_json(), Any, ClientSession, Namespace, run(), target_eval() (+1 more)
+Cohesion: 0.36
+Nodes (8): choose_position_category(), split_pdp_visitors_by_source(), Any, test_choose_position_category_falls_back_to_query_position(), test_choose_position_category_prefers_analytics_position(), test_split_pdp_visitors_clamps_ad_clicks_to_total(), test_split_pdp_visitors_falls_back_to_ad_impression_share(), test_split_pdp_visitors_uses_campaign_clicks_when_available()
 
 ### Community 32 - "monitor ozon step.js"
 Cohesion: 0.06
 Nodes (24): CAPTURE_MS, fs, http, httpGetJson(), INTERESTING, main(), OUT_DIR, OUT_FILE (+16 more)
 
 ### Community 33 - "Ozon Analytics"
-Cohesion: 0.17
-Nodes (8): OzonAnalytics, Any, Класс для аналитики данных Ozon., Продажи по схемам доставки (FBO/FBS)., Топ кампаний по расходу., Генерация полного отчета., Получить товары с низкими остатками., Топ товаров по выручке.
+Cohesion: 0.11
+Nodes (19): OzonAnalytics, Any, Модуль для аналитики и построения отчетов на основе данных Ozon., Класс для аналитики данных Ozon., Продажи по схемам доставки (FBO/FBS)., Топ кампаний по расходу., Генерация полного отчета., Получить товары с низкими остатками. (+11 more)
 
 ### Community 34 - "backfill missing posting items.py"
 Cohesion: 0.22
 Nodes (24): async_main(), build_items(), build_parser(), choose_fact_order_id(), count_missing_sales(), fetch_fbo_postings_map(), fetch_fbs_posting(), json_safe() (+16 more)
 
 ### Community 35 - "scan and set warehouses()"
-Cohesion: 0.15
-Nodes (25): _activate_cluster_request_items_tab(), _close_modal(), _get_clusters_from_table(), _normalize_cluster_key(), Any, supply_scan_warehouses_ui.py — Сканирование складов через UI seller.ozon.ru (Pla, Закрыть модальное окно — нажать крестик или Escape., Полный флоу:     1. Сверяет чекбоксы + ставит первый доступный склад для каждог (+17 more)
+Cohesion: 0.07
+Nodes (64): Дождаться готовности seller.ozon.ru:       - страница загружена       - пользо, wait_for_ozon_ready(), _activate_cluster_request_items_tab(), _check_warehouse_button(), _click_replace_and_save(), _click_select_for_cluster(), _close_modal(), _collect_timeslots_current_state() (+56 more)
 
 ### Community 36 - "export analytics endpoints.py"
 Cohesion: 0.21
@@ -402,11 +383,11 @@ Nodes (20): create_draft_flexible(), edit_cluster_assortment(), find_supply_orde
 
 ### Community 40 - "import finance exports.py"
 Cohesion: 0.19
-Nodes (27): async_main(), build_parser(), decimal_value(), FinanceExportImporter, load_json(), main(), month_bounds(), Any (+19 more)
+Nodes (25): async_main(), build_parser(), decimal_value(), FinanceExportImporter, load_json(), main(), month_bounds(), Any (+17 more)
 
 ### Community 41 - "supply mixed flow.py"
 Cohesion: 0.18
-Nodes (30): append_finance_posting(), build_cost_maps(), build_kpi_summary(), build_where(), extract_item_article(), finance_row_key_for_compensation_article(), fix_mojibake_cp1251_utf8(), init_row() (+22 more)
+Nodes (24): append_finance_posting(), build_cost_maps(), extract_item_article(), _extract_supply_clusters(), finance_row_key_for_compensation_article(), fix_mojibake_cp1251_utf8(), _is_ad_description(), load_posting_context() (+16 more)
 
 ### Community 42 - "manifest.json"
 Cohesion: 0.12
@@ -425,8 +406,8 @@ Cohesion: 0.05
 Nodes (39): FBO (Fulfillment by Ozon), FBS (Fulfillment by Seller), Ozon Seller API - Сжатая инструкция по всем методам, 📊 PERFORMANCE API (Реклама), rFBS (real FBS), rFBS Возвраты, 🎁 АКЦИИ И ПРОМО (Promo), 📊 АНАЛИТИКА (Analytics) (+31 more)
 
 ### Community 46 - "WB Finance Client"
-Cohesion: 0.14
-Nodes (10): _is_retryable(), Any, BaseException, Client for Wildberries Promotion API., Minimal WB Promotion API client for advertising spend ingestion., WBAdvertisingClient, Any, Wildberries API error. (+2 more)
+Cohesion: 0.05
+Nodes (58): _is_retryable(), Any, BaseException, Client for Wildberries Promotion API., Minimal WB Promotion API client for advertising spend ingestion., WBAdvertisingClient, _as_float(), _as_int() (+50 more)
 
 ### Community 47 - "export finance reports.py"
 Cohesion: 0.11
@@ -449,20 +430,16 @@ Cohesion: 0.26
 Nodes (16): build_context(), build_report(), classify_signal(), fetch_all(), load_database_url(), main(), num(), parse_args() (+8 more)
 
 ### Community 52 - "Database Manager"
-Cohesion: 0.17
-Nodes (22): clean_nan_values(), month_bounds(), Рекурсивно заменяет NaN, Infinity, -Infinity на None., analyze_finance_data(), get_accruals_comp_by_article_accrual(), get_cash_flow(), get_finance_costs(), get_finance_report() (+14 more)
-
-### Community 53 - "OzonAPI Error"
-Cohesion: 0.42
-Nodes (8): cdp_eval_and_cookies(), derive_context(), fetch_timeslots(), main_async(), parse_args(), Any, Namespace, to_msk()
+Cohesion: 0.11
+Nodes (37): _cors_middleware(), Dashboard application factory — route registration and lifecycle., CORS для Chrome-расширения (и preflight OPTIONS)., clean_nan_values(), month_bounds(), Рекурсивно заменяет NaN, Infinity, -Infinity на None., get_wb_advertising_report(), analyze_finance_data() (+29 more)
 
 ### Community 54 - "export weekly accruals 2026.py"
 Cohesion: 0.20
 Nodes (13): build_workbook(), main(), collect_matrix(), fetch_json(), iso_weeks_in_range(), main(), Any, date (+5 more)
 
 ### Community 55 - "Cdp Relay Client"
-Cohesion: 0.17
-Nodes (13): ArgumentParser, Namespace, FactOrder, FactOrderItem, Normalizovannye tovary iz fact_orders.items., Stroki CSV otcheta po tovaram (/v1/report/products/create)., Edinnaja vitrina zakazov (FBS + FBO + rFBS)., ReportProductItem (+5 more)
+Cohesion: 0.08
+Nodes (21): Лог синхронизации данных., SyncLog, Any, Dozhdat'sja, poka async-otchet stanet gotovym ili zavershitsja s oshibkoj., Postroit' stabil'nye unikal'nye imena kolonok dlja xlsx/csv., Vybrat' naibolee pohozhuju na zagolovok stroku., Preobrazovat' tablichnye dannye v spisok slovarej., Raspakovat' xlsx/csv async-otchet v tablichnyj vid. (+13 more)
 
 ### Community 56 - "capture ozon flow.js"
 Cohesion: 0.08
@@ -477,8 +454,8 @@ Cohesion: 0.08
 Nodes (23): Backend, `enrich_with_bestsellers({ skus })`, Frontend (`web/orders_dashboard.html`), `scrape_serp({ query_text, limit = 20 })`, `serp_competitors`, `serp_positions`, `serp_snapshots`, SERP-модуль: дизайн-спека (+15 more)
 
 ### Community 59 - "Acquire"
-Cohesion: 0.16
-Nodes (10): get_articles(), get_orders(), get_sales(), Dashboard routes/orders.py handlers., Request, Response, _Acquire, _FakeConnection (+2 more)
+Cohesion: 0.21
+Nodes (4): _Acquire, _FakeConnection, _FakePool, test_articles_current_products_source_filters_archived_and_invisible_products()
 
 ### Community 60 - "ozon overlay.js"
 Cohesion: 0.36
@@ -504,21 +481,13 @@ Nodes (21): 1. Oficialnyj sajt (rekomenduetsja), 2. EnterpriseDB (oficialnyj dis
 Cohesion: 0.46
 Nodes (7): Get-DashboardProcessIds(), Get-PortOwnerProcessId(), Load-DotEnv(), Restart-DashboardServer(), Start-DashboardServer(), Stop-DashboardProcesses(), Wait-ForDashboard()
 
-### Community 66 - "Sync Log"
-Cohesion: 0.12
-Nodes (23): normalize_wb_finance(), Raw-sync WB finance detailed report into shared DB., Normalize WB raw rows into wb_fact_finance., Rebuild WB daily finance vitrine with final-day marker., rebuild_wb_finance_daily(), sync_wb_finance(), _is_retryable(), BaseException (+15 more)
-
 ### Community 67 - "set warehouses for draft()"
 Cohesion: 0.11
 Nodes (18): 1) Pages In Scope, 2) Baseline Audit Artifacts, 3.1 Typography, 3.2 Color Tokens, 3.3 Buttons, 3.4 Tables, 3.5 Layout & Spacing, 3) Unified Design Standard (Target) (+10 more)
 
-### Community 68 - "normalize bestsellers percent()"
-Cohesion: 0.12
-Nodes (15): base_from_accrual_values(), calculate(), EconomicsResult, ProductEconomicsBase, Any, Универсальный движок расчёта экономики товара.  Используется в отчётах: - Акции, Результат расчёта по сценарию., Считает экономику товара по сценарию.      Если сценарий None — возвращает факти (+7 more)
-
 ### Community 69 - "scan all storage timeslots.py"
-Cohesion: 0.19
-Nodes (21): month_start_msk(), aggregate_recent_30d_totals(), build_revenue_breakdown(), build_rows_map_skeleton(), build_stock_based_daily_forecast(), current_forecast_days(), finance_report_notes(), get_finance_report_data() (+13 more)
+Cohesion: 0.15
+Nodes (27): build_kpi_summary(), init_row(), month_start_msk(), month_timeline(), recalculate_row_total(), set_row_from_formula(), aggregate_recent_30d_totals(), build_revenue_breakdown() (+19 more)
 
 ### Community 70 - "scan dropoff points availability.py"
 Cohesion: 0.12
@@ -556,10 +525,6 @@ Nodes (4): CODEX_BROWSER_RELAY_PORT, CODEX_BROWSER_RELAY_TOKEN, node, codex_brow
 Cohesion: 0.43
 Nodes (6): export_report(), main(), month_bounds(), date, Path, Export WB finance report from wb_finance_daily to CSV.
 
-### Community 80 - ". get performance token()"
-Cohesion: 0.16
-Nodes (17): Sync WB supplier stock balances., sync_wb_stocks_report(), _is_retryable(), BaseException, Client for Wildberries stocks API., Minimal WB statistics API client for stock balances., WBStocksClient, _as_bool() (+9 more)
-
 ### Community 81 - "parse devtools har.py"
 Cohesion: 0.43
 Nodes (6): decode_har_content(), main(), maybe_json(), parse_args(), Any, Namespace
@@ -592,10 +557,6 @@ Nodes (23): datetime, Получение агрегированной анали
 Cohesion: 0.14
 Nodes (13): API для другого проекта, Границы задачи, Дизайн: snapshot-таблица для финансовых данных отчета "Остатки", Изменения в коде, Источник значений, Переиспользование логики, Почему отдельная таблица, Решение (+5 more)
 
-### Community 90 - ".get postings list()"
-Cohesion: 0.23
-Nodes (18): Sync WB Promotion API daily advertising stats., sync_wb_advertising_report(), _as_float(), _as_int(), _chunks(), ensure_wb_advertising_tables(), _extract_campaign_ids(), _extract_fullstats_daily_metrics() (+10 more)
-
 ### Community 91 - ".get postings fbo list()"
 Cohesion: 0.15
 Nodes (12): Инструкция: анализ Finance Report за месяц, Итоговый вывод, Как сгенерировать отчёт, Порядок анализа, Правила оформления, Раздел 1: P&L — общий рост, Раздел 2: Структура % — эффективность условий, Раздел 3: Юнит-экономика — что происходит с одним заказом (+4 more)
@@ -609,8 +570,8 @@ Cohesion: 0.15
 Nodes (12): 1. Z-score (стандартное отклонение от среднего), 2. Модифицированный Z-score (на медиане и MAD), 3. IQR-метод (межквартильный размах), 4. Bollinger Bands (полосы Боллинджера), 5. Линейный тренд (последние N значений), Входные данные, Дополнительные указания, Инструкция для Claude: анализ временного ряда (+4 more)
 
 ### Community 94 - ".get product list()"
-Cohesion: 0.12
-Nodes (36): article_tags_from_offer_id(), as_float(), normalize_offer_id(), _ozon_post_json(), parse_date_utc(), choose_position_category(), get_analytics_product_queries(), get_article_analytics() (+28 more)
+Cohesion: 0.13
+Nodes (25): article_tags_from_offer_id(), build_where(), parse_date_utc(), get_articles(), get_orders(), get_sales(), Dashboard routes/orders.py handlers., get_returns() (+17 more)
 
 ### Community 95 - "Community 95"
 Cohesion: 0.13
@@ -624,13 +585,9 @@ Nodes (11): File Structure, Finance Report — Accrual Mode Implementation Plan,
 Cohesion: 0.17
 Nodes (11): 1) Ключевые файлы проекта, 2) REST API сервера отчетов (`orders_dashboard.py`), 3) Основные таблицы, которые используются в текущей сборке, 4) Источники Ozon API -> таблицы, 5.1 Базовые источники, 5.2 Принципы разборки транзакций, 5.3 Формулы агрегатов в отчете, 5) Финансовый отчет: откуда берется каждая группа значений (+3 more)
 
-### Community 98 - "Community 98"
-Cohesion: 0.43
-Nodes (7): find_target_id(), main(), parse_args(), Any, ClientSession, Namespace, run_capture()
-
 ### Community 99 - ".get analytics stocks()"
-Cohesion: 0.19
-Nodes (6): get_advertising_summary(), РЎРІРѕРґРЅР°СЏ С‚Р°Р±Р»РёС†Р° РїРѕ Р’РЎР•Рњ Р°СЂС‚РёРєСѓР»Р°Рј РІ СЂРµРєР»Р°РјРµ, _Acquire, _FakeConnection, _FakePool, test_advertising_summary_includes_stocked_article_without_enabled_ad()
+Cohesion: 0.21
+Nodes (4): _Acquire, _FakeConnection, _FakePool, test_advertising_summary_includes_stocked_article_without_enabled_ad()
 
 ### Community 100 - "supply api flow.py"
 Cohesion: 0.67
@@ -657,8 +614,8 @@ Cohesion: 0.20
 Nodes (9): WB Finance Report - Этап 1: метод получения данных, Источники, Контракт загрузки (v1), Критерии готовности этапа 1, Минимальный PoC для следующего шага, Почему так, Решение по источникам данных, Риски и контроль (+1 more)
 
 ### Community 145 - "Community 145"
-Cohesion: 0.09
-Nodes (27): BaseSettings, to_asyncpg_dsn(), ensure_finance_report_tables(), create_pool(), build_finance_report(), _delta(), _load_month(), _pct() (+19 more)
+Cohesion: 0.24
+Nodes (11): build_finance_report(), _delta(), _load_month(), _pct(), Возвращает строку вида '+12.3%' или '-5.1%'., _row(), _rub(), main() (+3 more)
 
 ### Community 146 - "Community 146"
 Cohesion: 0.22
@@ -669,8 +626,8 @@ Cohesion: 0.22
 Nodes (8): Дневная разбивка (первые 10 дней), Доступные данные в БД, Итоговое сравнение, Основные расхождения, Рекомендации, Сверка данных: БД vs Ручной отчет (февраль 2026), Сервер отчетов, Статус
 
 ### Community 148 - "Community 148"
-Cohesion: 0.27
-Nodes (12): _cors_middleware(), Dashboard application factory — route registration and lifecycle., CORS для Chrome-расширения (и preflight OPTIONS)., finance_costs_page(), index(), palletization_asset(), palletization_page(), Dashboard routes/pages.py handlers. (+4 more)
+Cohesion: 0.44
+Nodes (8): finance_costs_page(), index(), palletization_asset(), palletization_page(), Dashboard routes/pages.py handlers., shared_theme_css(), Request, Response
 
 ### Community 149 - "Community 149"
 Cohesion: 0.25
@@ -733,44 +690,20 @@ Cohesion: 0.83
 Nodes (3): main(), month_bounds_utc(), datetime
 
 ### Community 171 - "Community 171"
-Cohesion: 0.22
-Nodes (24): safe_divide(), get_monthly_report(), GET /api/monthly-report — скачать MD-отчёт за месяц., _build_ads_summary(), _build_header(), build_monthly_report(), _build_products_section(), _build_promos_section() (+16 more)
-
-### Community 172 - "Community 172"
-Cohesion: 0.19
-Nodes (18): _apply_serp_enrichment(), _call_plugin(), _enrich_via_fetch_bestsellers(), _load_bestsellers_fallback_map(), _map_bestseller_item(), _normalize_text(), _pick_bestseller_item_py(), post_serp_scrape() (+10 more)
-
-### Community 173 - "Community 173"
-Cohesion: 0.18
-Nodes (18): build_serp_report_rows(), get_article_serp_report(), get_latest_snapshot(), _load_our_skus(), SERP-сервис: сохранение снимков выдачи, управление конкурентами и главным запрос, Возвращает последний снимок выдачи по запросу со всеми позициями., Снапшот для секции «Поиск» в отчёте по артикулу., Конвертирует asyncpg Record в dict, Decimal → str. (+10 more)
+Cohesion: 0.30
+Nodes (20): safe_divide(), _build_ads_summary(), _build_header(), build_monthly_report(), _build_products_section(), _build_promos_section(), _build_shop_summary(), _build_stock_section() (+12 more)
 
 ### Community 174 - "Community 174"
 Cohesion: 0.05
-Nodes (23): OzonClient, Inicializacija sessii., Poluchenie kommentariev k otzyvu., Poluchenie spiska voprosov., Poluchenie vseh voprosov s paginaciej., Poluchenie spiska chatov., Poluchenie vseh chatov s paginaciej., Poluchenie tovarov v akcii. (+15 more)
+Nodes (22): OzonClient, Inicializacija sessii., Poluchenie spiska otzyvov., Poluchenie vseh otzyvov s paginaciej., Otvet na otzyv. Trebuet podpisku 'Upravlenie otzyvami' ili Premium Pro., Poluchenie spiska voprosov., Poluchenie vseh voprosov s paginaciej., Poluchenie spiska chatov. (+14 more)
 
 ### Community 175 - "Community 175"
-Cohesion: 0.23
-Nodes (11): build_price_report_item(), get_price_report(), Price report route handlers., Return latest Ozon product-price report rows from report_products_items., _to_float(), Any, Request, Response (+3 more)
+Cohesion: 0.19
+Nodes (13): build_price_report_item(), get_price_report(), Price report route handlers., Return latest Ozon product-price report rows from report_products_items., _to_float(), Any, Request, Response (+5 more)
 
 ### Community 176 - "Community 176"
 Cohesion: 0.83
 Nodes (3): matches_offer(), test_accrual_match_still_supports_normalized_identity(), test_accrual_match_uses_raw_offer_id_when_normalized_contains_sku()
-
-### Community 177 - "Community 177"
-Cohesion: 0.20
-Nodes (11): get_serp_primary_query(), post_serp_recalculate_primary(), GET /api/serp/primary-query?sku=... — главный запрос + топ запросов для dropdown, POST /api/serp/recalculate-primary — пересчитать главные запросы авто-правилом., get_primary_query(), get_top_queries_for_sku(), Возвращает главный запрос для SKU или None., Пересчитывает главный запрос для всех SKU где set_manually = false.     Правило: (+3 more)
-
-### Community 178 - "Community 178"
-Cohesion: 0.36
-Nodes (10): get_context_from_page(), main(), main_async(), msk_fmt(), parse_args(), post_json(), Any, ClientSession (+2 more)
-
-### Community 180 - "Community 180"
-Cohesion: 0.22
-Nodes (11): _click_select_for_cluster(), _log(), _open_cluster_items_modal(), pick_optimal_warehouses(), Открыть модалку товаров кластера из строки таблицы черновика., Ввести имя склада в поле 'Наименование или адрес'.      Label перекрывает inpu, Выбрать оптимальный склад для каждого кластера.      Алгоритм:     1. Найти с, Для каждого кластера: открыть модалку, ввести склад, нажать     "Выбрать точку" (+3 more)
-
-### Community 182 - "Community 182"
-Cohesion: 0.20
-Nodes (10): _check_warehouse_button(), _click_replace_and_save(), collect_timeslots_for_draft(), _get_cluster_names_stage2(), Дождаться таблицы этапа 2 'Склад размещения'.      Ozon может долго считать до, Получить имена кластеров из таблицы этапа 2., Проверить состояние кнопки 'Выбрать/Заменить точку'.     Returns: 'active' | 'd, Нажать 'Заменить точку' + 'Сохранить'. Returns True если успешно. (+2 more)
 
 ### Community 183 - "Community 183"
 Cohesion: 0.29
@@ -780,34 +713,6 @@ Nodes (5): assert, fs, path, test, vm
 Cohesion: 0.29
 Nodes (7): RateLimitError, Prevyashen limit zaprosov., test_analytics_product_queries_starts_probe_with_two_day_lag(), test_async_report_freshness_allows_next_calendar_day(), test_campaign_active_request_limit_detection(), test_cpo_orders_report_uses_timestamp_window(), test_full_sync_includes_transactions_and_campaigns()
 
-### Community 186 - "Community 186"
-Cohesion: 0.39
-Nodes (6): normalize_bestsellers_percent(), Return bestsellers percentage metrics as a fraction in the 0..1 range., _to_number(), Any, test_normalize_bestsellers_percent_accepts_fraction(), test_normalize_bestsellers_percent_converts_whole_percent_to_fraction()
-
-### Community 188 - "Community 188"
-Cohesion: 0.29
-Nodes (7): filter_timeslots(), datetime, Конвертировать ISO UTC строку в МСК строку., Получить дату/время слота в МСК., Фильтрация собранных таймслотов — выбор лучшего склада для каждого кластера., _slot_date_msk(), _to_msk()
-
-### Community 189 - "Community 189"
-Cohesion: 0.33
-Nodes (3): _Attempt, _ClientAlwaysRetryError, test_fetch_analytics_stocks_chunk_resilient_splits_retryerror()
-
-### Community 190 - "Community 190"
-Cohesion: 0.33
-Nodes (6): _collect_timeslots_current_state(), _expand_all_clusters(), Раскрыть все свёрнутые аккордеоны кластеров (шевроны ▸)., Прочитать все строки складов из таблицы этапа 2.      Возвращает список:, Раскрыть все кластеры, прочитать склады, кликнуть 'Выбрать' и собрать таймслоты., _read_warehouse_rows()
-
-### Community 191 - "Community 191"
-Cohesion: 0.33
-Nodes (6): _open_delivery_modal(), Открыть модалку 'Доставит Ozon' для кластера., Дождаться открытия модалки 'Способ доставки в кластер'., Выбрать способ доставки в модалке.      Москва → 'Привезу самостоятельно' (Dir, _select_delivery_type(), _wait_for_modal()
-
-### Community 192 - "Community 192"
-Cohesion: 0.50
-Nodes (4): put_serp_primary_query(), PUT /api/serp/primary-query — установить главный запрос вручную., Устанавливает главный запрос для SKU., set_primary_query()
-
-### Community 193 - "Community 193"
-Cohesion: 0.67
-Nodes (3): Exception, _PluginError, Ошибка плагина — возвращается как JSON {error: ...}.
-
 ## Knowledge Gaps
 - **533 isolated node(s):** `node`, `CODEX_BROWSER_RELAY_TOKEN`, `CODEX_BROWSER_RELAY_PORT`, `WebSocket`, `WebSocket` (+528 more)
   These have ≤1 connection - possible missing edges or undocumented components.
@@ -816,12 +721,12 @@ Nodes (3): Exception, _PluginError, Ошибка плагина — возвра
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `OzonClient` connect `Community 174` to `Ozon Client`, `models.py`, `. update sync log()`, `app.py`, `main.py`, `api.py`, `Community 156`, `Connection`, `backfill missing posting items.py`, `export analytics endpoints.py`, `export finance reports.py`, `Community 181`, `Cdp Relay Client`, `Community 184`, `Community 185`, `Community 187`, `.get returns list()`, `.get cash flow statement()`, `Community 95`?**
-  _High betweenness centrality (0.137) - this node is a cross-community bridge._
-- **Why does `SyncManager` connect `. update sync log()` to `models.py`, `Community 194`, `main.py`, `import finance exports.py`, `api.py`, `Community 174`, `export finance reports.py`, `Cdp Relay Client`, `Community 184`, `Community 189`?**
-  _High betweenness centrality (0.050) - this node is a cross-community bridge._
-- **Why does `normalize_offer_id()` connect `.get product list()` to `app.py`, `scan all storage timeslots.py`, `unitka.py`, `supply mixed flow.py`, `supply.py`, `finance report accrual.py`, `Community 176`, `Database Manager`, `Acquire`, `Connection`, `datetime`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **Why does `OzonClient` connect `Community 174` to `Ozon Client`, `models.py`, `. update sync log()`, `app.py`, `main.py`, `api.py`, `Community 156`, `Connection`, `backfill missing posting items.py`, `export analytics endpoints.py`, `export finance reports.py`, `OzonAPI Error`, `Community 181`, `Cdp Relay Client`, `Community 184`, `Community 187`, `.get returns list()`, `Sync Log`, `.get cash flow statement()`, `Community 95`?**
+  _High betweenness centrality (0.135) - this node is a cross-community bridge._
+- **Why does `SyncManager` connect `. update sync log()` to `models.py`, `Ozon Analytics`, `main.py`, `import finance exports.py`, `api.py`, `Community 174`, `export finance reports.py`, `Community 175`, `Cdp Relay Client`, `Community 184`?**
+  _High betweenness centrality (0.055) - this node is a cross-community bridge._
+- **Why does `normalize_offer_id()` connect `datetime` to `app.py`, `scan all storage timeslots.py`, `supply mixed flow.py`, `supply.py`, `finance report accrual.py`, `Community 176`, `Database Manager`, `unitka.py`, `Connection`, `.get product list()`?**
+  _High betweenness centrality (0.029) - this node is a cross-community bridge._
 - **Are the 37 inferred relationships involving `OzonClient` (e.g. with `EndpointCall` and `PromoProduct`) actually correct?**
   _`OzonClient` has 37 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 71 inferred relationships involving `SyncManager` (e.g. with `FinanceExportImporter` and `Any`) actually correct?**

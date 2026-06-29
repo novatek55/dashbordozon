@@ -1175,8 +1175,8 @@
     "semantic_hash": "7eed2dedfcebffed3791d47f852e7711"
   },
   "web/orders_dashboard.html": {
-    "mtime": 1782750916.0,
-    "ast_hash": "31332c206cba4cb1124b6b2c2ea66e6a",
+    "mtime": 1782753788.6063783,
+    "ast_hash": "d6cce344ff8afbbf34fbf91a2ebba76c",
     "semantic_hash": ""
   },
   "web/palletization/index.html": {
@@ -1270,13 +1270,13 @@
     "semantic_hash": ""
   },
   "src/dashboard/routes/prices.py": {
-    "mtime": 1782752887.0,
-    "ast_hash": "24451ad8140af09275f55933e92f9f17",
+    "mtime": 1782753629.518418,
+    "ast_hash": "7afe15467490f0e21b5228ceab648f96",
     "semantic_hash": ""
   },
   "test_price_report.py": {
-    "mtime": 1782751144.0,
-    "ast_hash": "9fb9ab1b72b5ae33e8a4a27e0a09e617",
+    "mtime": 1782753568.886965,
+    "ast_hash": "a85eb976442b8876aa3e95bd0c4df11b",
     "semantic_hash": ""
   },
   "\u2568\u0420\u2568\u255c\u2568\u2591\u2568\u2557\u2568\u2555\u2568\u2556 \u2564\u0411\u2564\u0412\u2564\u0410\u2564\u0413\u2568\u2551\u2564\u0412\u2564\u0413\u2564\u0410\u2564\u041b OZON \u0442\u0410\u0424 \u2564\u0410\u2568\u2561\u2568\u2556\u2564\u0413\u2568\u2557\u2564\u041c\u2564\u0412\u2568\u2591\u2564\u0412\u2564\u041b.txt": {

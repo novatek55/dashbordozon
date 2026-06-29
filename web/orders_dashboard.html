@@ -102,6 +102,30 @@
     th, td { border: 1px solid var(--line); padding: 6px; text-align: left; }
     th { background: #f7f9fc; position: sticky; top: 0; z-index: 2; font-family: "Onest", Arial, Helvetica, sans-serif; font-size: 12px; color: #7a879c; font-weight: 600; }
     .table-wrap { max-height: 75vh; overflow: auto; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: var(--shadow-soft); }
+    .price-report-table th,
+    .price-report-table td { padding: 10px 12px; vertical-align: middle; font-size: 13px; }
+    .price-report-table th { color: #6f7f94; background: #f6f8fb; }
+    .price-name-cell { min-width: 220px; max-width: 320px; }
+    .price-name-title { font-weight: 700; color: #202a38; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .price-name-offer { margin-top: 4px; color: #7b8a9d; font-size: 12px; }
+    .price-money { text-align: right; white-space: nowrap; font-size: 16px; color: #111827; }
+    .price-money .price-old { display: block; color: #8491a3; font-size: 12px; text-decoration: line-through; margin-top: 2px; }
+    .price-index-chip { display: inline-flex; align-items: center; border-radius: 8px; padding: 4px 9px; font-weight: 800; white-space: nowrap; }
+    .price-index-chip.beneficial { background: #e6fbf8; color: #009e9a; }
+    .price-index-chip.not_beneficial { background: #fff0eb; color: #ff4b2b; }
+    .price-index-chip.no_index { background: #eef3f8; color: #6f7f94; }
+    .price-market-card { min-width: 210px; max-width: 260px; }
+    .price-market-card .market-metrics { display: flex; align-items: center; gap: 14px; }
+    .price-market-card .metric-label { color: #6f7f94; font-size: 12px; }
+    .price-market-card .metric-value { margin-top: 3px; font-size: 18px; font-weight: 800; color: #111827; white-space: nowrap; }
+    .price-market-card .metric-value.index { color: #e6007e; }
+    .price-market-card .metric-sep { width: 1px; height: 42px; background: var(--line); }
+    .price-market-card .market-source { margin-top: 10px; font-weight: 800; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .price-market-card .market-source a { color: inherit; text-decoration: none; }
+    .price-market-card .market-source a:hover { color: var(--accent); text-decoration: underline; }
+    .price-market-card.missing { color: #7b8a9d; }
+    .price-market-card .market-empty { color: #7b8a9d; }
+    .price-market-card .add-links { display: inline-flex; align-items: center; justify-content: center; min-width: 140px; margin-top: 8px; padding: 7px 12px; border-radius: 8px; background: #e9f5ff; color: var(--accent); font-weight: 800; }
     .hidden { display: none; }
     .settings-costs-wrap { margin-top: 10px; }
     .settings-costs-table th[data-sort-key] { cursor: pointer; }
@@ -3487,16 +3511,16 @@
       realization_v2: ["date", "sku", "offer_id", "name", "quantity", "price", "total_amount", "commission_percent", "commission_amount", "payout_amount", "delivery_cost", "total_payout", "last_synced_at"],
       actions: [],
       price_report: [
-        { key: "offer_id", label: "Артикул" },
-        { key: "product_name", label: "Название" },
+        { key: "name_offer", label: "Название и артикул" },
         { key: "ozon_product_id", label: "Ozon Product ID" },
         { key: "fbo_sku_id", label: "FBO SKU" },
         { key: "fbs_sku_id", label: "FBS SKU" },
-        { key: "price_current", label: "Текущая цена" },
-        { key: "price_base", label: "Базовая цена" },
-        { key: "price_recommended", label: "Цена на другом сайте" },
-        { key: "recommended_price_link", label: "Ссылка" },
-        { key: "beneficial_price_status", label: "Выгодная цена" },
+        { key: "price_current", label: "Ваша цена" },
+        { key: "buyer_price", label: "Цена для покупателя" },
+        { key: "price_index", label: "Индекс цен" },
+        { key: "ozon_competitor_prices", label: "Цены конкурентов на Ozon" },
+        { key: "own_other_marketplace_prices", label: "Ваши цены на других площадках" },
+        { key: "other_marketplace_competitor_prices", label: "Цены конкурентов на других площадках" },
       ],
       stock_balances: [],
       article_characteristics: ["sku", "offer_id", "article_name", "is_kgt", "shipment_type", "volume_weight", "height_mm", "width_mm", "depth_mm", "weight_g", "updated_at"],
@@ -4678,6 +4702,7 @@
     }
 
     function renderHeader(cols) {
+      reportTable.classList.toggle("price-report-table", reportType.value === "price_report");
       const rk = reportType.value || "generic";
       tableHead.innerHTML = `<tr>${cols.map((c) => {
         const col = toColumnDef(c);
@@ -4705,29 +4730,83 @@
     function renderPriceReport(data) {
       const cols = COLUMNS.price_report;
       renderHeader(cols);
-      const moneyKeys = new Set(["price_current", "price_base", "price_recommended"]);
+      reportTable.classList.add("price-report-table");
       const rows = Array.isArray(data?.items) ? data.items : [];
+      const escapePriceHtml = (value) => String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+      const money = (value) => {
+        if (value === null || value === undefined || value === "") return "";
+        return `${Number(value).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`;
+      };
+      const indexText = (value) => {
+        if (value === null || value === undefined || value === "") return "";
+        return Number(value).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      };
+      const renderIndexChip = (row) => {
+        const status = row.price_index_status || (row.is_beneficial_price === true ? "beneficial" : (row.is_beneficial_price === false ? "not_beneficial" : "no_index"));
+        const label = status === "beneficial" ? "Выгодный" : (status === "not_beneficial" ? "Невыгодный" : "Без индекса");
+        return `<span class="price-index-chip ${escapePriceHtml(status)}">${escapePriceHtml(label)}</span>`;
+      };
+      const renderMarketCard = (block, fallbackAddLinks = false) => {
+        const data = block || {};
+        const hasPrice = data.price !== null && data.price !== undefined && data.price !== "";
+        const href = String(data.link || "").trim();
+        const source = String(data.source || "").trim();
+        if (!hasPrice) {
+          return `<div class="price-market-card missing">${fallbackAddLinks ? `<span class="add-links">Добавить ссылки</span>` : `<span class="market-empty">Нет данных</span>`}</div>`;
+        }
+        const sourceHtml = href
+          ? `<a href="${escapePriceHtml(href)}" target="_blank" rel="noopener">${escapePriceHtml(source || "Открыть ссылку")}</a>`
+          : escapePriceHtml(source || "Другая площадка");
+        return `
+          <div class="price-market-card">
+            <div class="market-metrics">
+              <div>
+                <div class="metric-label">Индекс</div>
+                <div class="metric-value index">${escapePriceHtml(indexText(data.index))}</div>
+              </div>
+              <div class="metric-sep"></div>
+              <div>
+                <div class="metric-label">Цена</div>
+                <div class="metric-value">${escapePriceHtml(money(data.price))}</div>
+              </div>
+            </div>
+            <div class="market-source">${sourceHtml}</div>
+          </div>
+        `;
+      };
       tbody.innerHTML = "";
       for (const row of rows) {
         const tr = document.createElement("tr");
         tr.innerHTML = cols.map((col) => {
           const key = col.key;
           const raw = row[key];
-          if (moneyKeys.has(key)) {
-            const value = raw === null || raw === undefined || raw === "" ? "" : `${Number(raw).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`;
-            return `<td style="text-align:right;white-space:nowrap;">${value}</td>`;
+          if (key === "name_offer") {
+            return `<td class="price-name-cell"><div class="price-name-title" title="${escapePriceHtml(row.product_name || "")}">${escapePriceHtml(row.product_name || "")}</div><div class="price-name-offer">${escapePriceHtml(row.offer_id || "")}</div></td>`;
           }
-          if (key === "recommended_price_link") {
-            const href = String(raw || "").trim();
-            return `<td>${href ? `<a href="${href}" target="_blank" rel="noopener">Открыть</a>` : ""}</td>`;
+          if (key === "price_current") {
+            return `<td class="price-money">${escapePriceHtml(money(row.price_current))}${row.price_base ? `<span class="price-old">${escapePriceHtml(money(row.price_base))}</span>` : ""}</td>`;
           }
-          if (key === "beneficial_price_status") {
-            const cls = row.is_beneficial_price === true ? "ok" : (row.is_beneficial_price === false ? "alert" : "");
-            const bg = cls === "ok" ? "var(--success-soft)" : (cls === "alert" ? "var(--danger-soft)" : "transparent");
-            const color = cls === "ok" ? "var(--success)" : (cls === "alert" ? "var(--danger)" : "var(--muted)");
-            return `<td><span style="display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:${bg};color:${color};font-weight:700;">${fmt(raw)}</span></td>`;
+          if (key === "buyer_price") {
+            return `<td class="price-money">${escapePriceHtml(money(row.price_current))}</td>`;
           }
-          return `<td>${fmt(raw)}</td>`;
+          if (key === "price_index") {
+            return `<td>${renderIndexChip(row)}</td>`;
+          }
+          if (key === "ozon_competitor_prices") {
+            return `<td>${renderMarketCard(row.ozon_competitor_prices, true)}</td>`;
+          }
+          if (key === "own_other_marketplace_prices") {
+            return `<td>${renderMarketCard(row.own_other_marketplace_prices)}</td>`;
+          }
+          if (key === "other_marketplace_competitor_prices") {
+            return `<td>${renderMarketCard(row.other_marketplace_competitor_prices)}</td>`;
+          }
+          return `<td>${escapePriceHtml(raw)}</td>`;
         }).join("");
         tbody.appendChild(tr);
       }
