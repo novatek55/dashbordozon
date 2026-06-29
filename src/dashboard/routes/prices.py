@@ -1,6 +1,7 @@
 """Price report route handlers."""
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
@@ -43,6 +44,11 @@ def _first_present(data: Dict[str, Any], keys: tuple[str, ...]) -> Any:
 
 
 def _market_card_from_price_index(price_indexes: Any, key: str) -> Dict[str, Any]:
+    if isinstance(price_indexes, str):
+        try:
+            price_indexes = json.loads(price_indexes)
+        except json.JSONDecodeError:
+            return {"status": "missing", "index": None, "price": None, "source": "", "link": ""}
     if not isinstance(price_indexes, dict):
         return {"status": "missing", "index": None, "price": None, "source": "", "link": ""}
     block = price_indexes.get(key) or {}

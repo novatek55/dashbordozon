@@ -1,5 +1,6 @@
 from decimal import Decimal
 import asyncio
+import json
 
 from src.dashboard.routes.prices import build_price_report_item
 from src.ozon_client import OzonClient
@@ -52,22 +53,22 @@ def test_build_price_report_item_uses_v5_price_indexes_for_market_cards():
         "price_current": Decimal("1000.00"),
         "price_base": Decimal("1300.00"),
         "customer_price": None,
-        "price_indexes": {
+        "price_indexes": json.dumps({
             "ozon_index_data": {
-                "minimal_price": "724",
+                "min_price": "724",
                 "price_index_value": "1.38",
             },
             "self_marketplaces_index_data": {
-                "minimal_price": "788",
+                "min_price": "788",
                 "price_index_value": "1.22",
                 "minimal_price_link": "https://wildberries.ru/catalog/1/detail.aspx",
             },
             "external_index_data": {
-                "minimal_price": "799",
+                "min_price": "799",
                 "price_index_value": "1.25",
                 "minimal_price_link": "https://market.yandex.ru/product/1",
             },
-        },
+        }),
         "price_recommended": None,
         "recommended_price_link": "",
         "price_details_synced_at": None,
