@@ -91,6 +91,38 @@ async def ensure_finance_report_tables(pool: asyncpg.Pool) -> None:
         )
         await conn.execute(
             """
+            ALTER TABLE finance_month_plan
+            ADD COLUMN IF NOT EXISTS marketplace TEXT NOT NULL DEFAULT 'ozon'
+            """
+        )
+        await conn.execute(
+            """
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1
+                    FROM pg_constraint
+                    WHERE conrelid = 'finance_month_plan'::regclass
+                      AND conname = 'finance_month_plan_pkey'
+                      AND pg_get_constraintdef(oid) = 'PRIMARY KEY (month_start)'
+                ) THEN
+                    ALTER TABLE finance_month_plan DROP CONSTRAINT finance_month_plan_pkey;
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1
+                    FROM pg_constraint
+                    WHERE conrelid = 'finance_month_plan'::regclass
+                      AND conname = 'finance_month_plan_marketplace_month_start_pkey'
+                ) THEN
+                    ALTER TABLE finance_month_plan
+                    ADD CONSTRAINT finance_month_plan_marketplace_month_start_pkey
+                    PRIMARY KEY (marketplace, month_start);
+                END IF;
+            END $$;
+            """
+        )
+        await conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS supply_plan_state (
                 offer_id TEXT PRIMARY KEY,
                 product_id BIGINT,
@@ -446,9 +478,12 @@ async def save_finance_plan(request: web.Request) -> web.Response:
         return web.json_response({"error": "РћР¶РёРґР°РµС‚СЃСЏ JSON body."}, status=400)
 
     month_value = str(payload.get("month") or "").strip()
+    marketplace = str(payload.get("marketplace") or request.query.get("marketplace") or "ozon").strip().lower()
     revenue_plan = as_float(payload.get("revenue_plan"), default=-1.0)
     if not month_value:
         return web.json_response({"error": "РџРѕР»Рµ 'month' РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ."}, status=400)
+    if marketplace not in {"ozon", "wb"}:
+        return web.json_response({"error": "Invalid marketplace, expected ozon or wb"}, status=400)
     if revenue_plan < 0:
         return web.json_response({"error": "РџРѕР»Рµ 'revenue_plan' РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ >= 0."}, status=400)
 
@@ -468,16 +503,17 @@ async def save_finance_plan(request: web.Request) -> web.Response:
     async with pool.acquire() as conn:
         await conn.execute(
             """
-            INSERT INTO finance_month_plan (month_start, revenue_plan, updated_at)
-            VALUES ($1, $2, now())
-            ON CONFLICT (month_start) DO UPDATE
+            INSERT INTO finance_month_plan (marketplace, month_start, revenue_plan, updated_at)
+            VALUES ($1, $2, $3, now())
+            ON CONFLICT (marketplace, month_start) DO UPDATE
             SET revenue_plan = EXCLUDED.revenue_plan,
                 updated_at = now()
             """,
+            marketplace,
             month_start,
             revenue_plan,
         )
-    return web.json_response({"status": "ok", "month": month_value, "revenue_plan": revenue_plan})
+    return web.json_response({"status": "ok", "marketplace": marketplace, "month": month_value, "revenue_plan": revenue_plan})
 
 
 async def get_cash_flow(request: web.Request) -> web.Response:
@@ -640,7 +676,8 @@ async def build_rows_map_for_month(
         """
         SELECT revenue_plan
         FROM finance_month_plan
-        WHERE month_start = $1
+        WHERE marketplace = 'ozon'
+          AND month_start = $1
         """,
         month_start_msk(month_value).date(),
     )
@@ -2437,15 +2474,21 @@ async def get_realization_v2(request: web.Request) -> web.Response:
 
 async def get_wb_finance_report_daily(request: web.Request) -> web.Response:
     """WB finance daily report from wb_finance_daily vitrine."""
+    month_raw = (request.query.get("month") or "").strip()
     date_from_raw = (request.query.get("date_from") or "").strip()
     date_to_raw = (request.query.get("date_to") or "").strip()
     final_only_raw = (request.query.get("final_only") or "1").strip().lower()
 
     try:
-        date_from = datetime.strptime(date_from_raw, "%Y-%m-%d").date() if date_from_raw else None
-        date_to = datetime.strptime(date_to_raw, "%Y-%m-%d").date() if date_to_raw else None
+        if month_raw and not date_from_raw and not date_to_raw:
+            month_start, month_end, _ = month_bounds(month_raw)
+            date_from = month_start.date()
+            date_to = (month_end - timedelta(days=1)).date()
+        else:
+            date_from = datetime.strptime(date_from_raw, "%Y-%m-%d").date() if date_from_raw else None
+            date_to = datetime.strptime(date_to_raw, "%Y-%m-%d").date() if date_to_raw else None
     except ValueError:
-        return web.json_response({"error": "Invalid date format, expected YYYY-MM-DD"}, status=400)
+        return web.json_response({"error": "Invalid date format, expected YYYY-MM-DD or month YYYY-MM"}, status=400)
 
     final_only = final_only_raw not in {"0", "false", "no"}
 
@@ -2461,11 +2504,17 @@ async def get_wb_finance_report_daily(request: web.Request) -> web.Response:
         params.append(date_to)
         idx += 1
     if final_only:
-        conditions.append("is_final_day = true")
+        conditions.append("NOW() >= ((report_date + INTERVAL '1 day') + TIME '12:00') AT TIME ZONE 'Europe/Moscow'")
 
     where_sql = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     sql = f"""
-        WITH src AS (
+        WITH cost_map AS (
+            SELECT lower(trim(article)) AS article_key, MAX(unit_cost) AS unit_cost
+            FROM finance_article_costs
+            WHERE nullif(trim(article), '') IS NOT NULL
+            GROUP BY lower(trim(article))
+        ),
+        src AS (
             SELECT
                 (f.sale_dt AT TIME ZONE 'Europe/Moscow')::date AS report_date,
                 COALESCE(NULLIF(trim((CASE
@@ -2484,23 +2533,38 @@ async def get_wb_finance_report_daily(request: web.Request) -> web.Response:
                 COALESCE(f.deduction, 0) AS deduction,
                 COALESCE(f.additional_payment, 0) AS additional_payment,
                 COALESCE(f.paid_storage, 0) AS paid_storage,
-                COALESCE(f.paid_acceptance, 0) AS paid_acceptance
+                COALESCE(f.paid_acceptance, 0) AS paid_acceptance,
+                CASE
+                    WHEN lower(COALESCE(f.operation_name, f.raw_selleropername, '')) = 'возврат'
+                        THEN -ABS(COALESCE(f.quantity, 0)) * COALESCE(c.unit_cost, 0)
+                    WHEN lower(COALESCE(f.operation_name, f.raw_selleropername, '')) = 'продажа'
+                        THEN ABS(COALESCE(f.quantity, 0)) * COALESCE(c.unit_cost, 0)
+                    ELSE 0
+                END AS material_cost
             FROM wb_fact_finance f
             JOIN wb_raw_sales_report_details r ON r.id = f.raw_id
+            LEFT JOIN cost_map c ON c.article_key = lower(trim(COALESCE(f.raw_vendorcode, f.sa_name, '')))
             WHERE f.sale_dt IS NOT NULL
         ),
         agg AS (
             SELECT
                 report_date,
                 seller_oper_name,
-                SUM(retail_amount) AS gross_revenue,
+                SUM(CASE
+                    WHEN lower(seller_oper_name) = 'возврат' THEN -ABS(retail_amount)
+                    ELSE retail_amount
+                END) AS gross_revenue,
                 SUM(vw) AS marketplace_commission,
                 SUM(delivery_service) AS logistics_direct,
                 SUM(rebill_logistic_cost + return_amount) AS logistics_reverse,
                 SUM(acquiring_fee) AS acquiring,
                 SUM(penalty) AS penalties,
                 SUM(deduction + additional_payment + paid_storage + paid_acceptance) AS other_deductions,
-                SUM(for_pay) AS to_pay,
+                SUM(material_cost) AS material_cost,
+                SUM(CASE
+                    WHEN lower(seller_oper_name) = 'возврат' THEN -ABS(for_pay)
+                    ELSE for_pay
+                END) AS to_pay,
                 COUNT(*)::int AS rows_count
             FROM src
             GROUP BY report_date, seller_oper_name
@@ -2515,7 +2579,8 @@ async def get_wb_finance_report_daily(request: web.Request) -> web.Response:
             acquiring,
             penalties,
             other_deductions,
-            (marketplace_commission + logistics_direct + logistics_reverse + acquiring + penalties + other_deductions) AS marketplace_expenses_total,
+            (ABS(marketplace_commission) + ABS(logistics_direct) + ABS(logistics_reverse) + ABS(acquiring) + ABS(penalties) + ABS(other_deductions)) AS marketplace_expenses_total,
+            material_cost,
             to_pay,
             rows_count,
             NOW() >= ((report_date + INTERVAL '1 day') + TIME '12:00') AT TIME ZONE 'Europe/Moscow' AS is_final_day,
@@ -2529,6 +2594,47 @@ async def get_wb_finance_report_daily(request: web.Request) -> web.Response:
     pool: asyncpg.Pool = request.app["pool"]
     async with pool.acquire() as conn:
         rows = await conn.fetch(sql, *params)
+        plan_month = None
+        if date_from is not None:
+            plan_month = f"{date_from.year:04d}-{date_from.month:02d}"
+        elif rows:
+            first_date = rows[0]["report_date"]
+            if first_date:
+                plan_month = f"{first_date.year:04d}-{first_date.month:02d}"
+        if plan_month:
+            plan_row = await conn.fetchrow(
+                """
+                SELECT revenue_plan
+                FROM finance_month_plan
+                WHERE marketplace = 'wb'
+                  AND month_start = $1
+                """,
+                month_start_msk(plan_month).date(),
+            )
+        else:
+            plan_row = None
+        if date_from is not None and date_to is not None:
+            ad_rows = await conn.fetch(
+                """
+                SELECT
+                    report_date,
+                    SUM(spend)::float8 AS spend,
+                    SUM(views)::bigint AS views,
+                    SUM(clicks)::bigint AS clicks,
+                    SUM(carts)::bigint AS carts,
+                    SUM(orders)::bigint AS orders,
+                    SUM(revenue)::float8 AS revenue
+                FROM wb_advertising_daily
+                WHERE report_date >= $1
+                  AND report_date <= $2
+                GROUP BY report_date
+                ORDER BY report_date
+                """,
+                date_from,
+                date_to,
+            )
+        else:
+            ad_rows = []
 
     items: List[Dict[str, Any]] = []
     totals = {
@@ -2540,6 +2646,8 @@ async def get_wb_finance_report_daily(request: web.Request) -> web.Response:
         "penalties": 0.0,
         "other_deductions": 0.0,
         "marketplace_expenses_total": 0.0,
+        "material_cost": 0.0,
+        "advertising_spend": 0.0,
         "to_pay": 0.0,
         "rows_count": 0,
     }
@@ -2555,6 +2663,7 @@ async def get_wb_finance_report_daily(request: web.Request) -> web.Response:
             "penalties": as_float(r["penalties"]),
             "other_deductions": as_float(r["other_deductions"]),
             "marketplace_expenses_total": as_float(r["marketplace_expenses_total"]),
+            "material_cost": as_float(r["material_cost"]),
             "to_pay": as_float(r["to_pay"]),
             "rows_count": int(r["rows_count"] or 0),
             "is_final_day": bool(r["is_final_day"]),
@@ -2570,14 +2679,73 @@ async def get_wb_finance_report_daily(request: web.Request) -> web.Response:
         totals["penalties"] += float(item["penalties"] or 0.0)
         totals["other_deductions"] += float(item["other_deductions"] or 0.0)
         totals["marketplace_expenses_total"] += float(item["marketplace_expenses_total"] or 0.0)
+        totals["material_cost"] += float(item["material_cost"] or 0.0)
         totals["to_pay"] += float(item["to_pay"] or 0.0)
         totals["rows_count"] += int(item["rows_count"] or 0)
+
+    advertising_daily: List[Dict[str, Any]] = []
+    for r in ad_rows:
+        spend = as_float(r["spend"])
+        advertising_daily.append(
+            {
+                "report_date": r["report_date"].isoformat() if r["report_date"] else None,
+                "spend": spend,
+                "views": int(r["views"] or 0),
+                "clicks": int(r["clicks"] or 0),
+                "carts": int(r["carts"] or 0),
+                "orders": int(r["orders"] or 0),
+                "revenue": as_float(r["revenue"]),
+            }
+        )
+        totals["advertising_spend"] += float(spend or 0.0)
+
+    if plan_month:
+        plan_start, _, plan_days = month_bounds(plan_month)
+        now_msk = datetime.now(MSK)
+        plan_month_dt = month_start_msk(plan_month)
+        plan_editable = plan_month_dt.year == now_msk.year and plan_month_dt.month == now_msk.month
+        if plan_row:
+            revenue_plan_total = as_float(plan_row["revenue_plan"])
+        elif plan_editable:
+            revenue_plan_total = PLAN_BASE_VALUES["revenue_mp"]
+        else:
+            revenue_plan_total = None
+        gross_profit_plan_total = (
+            scale_plan_value(PLAN_BASE_VALUES["gross_profit"], revenue_plan_total)
+            if revenue_plan_total is not None
+            else None
+        )
+        plan_payload = {
+            "marketplace": "wb",
+            "month": plan_month,
+            "month_start": plan_start.isoformat(),
+            "month_days": len(plan_days),
+            "revenue_mp": revenue_plan_total,
+            "gross_profit": gross_profit_plan_total,
+            "editable": plan_editable,
+            "exists": bool(plan_row),
+        }
+    else:
+        plan_payload = {
+            "marketplace": "wb",
+            "month": "",
+            "month_start": "",
+            "month_days": 0,
+            "revenue_mp": None,
+            "gross_profit": None,
+            "editable": False,
+            "exists": False,
+        }
 
     data = clean_nan_values(
         {
             "count": len(items),
             "final_only": final_only,
+            "marketplace": "wb",
+            "month": plan_payload["month"],
+            "plan": plan_payload,
             "items": items,
+            "advertising_daily": advertising_daily,
             "totals": totals,
         }
     )

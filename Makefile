@@ -1,9 +1,10 @@
-.PHONY: help install init-db migrate sync-full sync-products sync-stocks sync-postings sync-transactions sync-returns sync-campaigns analytics docker-up docker-down clean
+.PHONY: help install init-db check-db-source migrate sync-full sync-products sync-stocks sync-postings sync-transactions sync-returns sync-campaigns analytics docker-up docker-down clean
 
 help:
 	@echo "Available commands:"
 	@echo "  make install          - Install dependencies"
 	@echo "  make init-db          - Initialize database"
+	@echo "  make check-db-source  - Check whether DATABASE_URL matches DB_SOURCE_MODE"
 	@echo "  make migrate          - Run database migrations"
 	@echo "  make sync-full        - Full sync of all data"
 	@echo "  make sync-products    - Sync products only"
@@ -23,6 +24,9 @@ install:
 
 init-db:
 	python -c "import asyncio; from src.database import init_database; asyncio.run(init_database())"
+
+check-db-source:
+	python scripts/check_db_source.py
 
 migrate:
 	alembic upgrade head

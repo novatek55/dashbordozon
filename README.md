@@ -63,15 +63,44 @@ OZON_PERFORMANCE_CLIENT_SECRET=your_performance_client_secret
 
 # Database
 DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/ozon_analytics
+DB_SOURCE_MODE=dev_fixture
+ALLOW_LOCAL_DATABASE=true
+EXPECTED_DB_HOST=
 
 # Sync Settings
 SYNC_DAYS_BACK=30
 BATCH_SIZE=1000
 MAX_CONCURRENT_REQUESTS=5
+CAMPAIGNS_REFRESH_HOURS=6
+CAMPAIGN_REPORT_BATCH_SIZE=10
+CAMPAIGN_REPORT_CREATE_ATTEMPTS=6
+CAMPAIGN_REPORT_ACTIVE_LIMIT_DELAY_SECONDS=120
 
 # Logging
 LOG_LEVEL=INFO
 ```
+
+### Database source policy
+
+The server database is the source of truth for current reports and agent-generated
+queries. Do not commit live database files or dumps to git. Keep schema,
+migrations, API contracts, and test fixtures in the repository instead.
+
+Use these modes explicitly:
+
+- `DB_SOURCE_MODE=server` - current server data is expected. Local SQLite and
+  localhost PostgreSQL are rejected unless `ALLOW_LOCAL_DATABASE=true`.
+- `DB_SOURCE_MODE=local_snapshot` - a deliberately restored local snapshot.
+- `DB_SOURCE_MODE=dev_fixture` - local test/development data.
+
+Before asking an agent to prepare real queries, run:
+
+```bash
+python scripts/check_db_source.py
+```
+
+If it prints `DB source: REJECTED`, update `.env` or sync/restore an explicit
+snapshot before using the data for business decisions.
 
 ### Как получить API ключи:
 

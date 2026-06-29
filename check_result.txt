@@ -1,0 +1,27 @@
+OK: Function found
+
+Code:
+async function calculatePalletsForSupplyPlan() {
+      syncSupplyDetailOverridesFromDom();
+      // ÐÐµÑÐµÐ¼ Ð´Ð°Ð½Ð½ÑÐµ Ð½Ð°Ð¿ÑÑÐ¼ÑÑ Ð¸Ð· ÑÐµÐºÑÑÐµÐ³Ð¾ supply-plan, Ð° Ð½Ðµ Ð¸Ð· HTML ÑÐ°Ð±Ð»Ð¸ÑÑ.
+      const groups = getSupplyPlanItemsSource();
+      const supplyItems = groups
+        .map((group) => {
+          const details = (group.details || [])
+            .map((detail, detailIndex) => getEffectiveSupplyDetail(group, detail, detailIndex))
+            .filter((detail) => Number(detail.allocated_supply || 0) > 0)
+            .map((detail) => ({
+              sku: detail.sku || group.sku || group.offer_id,
+              cluster_name: detail.cluster_name || detail.warehouse_name || "Unknown",
+              allocated_supply: Number(detail.allocated_supply || 0),
+            }));
+          return {
+            offer_id: group.offer_id,
+            sku: group.sku || group.offer_id,
+            details,
+          };
+        })
+        .filter((item) => item.details.length > 0);
+      
+      if (!supplyItems.length) {
+        alert('ÐÐµÑ Ð´Ð°Ð½Ð½ÑÑ Ð´Ð»Ñ ÑÐ°ÑÑÐµÑÐ°. Ð£Ð±ÐµÐ´Ð¸ÑÐµÑÑ ÑÑÐ¾ Ð² ÑÐ°Ð±Ð»Ð¸ÑÐµ ÐµÑÑÑ ÑÐ°ÑÐ¿ÑÐµÐ´ÐµÐ»ÐµÐ½

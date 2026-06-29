@@ -8,8 +8,10 @@
     "https://calculator.ozon.ru/*",
     "https://seller.ozon.ru/*",
     "https://www.ozon.ru/*",
-    "http://127.0.0.1:8088/*",
-    "http://localhost:8088/*"
+    "http://127.0.0.1/*",
+    "http://localhost/*",
+    "http://80.87.203.161/*",
+    "https://80.87.203.161/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -21,8 +23,10 @@
   "content_scripts": [
     {
       "matches": [
-        "http://127.0.0.1:8088/*",
-        "http://localhost:8088/*"
+        "http://127.0.0.1/*",
+        "http://localhost/*",
+        "http://80.87.203.161/*",
+        "https://80.87.203.161/*"
       ],
       "js": ["content.js"],
       "run_at": "document_start"

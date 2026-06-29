@@ -1,5 +1,37 @@
 # Nastrojka bazy dannyh
 
+## Source of truth
+
+Server PostgreSQL is the source of truth for current business data. Local SQLite
+or localhost PostgreSQL must be treated only as an explicit development fixture
+or restored snapshot. Do not store live `.db`, `.dump`, or `.sql.gz` database
+files in git; store schema, migrations, contracts, and small fixtures instead.
+
+Check the active database source before composing real queries:
+
+```bash
+python scripts/check_db_source.py
+```
+
+Recommended `.env` values:
+
+```env
+# Real/current data
+DB_SOURCE_MODE=server
+ALLOW_LOCAL_DATABASE=false
+EXPECTED_DB_HOST=prod-db.example.com
+
+# Local development data
+DB_SOURCE_MODE=dev_fixture
+ALLOW_LOCAL_DATABASE=true
+EXPECTED_DB_HOST=
+
+# Local restored server snapshot
+DB_SOURCE_MODE=local_snapshot
+ALLOW_LOCAL_DATABASE=true
+EXPECTED_DB_HOST=
+```
+
 ## Bystrostart (SQLite) - GOTOWO
 
 Baza dannyh SQLite uspeshno sozdana i gotova k rabote!

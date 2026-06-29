@@ -11,6 +11,7 @@
 """
 from __future__ import annotations
 
+import os
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, List
 
@@ -43,7 +44,7 @@ from src.services.report_services import (
 )
 
 ACCRUAL_SHARE_KEYS = [*ACCRUAL_COST_ROW_KEYS, "ad_spend"]
-INTERNAL_BASE_URL = "http://127.0.0.1:8088"
+INTERNAL_BASE_URL = os.getenv("DASHBOARD_INTERNAL_BASE_URL", "http://127.0.0.1:8088")
 
 
 ACCRUAL_NOTES = [

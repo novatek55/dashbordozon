@@ -1,0 +1,14 @@
+[Unit]
+Description=Ozon Dashboard daily data sync
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/ozon-dashboard
+EnvironmentFile=/etc/ozon-dashboard.env
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONUTF8=1
+ExecStart=/usr/bin/flock -n /opt/ozon-dashboard/logs/ozon-dashboard-sync.lock /opt/ozon-dashboard/.venv/bin/python -m src.main --mode full

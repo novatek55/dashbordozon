@@ -8,6 +8,7 @@ import logging
 
 from src.models import Base
 from src.config import settings
+from src.db_source_guard import validate_database_source
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,19 @@ class DatabaseManager:
     
     async def initialize(self):
         """Инициализация подключения к БД."""
+        db_source = validate_database_source(
+            self.database_url,
+            source_mode=settings.db_source_mode,
+            allow_local_database=settings.allow_local_database,
+            expected_host=settings.expected_db_host,
+        )
+        logger.info(
+            "Database source accepted: mode=%s kind=%s host=%s local=%s",
+            settings.db_source_mode,
+            db_source.kind,
+            db_source.host,
+            db_source.is_local,
+        )
         self.engine = create_async_engine(
             self.database_url,
             echo=False,

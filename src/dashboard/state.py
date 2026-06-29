@@ -24,6 +24,8 @@ sync_status: Dict[str, Any] = {
     "progress": 0,
     "stage": "",
     "stages": [],
+    "current_detail": "",
+    "current_log": [],
     "started_at": None,
     "completed_at": None,
     "error": None,

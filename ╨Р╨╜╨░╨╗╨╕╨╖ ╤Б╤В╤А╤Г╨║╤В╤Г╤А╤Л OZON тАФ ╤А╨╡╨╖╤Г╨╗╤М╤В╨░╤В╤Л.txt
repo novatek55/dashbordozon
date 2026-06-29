@@ -1,0 +1,316 @@
+Анализ структуры OZON — результаты исследования
+Что удалось выяснить
+Контейнер карточки: .tile-root — каждый товар в выдаче обёрнут в этот div.
+Селекторы всех нужных полей:
+ПолеСелекторSKUИз href ссылки a[href*="/product/"] → regex -(\d{6,12})\/?Названиеspan.tsBody500MediumЦена текущаяspan.tsHeadline500MediumСтарая ценаspan с классами tsBodyControl400Small + c35_3_17-b (без b4) и ₽Скидка %span с классом c35_3_17-b4 содержащий %Остатокspan с текстом /\d+ шт осталось/Рейтингspan.tsBodyControl300XSmall (первый)Кол-во отзывовspan.c7w1_6_1-a0.tsBodyControl300XSmallБрендspan.c7w1_6_1-a0.tsBodyControl400Small — появляется только если бренд явно указан в карточкеАкция.b5_6_5-a4 — может быть несколько: «Распродажа», «Вау-цены», «250 баллов за отзыв»
+Важное замечание по бренду: большинство карточек не показывают бренд в листинге — он есть только у официальных брендовых магазинов (liftdesk, Millwood и т.п.). Для получения бренда по всем товарам нужно заходить на страницу каждого товара или использовать Ozon Seller API.
+Пагинация: URL строится как ?page=2&text=запрос или ?page=2 для категорий.
+
+Готовый Python скрипт
+python"""
+OZON Search Position Parser
+Собирает: позицию, SKU, бренд, цену, остаток, рейтинг, отзывы, акцию
+Требования: pip install playwright pandas asyncio
+Инициализация: playwright install chromium
+"""
+
+import asyncio
+import re
+import json
+import pandas as pd
+from datetime import datetime
+from playwright.async_api import async_playwright
+
+
+# ──────────────────────────────────────────────
+# НАСТРОЙКИ
+# ──────────────────────────────────────────────
+QUERIES = [
+    "подстолье",
+    "ножки для стола лофт",
+    # добавляй свои запросы
+]
+
+MAX_PAGES = 5          # кол-во страниц на запрос
+HEADLESS = True        # False — видеть браузер
+DELAY_BETWEEN_PAGES = 2.0  # секунды между страницами
+OUTPUT_FILE = f"ozon_positions_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+
+
+# ──────────────────────────────────────────────
+# СЕЛЕКТОРЫ (проверено на 11.06.2026)
+# ──────────────────────────────────────────────
+CARD_SELECTOR = ".tile-root"
+SKU_LINK_SELECTOR = "a[href*='/product/']"
+TITLE_SELECTOR = "span.tsBody500Medium"
+PRICE_SELECTOR = "span.tsHeadline500Medium"
+RATING_SELECTOR = "span.tsBodyControl300XSmall"
+REVIEWS_SELECTOR = "span.c7w1_6_1-a0"
+PROMO_SELECTOR = ".b5_6_5-a4"
+
+
+def parse_card(card_html: str, position: int, query: str) -> dict:
+    """
+    Парсит одну карточку через JavaScript в browser context.
+    Используется внутри evaluate() Playwright.
+    """
+    # Эта функция не вызывается напрямую — логика ниже в JS
+    pass
+
+
+PARSE_CARDS_JS = """
+() => {
+    const cards = document.querySelectorAll('.tile-root');
+    const result = [];
+
+    cards.forEach((card, idx) => {
+        // --- SKU из URL ---
+        const linkEl = card.querySelector("a[href*='/product/']");
+        const href = linkEl ? linkEl.href : '';
+        const skuMatch = href.match(/-(\d{6,12})\/?(\?|$)/);
+        const sku = skuMatch ? skuMatch[1] : null;
+
+        // --- Название ---
+        const titleEl = card.querySelector('span.tsBody500Medium');
+        const title = titleEl ? titleEl.textContent.trim() : '';
+
+        // --- Текущая цена ---
+        const priceEl = card.querySelector('span.tsHeadline500Medium');
+        const currentPrice = priceEl ? priceEl.textContent.trim() : '';
+
+        // --- Старая цена и скидка ---
+        let oldPrice = '', discount = '', stock = '';
+        card.querySelectorAll('span').forEach(sp => {
+            const cls = sp.className || '';
+            const t = sp.textContent.trim();
+            // Старая цена: tsBodyControl400Small + c35_3_17-b (без b4)
+            if (cls.includes('tsBodyControl400Small') && cls.includes('c35_3_17-b')
+                && !cls.includes('b4') && t.includes('₽')) {
+                oldPrice = t;
+            }
+            // Скидка: содержит c35_3_17-b4 и %
+            if (cls.includes('c35_3_17-b4') && t.includes('%')) {
+                discount = t;
+            }
+            // Остаток: текст вида "403 шт осталось"
+            if (/\d+\s*шт\s*осталось/i.test(t) && !sp.querySelector('span')) {
+                stock = t;
+            }
+        });
+
+        // --- Рейтинг (первый span.tsBodyControl300XSmall) ---
+        const ratingEl = card.querySelector('span.tsBodyControl300XSmall');
+        const rating = ratingEl ? ratingEl.textContent.trim() : '';
+
+        // --- Отзывы и Бренд (оба в span.c7w1_6_1-a0) ---
+        let reviews = '', brand = '';
+        card.querySelectorAll('span.c7w1_6_1-a0').forEach(sp => {
+            const cls = sp.className || '';
+            // Отзывы — tsBodyControl300XSmall
+            if (cls.includes('tsBodyControl300XSmall')) {
+                reviews = sp.textContent.trim();
+            }
+            // Бренд — tsBodyControl400Small (только у брендовых карточек)
+            if (cls.includes('tsBodyControl400Small')) {
+                brand = sp.textContent.trim();
+            }
+        });
+
+        // --- Акция (все .b5_6_5-a4 бейджи) ---
+        const promoEls = card.querySelectorAll('.b5_6_5-a4');
+        const promos = [];
+        promoEls.forEach(el => {
+            const t = el.textContent.trim();
+            if (t) promos.push(t);
+        });
+        const promo = promos.join(' | ');
+
+        // --- Числовые значения ---
+        const priceNum = parseFloat(currentPrice.replace(/[^\d]/g, '')) || null;
+        const oldPriceNum = parseFloat(oldPrice.replace(/[^\d]/g, '')) || null;
+        const stockNum = stock ? parseInt(stock.match(/\d+/)[0]) : null;
+        const ratingNum = parseFloat(rating) || null;
+        const reviewsNum = reviews ? parseInt(reviews.replace(/[^\d]/g, '')) : null;
+
+        if (sku) {
+            result.push({
+                sku,
+                title,
+                brand,
+                current_price: priceNum,
+                current_price_str: currentPrice,
+                old_price: oldPriceNum,
+                discount,
+                stock: stockNum,
+                stock_str: stock,
+                rating: ratingNum,
+                reviews: reviewsNum,
+                promo,
+                url: href.split('?')[0]
+            });
+        }
+    });
+
+    return result;
+}
+"""
+
+
+async def get_positions(page, query: str, max_pages: int = 5) -> list[dict]:
+    """Собирает позиции товаров по поисковому запросу."""
+    all_items = []
+    position_counter = 1
+
+    for page_num in range(1, max_pages + 1):
+        # Формируем URL
+        if page_num == 1:
+            url = f"https://www.ozon.ru/search/?text={query}&sorting=score"
+        else:
+            url = f"https://www.ozon.ru/search/?page={page_num}&text={query}&sorting=score"
+
+        print(f"  [query='{query}'] Страница {page_num}: {url}")
+
+        try:
+            await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+            # Ждём загрузки карточек
+            await page.wait_for_selector(CARD_SELECTOR, timeout=15000)
+            # Небольшая пауза для дозагрузки
+            await asyncio.sleep(1.5)
+            # Прокрутка для загрузки lazy-контента
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight / 2)")
+            await asyncio.sleep(0.5)
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            await asyncio.sleep(0.5)
+        except Exception as e:
+            print(f"  Ошибка загрузки страницы {page_num}: {e}")
+            break
+
+        # Парсим карточки
+        try:
+            items = await page.evaluate(PARSE_CARDS_JS)
+        except Exception as e:
+            print(f"  Ошибка парсинга: {e}")
+            break
+
+        if not items:
+            print(f"  Карточки не найдены — выход")
+            break
+
+        # Добавляем позицию и метаданные
+        for item in items:
+            item["position"] = position_counter
+            item["query"] = query
+            item["page"] = page_num
+            item["collected_at"] = datetime.now().isoformat()
+            all_items.append(item)
+            position_counter += 1
+
+        print(f"  Собрано {len(items)} товаров (всего: {len(all_items)})")
+
+        # Проверяем есть ли следующая страница
+        has_next = await page.query_selector("a[href*='page=" + str(page_num + 1) + "']")
+        if not has_next and page_num > 1:
+            print(f"  Следующая страница не найдена — стоп")
+            break
+
+        await asyncio.sleep(DELAY_BETWEEN_PAGES)
+
+    return all_items
+
+
+async def main():
+    all_results = []
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(
+            headless=HEADLESS,
+            args=[
+                "--no-sandbox",
+                "--disable-blink-features=AutomationControlled",
+            ]
+        )
+
+        context = await browser.new_context(
+            viewport={"width": 1280, "height": 900},
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/125.0.0.0 Safari/537.36"
+            ),
+            locale="ru-RU",
+        )
+
+        # Блокируем лишние ресурсы для скорости
+        await context.route(
+            "**/*.{png,jpg,jpeg,gif,webp,svg,woff,woff2}",
+            lambda route: route.abort()
+        )
+
+        page = await context.new_page()
+
+        # Обход детекции автоматизации
+        await page.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+        """)
+
+        for query in QUERIES:
+            print(f"\n{'='*50}")
+            print(f"Запрос: '{query}'")
+            print(f"{'='*50}")
+
+            results = await get_positions(page, query, MAX_PAGES)
+            all_results.extend(results)
+            print(f"Итого по запросу '{query}': {len(results)} позиций")
+
+        await browser.close()
+
+    # ──────────────────────────────────────────────
+    # СОХРАНЕНИЕ В EXCEL
+    # ──────────────────────────────────────────────
+    if all_results:
+        df = pd.DataFrame(all_results)
+
+        # Порядок колонок
+        cols = [
+            "query", "position", "page", "sku",
+            "brand", "title",
+            "current_price", "old_price", "discount",
+            "stock", "rating", "reviews", "promo",
+            "url", "collected_at"
+        ]
+        # Оставляем только существующие колонки
+        cols = [c for c in cols if c in df.columns]
+        df = df[cols]
+
+        with pd.ExcelWriter(OUTPUT_FILE, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="positions")
+
+            # Авто-ширина колонок
+            ws = writer.sheets["positions"]
+            for col in ws.columns:
+                max_len = max(len(str(cell.value or "")) for cell in col)
+                ws.column_dimensions[col[0].column_letter].width = min(max_len + 2, 60)
+
+        print(f"\n✅ Сохранено {len(df)} строк → {OUTPUT_FILE}")
+
+        # Превью в консоль
+        print(df[["query", "position", "sku", "brand",
+                   "current_price", "stock", "rating", "reviews", "promo"]].head(10).to_string())
+    else:
+        print("Данные не собраны")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+Как запустить
+bashpip install playwright pandas openpyxl
+playwright install chromium
+python ozon_parser.py
+
+Ключевые моменты архитектуры
+Почему Playwright, а не requests/BeautifulSoup: OZON рендерит страницу через React — без JS большинство данных недоступны. Playwright запускает реальный браузер и выполняет JavaScript прямо в контексте страницы.
+Как работает SKU: всегда в конце URL товара — /product/название-XXXXXXXXXX/. Regex -(\d{6,12})\/? надёжно его извлекает.
+Бренд: отображается в карточке только у официальных брендовых магазинов (span.c7w1_6_1-a0.tsBodyControl400Small). Для остальных товаров бренд нужно брать со страницы товара или через Ozon Seller API (если есть доступ).
+Устойчивость к изменению классов: OZON периодически обфусцирует классы (вида c35_3_17-b). Если парсер сломается, нужно переопределить селекторы заново — логика их поиска описана в комментариях кода.
+Антибот: добавлен реальный User-Agent, скрыт navigator.webdriver, блокируются изображения для ускорения. При блокировке — добавь паузы и ротацию прокси

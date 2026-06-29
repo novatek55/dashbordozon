@@ -1,4 +1,5 @@
 ﻿"""Dashboard routes/advertising.py handlers."""
+import asyncio
 import logging
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
@@ -14,6 +15,267 @@ from src.dashboard.helpers import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+async def get_wb_advertising_report(request: web.Request) -> web.Response:
+    """WB advertising daily report from wb_advertising_daily."""
+    month_raw = (request.query.get("month") or "").strip()
+    date_from_raw = (request.query.get("date_from") or "").strip()
+    date_to_raw = (request.query.get("date_to") or "").strip()
+    advert_id_raw = (request.query.get("advert_id") or "").strip()
+    advert_id = 0
+    if advert_id_raw:
+        try:
+            advert_id = int(advert_id_raw)
+        except ValueError:
+            return web.json_response({"error": "Invalid advert_id"}, status=400)
+    try:
+        if month_raw and not date_from_raw and not date_to_raw:
+            year_s, month_s = month_raw.split("-", 1)
+            year, month = int(year_s), int(month_s)
+            date_from = date(year, month, 1)
+            if month == 12:
+                date_to = date(year + 1, 1, 1) - timedelta(days=1)
+            else:
+                date_to = date(year, month + 1, 1) - timedelta(days=1)
+        else:
+            date_from = datetime.strptime(date_from_raw, "%Y-%m-%d").date() if date_from_raw else (datetime.now(MSK) - timedelta(days=30)).date()
+            date_to = datetime.strptime(date_to_raw, "%Y-%m-%d").date() if date_to_raw else (datetime.now(MSK) - timedelta(days=1)).date()
+    except ValueError:
+        return web.json_response({"error": "Invalid date format, expected YYYY-MM-DD or month YYYY-MM"}, status=400)
+
+    pool: asyncpg.Pool = request.app["pool"]
+    async with pool.acquire() as conn:
+        daily_rows = await conn.fetch(
+            """
+            SELECT
+                d.report_date,
+                SUM(d.views)::bigint AS views,
+                SUM(d.clicks)::bigint AS clicks,
+                SUM(d.carts)::bigint AS carts,
+                SUM(d.orders)::bigint AS orders,
+                SUM(d.shks)::bigint AS shks,
+                SUM(d.canceled)::bigint AS canceled,
+                SUM(d.spend)::float8 AS spend,
+                SUM(d.stats_spend)::float8 AS stats_spend,
+                AVG(NULLIF(d.avg_position, 0))::float8 AS avg_position,
+                SUM(d.revenue)::float8 AS revenue
+            FROM wb_advertising_daily d
+            WHERE d.report_date >= $1
+              AND d.report_date <= $2
+              AND ($3::bigint = 0 OR d.advert_id = $3::bigint)
+            GROUP BY d.report_date
+            ORDER BY d.report_date
+            """,
+            date_from,
+            date_to,
+            advert_id,
+        )
+        campaign_rows = await conn.fetch(
+            """
+            SELECT
+                d.advert_id,
+                COALESCE(c.name, d.advert_id::text) AS name,
+                COALESCE(c.type, '') AS type,
+                COALESCE(c.status, '') AS status,
+                SUM(d.views)::bigint AS views,
+                SUM(d.clicks)::bigint AS clicks,
+                SUM(d.carts)::bigint AS carts,
+                SUM(d.orders)::bigint AS orders,
+                SUM(d.shks)::bigint AS shks,
+                SUM(d.canceled)::bigint AS canceled,
+                SUM(d.spend)::float8 AS spend,
+                SUM(d.stats_spend)::float8 AS stats_spend,
+                AVG(NULLIF(d.avg_position, 0))::float8 AS avg_position,
+                SUM(d.revenue)::float8 AS revenue
+            FROM wb_advertising_daily d
+            LEFT JOIN wb_advertising_campaigns c ON c.advert_id = d.advert_id
+            WHERE d.report_date >= $1
+              AND d.report_date <= $2
+              AND ($3::bigint = 0 OR d.advert_id = $3::bigint)
+            GROUP BY d.advert_id, c.name, c.type, c.status
+            ORDER BY SUM(d.spend) DESC
+            """,
+            date_from,
+            date_to,
+            advert_id,
+        )
+        daily_by_campaign_rows = await conn.fetch(
+            """
+            SELECT
+                d.advert_id,
+                d.report_date,
+                COALESCE(c.name, d.advert_id::text) AS name,
+                SUM(d.views)::bigint AS views,
+                SUM(d.clicks)::bigint AS clicks,
+                SUM(d.carts)::bigint AS carts,
+                SUM(d.orders)::bigint AS orders,
+                SUM(d.shks)::bigint AS shks,
+                SUM(d.canceled)::bigint AS canceled,
+                SUM(d.spend)::float8 AS spend,
+                SUM(d.stats_spend)::float8 AS stats_spend,
+                AVG(NULLIF(d.avg_position, 0))::float8 AS avg_position,
+                SUM(d.revenue)::float8 AS revenue
+            FROM wb_advertising_daily d
+            LEFT JOIN wb_advertising_campaigns c ON c.advert_id = d.advert_id
+            WHERE d.report_date >= $1
+              AND d.report_date <= $2
+              AND ($3::bigint = 0 OR d.advert_id = $3::bigint)
+            GROUP BY d.advert_id, d.report_date, c.name
+            ORDER BY d.report_date, d.advert_id
+            """,
+            date_from,
+            date_to,
+            advert_id,
+        )
+        product_rows = await conn.fetch(
+            """
+            WITH stock AS (
+                SELECT nm_id, sum(coalesce(quantity_full, quantity, 0))::bigint AS stock_total
+                FROM wb_stocks
+                GROUP BY nm_id
+            )
+            SELECT
+                n.nm_id,
+                COALESCE(NULLIF(n.name, ''), n.nm_id::text) AS name,
+                SUM(n.views)::bigint AS views,
+                SUM(n.clicks)::bigint AS clicks,
+                SUM(n.carts)::bigint AS carts,
+                SUM(n.orders)::bigint AS orders,
+                SUM(n.shks)::bigint AS shks,
+                SUM(n.canceled)::bigint AS canceled,
+                SUM(n.stats_spend)::float8 AS stats_spend,
+                SUM(n.revenue)::float8 AS revenue,
+                AVG(NULLIF(d.avg_position, 0))::float8 AS avg_position,
+                ARRAY_AGG(DISTINCT n.advert_id ORDER BY n.advert_id) AS advert_ids,
+                max(coalesce(stock.stock_total, 0))::bigint AS stock_total
+            FROM wb_advertising_nm_daily n
+            LEFT JOIN wb_advertising_daily d
+              ON d.advert_id = n.advert_id
+             AND d.report_date = n.report_date
+            LEFT JOIN stock ON stock.nm_id = n.nm_id
+            WHERE n.report_date >= $1
+              AND n.report_date <= $2
+              AND ($3::bigint = 0 OR n.advert_id = $3::bigint)
+            GROUP BY n.nm_id, COALESCE(NULLIF(n.name, ''), n.nm_id::text)
+            ORDER BY SUM(n.stats_spend) DESC, SUM(n.views) DESC
+            LIMIT 500
+            """,
+            date_from,
+            date_to,
+            advert_id,
+        )
+
+    daily = [
+        {
+            "date": r["report_date"].isoformat() if r["report_date"] else None,
+            "date_label": r["report_date"].isoformat()[5:] if r["report_date"] else None,
+            "views": int(r["views"] or 0),
+            "clicks": int(r["clicks"] or 0),
+            "carts": int(r["carts"] or 0),
+            "orders": int(r["orders"] or 0),
+            "shks": int(r["shks"] or 0),
+            "canceled": int(r["canceled"] or 0),
+            "spend": float(r["spend"] or 0.0),
+            "stats_spend": float(r["stats_spend"] or 0.0),
+            "avg_position": float(r["avg_position"] or 0.0),
+            "revenue": float(r["revenue"] or 0.0),
+        }
+        for r in daily_rows
+    ]
+    campaigns = [
+        {
+            "advert_id": int(r["advert_id"]),
+            "name": r["name"],
+            "type": r["type"],
+            "status": r["status"],
+            "views": int(r["views"] or 0),
+            "clicks": int(r["clicks"] or 0),
+            "carts": int(r["carts"] or 0),
+            "orders": int(r["orders"] or 0),
+            "shks": int(r["shks"] or 0),
+            "canceled": int(r["canceled"] or 0),
+            "spend": float(r["spend"] or 0.0),
+            "stats_spend": float(r["stats_spend"] or 0.0),
+            "avg_position": float(r["avg_position"] or 0.0),
+            "revenue": float(r["revenue"] or 0.0),
+        }
+        for r in campaign_rows
+    ]
+    products = [
+        {
+            "nm_id": int(r["nm_id"]),
+            "name": r["name"],
+            "views": int(r["views"] or 0),
+            "clicks": int(r["clicks"] or 0),
+            "carts": int(r["carts"] or 0),
+            "orders": int(r["orders"] or 0),
+            "shks": int(r["shks"] or 0),
+            "canceled": int(r["canceled"] or 0),
+            "stats_spend": float(r["stats_spend"] or 0.0),
+            "avg_position": float(r["avg_position"] or 0.0),
+            "revenue": float(r["revenue"] or 0.0),
+            "advert_ids": [int(v) for v in (r["advert_ids"] or []) if v],
+            "stock_total": int(r["stock_total"] or 0),
+        }
+        for r in product_rows
+    ]
+    daily_by_campaign: Dict[str, List[Dict[str, Any]]] = {}
+    daily_campaigns: Dict[str, List[Dict[str, Any]]] = {}
+    for r in daily_by_campaign_rows:
+        day = r["report_date"].isoformat() if r["report_date"] else None
+        if not day:
+            continue
+        campaign_advert_id = int(r["advert_id"])
+        row = {
+            "date": day,
+            "date_label": day[5:],
+            "advert_id": campaign_advert_id,
+            "name": r["name"],
+            "views": int(r["views"] or 0),
+            "clicks": int(r["clicks"] or 0),
+            "carts": int(r["carts"] or 0),
+            "orders": int(r["orders"] or 0),
+            "shks": int(r["shks"] or 0),
+            "canceled": int(r["canceled"] or 0),
+            "spend": float(r["spend"] or 0.0),
+            "stats_spend": float(r["stats_spend"] or 0.0),
+            "avg_position": float(r["avg_position"] or 0.0),
+            "revenue": float(r["revenue"] or 0.0),
+        }
+        daily_by_campaign.setdefault(str(campaign_advert_id), []).append(row)
+        daily_campaigns.setdefault(day, []).append({
+            "advert_id": campaign_advert_id,
+            "name": r["name"],
+        })
+    totals = {
+        "views": sum(row["views"] for row in daily),
+        "clicks": sum(row["clicks"] for row in daily),
+        "carts": sum(row["carts"] for row in daily),
+        "orders": sum(row["orders"] for row in daily),
+        "shks": sum(row["shks"] for row in daily),
+        "canceled": sum(row["canceled"] for row in daily),
+        "spend": sum(row["spend"] for row in daily),
+        "stats_spend": sum(row["stats_spend"] for row in daily),
+        "avg_position": (
+            sum(row["avg_position"] for row in daily if row["avg_position"] > 0)
+            / max(1, sum(1 for row in daily if row["avg_position"] > 0))
+        ),
+        "revenue": sum(row["revenue"] for row in daily),
+    }
+    return web.json_response(clean_nan_values({
+        "marketplace": "wb",
+        "date_from": date_from.isoformat(),
+        "date_to": date_to.isoformat(),
+        "advert_id": advert_id or None,
+        "count": len(campaigns),
+        "daily": daily,
+        "campaigns": campaigns,
+        "products": products,
+        "daily_by_campaign": daily_by_campaign,
+        "daily_campaigns": daily_campaigns,
+        "totals": totals,
+    }))
 
 
 async def get_advertising_summary(request: web.Request) -> web.Response:
@@ -38,6 +300,10 @@ async def get_advertising_summary(request: web.Request) -> web.Response:
     date_to_exclusive = date_to + timedelta(days=1)
     num_days = (date_to - date_from).days + 1
 
+    # UTC bounds for campaign_statistics.date (stored as UTC timestamp, МСК = UTC+3)
+    utc_from = datetime(date_from.year, date_from.month, date_from.day, tzinfo=timezone.utc) - timedelta(hours=3)
+    utc_to = datetime(date_to_exclusive.year, date_to_exclusive.month, date_to_exclusive.day, tzinfo=timezone.utc) - timedelta(hours=3) + timedelta(hours=24)
+
     pool: asyncpg.Pool = request.app["pool"]
     async with pool.acquire() as conn:
         # 1. Р РµРєР»Р°РјРЅР°СЏ СЃС‚Р°С‚РёСЃС‚РёРєР° РїРѕ SKU Р·Р° РїРµСЂРёРѕРґ
@@ -59,36 +325,96 @@ async def get_advertising_summary(request: web.Request) -> web.Response:
                     )
                 ) AS ad_revenue_cpo
             FROM campaign_statistics cs
-            WHERE (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date >= $1
-              AND (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date < $2
+            WHERE cs.date >= $1 AND cs.date < $2
             GROUP BY cs.sku
             HAVING sum(cs.spent::float8) > 0 OR sum(cs.orders)::int > 0
             ORDER BY sum(cs.spent::float8) DESC
             """,
-            date_from,
-            date_to_exclusive,
+            utc_from,
+            utc_to,
         )
 
-        if not ad_rows:
-            return web.json_response({
-                "items": [], "date_from": str(date_from),
-                "date_to": str(date_to), "num_days": num_days,
-            })
+        stock_rows = await conn.fetch(
+            """
+            WITH stock AS (
+                SELECT
+                    lower(trim(offer_id)) AS offer_key,
+                    sum(
+                        coalesce(available_stock_count, 0) +
+                        coalesce(waiting_docs_stock_count, 0) +
+                        coalesce(requested_stock_count, 0) +
+                        coalesce(transit_stock_count, 0)
+                    )::bigint AS total_stock
+                FROM analytics_stocks
+                WHERE coalesce(trim(offer_id), '') <> ''
+                GROUP BY lower(trim(offer_id))
+                UNION ALL
+                SELECT
+                    lower(trim(offer_id)) AS offer_key,
+                    sum(coalesce(present, 0))::bigint AS total_stock
+                FROM fbs_warehouse_stocks
+                WHERE coalesce(trim(offer_id), '') <> ''
+                GROUP BY lower(trim(offer_id))
+            ),
+            stock_sum AS (
+                SELECT offer_key, sum(total_stock)::bigint AS total_stock
+                FROM stock
+                GROUP BY offer_key
+                HAVING sum(total_stock) > 0
+            ),
+            product_ref AS (
+                SELECT DISTINCT ON (lower(trim(offer_id)))
+                    lower(trim(offer_id)) AS offer_key,
+                    trim(offer_id) AS offer_id,
+                    sku::bigint AS sku,
+                    product_name
+                FROM (
+                    SELECT offer_id, fbo_sku_id::bigint AS sku, product_name, last_synced_at
+                    FROM report_products_items
+                    WHERE fbo_sku_id IS NOT NULL AND coalesce(trim(offer_id), '') <> ''
+                    UNION ALL
+                    SELECT offer_id, fbs_sku_id::bigint AS sku, product_name, last_synced_at
+                    FROM report_products_items
+                    WHERE fbs_sku_id IS NOT NULL AND coalesce(trim(offer_id), '') <> ''
+                    UNION ALL
+                    SELECT offer_id, sku::bigint AS sku, NULL AS product_name, updated_at AS last_synced_at
+                    FROM article_characteristics
+                    WHERE sku IS NOT NULL AND coalesce(trim(offer_id), '') <> ''
+                ) src
+                ORDER BY lower(trim(offer_id)), last_synced_at DESC NULLS LAST
+            )
+            SELECT
+                ss.offer_key,
+                coalesce(pr.offer_id, ss.offer_key) AS offer_id,
+                pr.sku,
+                pr.product_name,
+                ss.total_stock
+            FROM stock_sum ss
+            LEFT JOIN product_ref pr ON pr.offer_key = ss.offer_key
+            ORDER BY ss.total_stock DESC
+            """,
+        )
 
-        # РЎРѕР±СЂР°С‚СЊ РІСЃРµ SKU
-        all_skus = [int(r["sku"]) for r in ad_rows if r["sku"]]
+        # РЎРѕР±СЂР°С‚СЊ РІСЃРµ SKU: РёР· СЂРµРєР»Р°РјС‹ + С‚РѕРІР°СЂС‹ СЃ РѕСЃС‚Р°С‚РєР°РјРё
+        all_skus = sorted({
+            int(r["sku"])
+            for r in [*ad_rows, *stock_rows]
+            if r["sku"] is not None
+        })
 
         # 2. SKU в†’ offer_id РјР°РїРїРёРЅРі
-        sku_identity_map = await load_sku_identity_map(conn, all_skus)
+        sku_identity_map = await load_sku_identity_map(conn, all_skus) if all_skus else {}
         sku_to_offer = {sku: v["offer_id"] for sku, v in sku_identity_map.items() if v.get("offer_id")}
         sku_to_name = {sku: v["product_name"] for sku, v in sku_identity_map.items() if v.get("product_name")}
-        ad_offer_ids_norm = sorted(
-            {
-                str(v).strip().lower()
-                for v in sku_to_offer.values()
-                if str(v).strip()
-            }
-        )
+        for row in stock_rows:
+            sku_val = row["sku"]
+            if sku_val is None:
+                continue
+            sku = int(sku_val)
+            if row["offer_id"]:
+                sku_to_offer.setdefault(sku, str(row["offer_id"]))
+            if row["product_name"]:
+                sku_to_name.setdefault(sku, str(row["product_name"]))
 
         # 3. Общие заказы/выручка по SKU за период (тот же источник: Performance analytics_data)
         total_rows = await conn.fetch(
@@ -107,7 +433,7 @@ async def get_advertising_summary(request: web.Request) -> web.Response:
             date_from,
             date_to_exclusive,
         )
-        total_by_sku = {int(r["sku"]): r for r in total_rows}
+        total_by_sku = {int(r["sku"]): dict(r) for r in total_rows}
 
         # 4. РЎРµР±РµСЃС‚РѕРёРјРѕСЃС‚СЊ
         cost_rows = await conn.fetch(
@@ -118,54 +444,78 @@ async def get_advertising_summary(request: web.Request) -> web.Response:
         )
         cost_by_article = {r["article"]: float(r["unit_cost"]) for r in cost_rows if r["unit_cost"]}
 
-        # 5. Остатки по артикулам (как в отчёте «Остатки»): FBO total + FBS present
+        # 5. РЎС‚Р°С‚СѓСЃС‹ РѕСЃС‚Р°С‚РєРѕРІ, СЂРµРєР»Р°РјС‹ Рё Р°РєС†РёР№ РїРѕ Р°СЂС‚РёРєСѓР»Р°Рј.
         stock_total_by_offer: Dict[str, int] = {}
-        if ad_offer_ids_norm:
-            fbo_stock_rows = await conn.fetch(
-                """
-                SELECT
-                    lower(trim(offer_id)) AS offer_key,
-                    sum(
-                        coalesce(available_stock_count, 0) +
-                        coalesce(waiting_docs_stock_count, 0) +
-                        coalesce(requested_stock_count, 0) +
-                        coalesce(transit_stock_count, 0)
-                    )::bigint AS total_stock
-                FROM analytics_stocks
-                WHERE lower(trim(offer_id)) = any($1::text[])
-                GROUP BY lower(trim(offer_id))
-                """,
-                ad_offer_ids_norm,
+        stock_meta_by_offer: Dict[str, Dict[str, Any]] = {}
+        for r in stock_rows:
+            key = str(r["offer_key"] or "").strip().lower()
+            if not key:
+                continue
+            stock_total_by_offer[key] = stock_total_by_offer.get(key, 0) + int(r["total_stock"] or 0)
+            stock_meta_by_offer.setdefault(key, {
+                "offer_id": str(r["offer_id"] or key),
+                "product_name": str(r["product_name"] or ""),
+                "sku": int(r["sku"]) if r["sku"] is not None else None,
+            })
+
+        ad_status_rows = await conn.fetch(
+            """
+            SELECT DISTINCT co.sku
+            FROM campaign_objects co
+            JOIN campaigns c ON c.id = co.campaign_id
+            WHERE co.sku = any($1::bigint[])
+              AND c.state = 'CAMPAIGN_STATE_RUNNING'
+              AND coalesce(co.status, 'ACTIVE') NOT IN ('PAUSED', 'STOPPED', 'INACTIVE', 'DISABLED')
+            """,
+            all_skus,
+        )
+        ad_enabled_skus = {int(r["sku"]) for r in ad_status_rows if r["sku"] is not None}
+
+        promo_status_rows = await conn.fetch(
+            """
+            WITH sku_to_product AS (
+                SELECT DISTINCT ON (sku) sku, ozon_product_id AS product_id, lower(trim(offer_id)) AS offer_key
+                FROM (
+                    SELECT fbo_sku_id::bigint AS sku, ozon_product_id, offer_id, last_synced_at
+                    FROM report_products_items
+                    WHERE fbo_sku_id IS NOT NULL AND ozon_product_id IS NOT NULL
+                    UNION ALL
+                    SELECT fbs_sku_id::bigint AS sku, ozon_product_id, offer_id, last_synced_at
+                    FROM report_products_items
+                    WHERE fbs_sku_id IS NOT NULL AND ozon_product_id IS NOT NULL
+                ) x
+                WHERE sku = any($1::bigint[])
+                ORDER BY sku, last_synced_at DESC NULLS LAST
             )
-            fbs_stock_rows = await conn.fetch(
-                """
-                SELECT
-                    lower(trim(offer_id)) AS offer_key,
-                    sum(coalesce(present, 0))::bigint AS total_stock
-                FROM fbs_warehouse_stocks
-                WHERE lower(trim(offer_id)) = any($1::text[])
-                GROUP BY lower(trim(offer_id))
-                """,
-                ad_offer_ids_norm,
-            )
-            for r in fbo_stock_rows:
-                key = str(r["offer_key"] or "").strip().lower()
-                if not key:
-                    continue
-                stock_total_by_offer[key] = stock_total_by_offer.get(key, 0) + int(r["total_stock"] or 0)
-            for r in fbs_stock_rows:
-                key = str(r["offer_key"] or "").strip().lower()
-                if not key:
-                    continue
-                stock_total_by_offer[key] = stock_total_by_offer.get(key, 0) + int(r["total_stock"] or 0)
+            SELECT DISTINCT stp.offer_key
+            FROM sku_to_product stp
+            JOIN promo_products pp ON pp.sku = stp.product_id
+            WHERE pp.is_participating IS TRUE
+            """,
+            all_skus,
+        )
+        promo_enabled_by_offer = {
+            str(r["offer_key"] or "").strip().lower()
+            for r in promo_status_rows
+            if str(r["offer_key"] or "").strip()
+        }
 
     # РђРіСЂРµРіР°С†РёСЏ РїРѕ offer_id
     offer_agg = defaultdict(lambda: {
         "views": 0, "clicks": 0, "adds_to_cart": 0, "spent": 0.0,
         "ad_orders": 0, "ad_revenue": 0.0, "ad_orders_cpo": 0, "ad_revenue_cpo": 0.0,
         "total_qty": 0, "total_revenue": 0.0,
-        "product_name": "", "skus": [],
+        "product_name": "", "skus": [], "ad_enabled": False,
     })
+
+    for oid_lower, meta in stock_meta_by_offer.items():
+        agg = offer_agg[oid_lower]
+        agg["offer_id"] = meta["offer_id"]
+        if meta.get("product_name"):
+            agg["product_name"] = meta["product_name"]
+        sku = meta.get("sku")
+        if sku is not None and sku not in agg["skus"]:
+            agg["skus"].append(sku)
 
     for row in ad_rows:
         sku = int(row["sku"])
@@ -187,6 +537,8 @@ async def get_advertising_summary(request: web.Request) -> web.Response:
             agg["product_name"] = sku_to_name[sku]
         if sku not in agg["skus"]:
             agg["skus"].append(sku)
+        if sku in ad_enabled_skus:
+            agg["ad_enabled"] = True
 
         tot = total_by_sku.get(sku, {})
         agg["total_qty"] += int(tot.get("total_qty") or 0)
@@ -209,6 +561,8 @@ async def get_advertising_summary(request: web.Request) -> web.Response:
             "offer_id": agg["offer_id"],
             "product_name": agg["product_name"],
             "stock_total": int(stock_total_by_offer.get(oid_lower, 0)),
+            "ad_enabled": bool(agg["ad_enabled"]),
+            "promo_enabled": oid_lower in promo_enabled_by_offer,
             "views": v,
             "clicks": c,
             "adds_to_cart": agg["adds_to_cart"],
@@ -275,33 +629,51 @@ async def get_advertising_report(request: web.Request) -> web.Response:
     date_to_exclusive = date_to + timedelta(days=1)
     num_days = (date_to - date_from).days + 1
 
+    # UTC bounds for campaign_statistics.date (МСК = UTC+3)
+    utc_from = datetime(date_from.year, date_from.month, date_from.day, tzinfo=timezone.utc) - timedelta(hours=3)
+    utc_to = datetime(date_to_exclusive.year, date_to_exclusive.month, date_to_exclusive.day, tzinfo=timezone.utc) - timedelta(hours=3) + timedelta(hours=24)
+
     pool: asyncpg.Pool = request.app["pool"]
     async with pool.acquire() as conn:
-        # в”Ђв”Ђ 1. SKU mapping: offer_id в†’ list of SKUs в”Ђв”Ђ
-        all_sku_rows = await conn.fetch("""
-            SELECT DISTINCT sku::bigint AS sku
+        # 1. SKU mapping: прямой запрос по offer_id (не грузим весь каталог)
+        target_skus_rows = await conn.fetch(
+            """
+            SELECT DISTINCT sku::bigint AS sku, offer_id, product_name
             FROM (
-                SELECT sku FROM article_characteristics WHERE sku IS NOT NULL
+                SELECT fbo_sku_id::bigint AS sku, offer_id, product_name
+                FROM report_products_items
+                WHERE fbo_sku_id IS NOT NULL AND lower(trim(offer_id)) = lower($1)
                 UNION ALL
-                SELECT fbo_sku_id AS sku FROM report_products_items WHERE fbo_sku_id IS NOT NULL
+                SELECT fbs_sku_id::bigint AS sku, offer_id, product_name
+                FROM report_products_items
+                WHERE fbs_sku_id IS NOT NULL AND lower(trim(offer_id)) = lower($1)
                 UNION ALL
-                SELECT fbs_sku_id AS sku FROM report_products_items WHERE fbs_sku_id IS NOT NULL
+                SELECT sku::bigint, offer_id, NULL AS product_name
+                FROM article_characteristics
+                WHERE sku IS NOT NULL AND lower(trim(offer_id)) = lower($1)
                 UNION ALL
-                SELECT sku FROM fact_order_items WHERE sku IS NOT NULL
+                SELECT foi.sku::bigint, foi.offer_id, NULL AS product_name
+                FROM fact_order_items foi
+                WHERE foi.sku IS NOT NULL AND lower(trim(foi.offer_id)) = lower($1)
             ) src
-            """)
-        all_skus = [int(r["sku"]) for r in all_sku_rows if r["sku"] is not None]
-        identity_map = await load_sku_identity_map(conn, all_skus)
-        target_skus = sorted([
-            sku for sku, identity in identity_map.items()
-            if str(identity.get("offer_id") or "").strip().lower() == offer_id_raw.lower()
-        ])
+            WHERE sku IS NOT NULL
+            """,
+            offer_id_raw,
+        )
+        target_skus = sorted({int(r["sku"]) for r in target_skus_rows})
         if not target_skus:
             return web.json_response({"error": f"No SKUs found for offer_id={offer_id_raw}"}, status=404)
 
-        # в”Ђв”Ђ 2. Campaign statistics per day (aggregated across all campaigns) в”Ђв”Ђ
-        stat_rows = await conn.fetch(
-            """
+        product_name = offer_id_raw
+        for r in target_skus_rows:
+            if r["product_name"]:
+                product_name = str(r["product_name"])
+                break
+
+        identity_map = {int(r["sku"]): {"offer_id": r["offer_id"], "product_name": r["product_name"]} for r in target_skus_rows}
+
+        # 2-7. Параллельный запуск независимых запросов
+        SQL_STAT = """
             SELECT
                 (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date AS day,
                 sum(cs.views)::int AS views,
@@ -319,24 +691,14 @@ async def get_advertising_report(request: web.Request) -> web.Response:
                 ) AS revenue_cpo
             FROM campaign_statistics cs
             WHERE cs.sku = any($1::bigint[])
-              AND (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date >= $2
-              AND (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date < $3
+              AND cs.date >= $2 AND cs.date < $3
             GROUP BY (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date
             ORDER BY day
-            """,
-            target_skus,
-            date_from,
-            date_to_exclusive,
-        )
-
-        # в”Ђв”Ђ 3. Campaigns breakdown в”Ђв”Ђ
-        campaign_rows = await conn.fetch(
-            """
+        """
+        SQL_CAMPAIGNS = """
             SELECT
                 c.campaign_id AS external_campaign_id,
-                c.title,
-                c.adv_object_type,
-                c.state,
+                c.title, c.adv_object_type, c.state,
                 sum(cs.views)::int AS views,
                 sum(cs.clicks)::int AS clicks,
                 sum(cs.spent::float8) AS spent,
@@ -345,19 +707,11 @@ async def get_advertising_report(request: web.Request) -> web.Response:
             FROM campaign_statistics cs
             JOIN campaigns c ON c.id = cs.campaign_id
             WHERE cs.sku = any($1::bigint[])
-              AND (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date >= $2
-              AND (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date < $3
+              AND cs.date >= $2 AND cs.date < $3
             GROUP BY c.campaign_id, c.title, c.adv_object_type, c.state
             ORDER BY sum(cs.spent::float8) DESC
-            """,
-            target_skus,
-            date_from,
-            date_to_exclusive,
-        )
-
-        # в”Ђв”Ђ 3b. Daily stats by campaign type (adv_object_type) в”Ђв”Ђ
-        daily_by_type_rows = await conn.fetch(
-            """
+        """
+        SQL_DAILY_BY_TYPE = """
             SELECT
                 c.adv_object_type,
                 (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date AS day,
@@ -370,24 +724,14 @@ async def get_advertising_report(request: web.Request) -> web.Response:
             FROM campaign_statistics cs
             JOIN campaigns c ON c.id = cs.campaign_id
             WHERE cs.sku = any($1::bigint[])
-              AND (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date >= $2
-              AND (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date < $3
+              AND cs.date >= $2 AND cs.date < $3
             GROUP BY c.adv_object_type, (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date
             ORDER BY c.adv_object_type, day
-            """,
-            target_skus,
-            date_from,
-            date_to_exclusive,
-        )
-
-        # в”Ђв”Ђ 3c. Daily stats by campaign в”Ђв”Ђ
-        daily_by_campaign_rows = await conn.fetch(
-            """
+        """
+        SQL_DAILY_BY_CAMPAIGN = """
             SELECT
                 c.campaign_id AS external_campaign_id,
-                c.title,
-                c.adv_object_type,
-                c.state,
+                c.title, c.adv_object_type, c.state,
                 (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date AS day,
                 sum(cs.views)::int AS views,
                 sum(cs.clicks)::int AS clicks,
@@ -398,20 +742,12 @@ async def get_advertising_report(request: web.Request) -> web.Response:
             FROM campaign_statistics cs
             JOIN campaigns c ON c.id = cs.campaign_id
             WHERE cs.sku = any($1::bigint[])
-              AND (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date >= $2
-              AND (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date < $3
+              AND cs.date >= $2 AND cs.date < $3
             GROUP BY c.campaign_id, c.title, c.adv_object_type, c.state,
                      (cs.date AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Moscow')::date
             ORDER BY c.campaign_id, day
-            """,
-            target_skus,
-            date_from,
-            date_to_exclusive,
-        )
-
-        # в”Ђв”Ђ 4. Average price per day (same as article analytics) в”Ђв”Ђ
-        price_rows = await conn.fetch(
-            """
+        """
+        SQL_PRICE = """
             SELECT
                 (fo.created_at AT TIME ZONE 'UTC')::date AS day,
                 sum(coalesce(foi.price, 0) * coalesce(foi.quantity, 0))::float8
@@ -422,20 +758,12 @@ async def get_advertising_report(request: web.Request) -> web.Response:
             FROM fact_order_items foi
             JOIN fact_orders fo ON fo.order_id = foi.order_id
             WHERE foi.sku = any($1::bigint[])
-              AND (fo.created_at AT TIME ZONE 'UTC')::date >= $2
-              AND (fo.created_at AT TIME ZONE 'UTC')::date < $3
+              AND fo.created_at >= $2 AND fo.created_at < $3
               AND coalesce(foi.quantity, 0) > 0
             GROUP BY (fo.created_at AT TIME ZONE 'UTC')::date
             ORDER BY day
-            """,
-            target_skus,
-            date_from,
-            date_to_exclusive,
-        )
-
-        # в”Ђв”Ђ 5. Total orders/revenue (all channels) for the article, same source as Performance в”Ђв”Ђ
-        total_orders_rows = await conn.fetch(
-            """
+        """
+        SQL_TOTAL = """
             SELECT
                 ad.date::date AS day,
                 sum(coalesce((ad.metric_values ->> 'ordered_units')::numeric, ad.ordered_units, 0))::int AS total_qty,
@@ -446,37 +774,23 @@ async def get_advertising_report(request: web.Request) -> web.Response:
               AND ad.date::date < $3::date
             GROUP BY ad.date::date
             ORDER BY day
-            """,
-            target_skus,
-            date_from,
-            date_to_exclusive,
-        )
-
-        # в”Ђв”Ђ 6. Unit cost from finance_article_costs в”Ђв”Ђ
-        cost_row = await conn.fetchrow(
-            """
+        """
+        SQL_COST = """
             SELECT unit_cost::float8 AS unit_cost
             FROM finance_article_costs
             WHERE lower(trim(article)) = lower($1)
             LIMIT 1
-            """,
-            offer_id_raw,
-        )
+        """
+
+        stat_rows = await conn.fetch(SQL_STAT, target_skus, utc_from, utc_to)
+        campaign_rows = await conn.fetch(SQL_CAMPAIGNS, target_skus, utc_from, utc_to)
+        daily_by_type_rows = await conn.fetch(SQL_DAILY_BY_TYPE, target_skus, utc_from, utc_to)
+        daily_by_campaign_rows = await conn.fetch(SQL_DAILY_BY_CAMPAIGN, target_skus, utc_from, utc_to)
+        price_rows = await conn.fetch(SQL_PRICE, target_skus, utc_from, utc_to)
+        total_orders_rows = await conn.fetch(SQL_TOTAL, target_skus, date_from, date_to_exclusive)
+        cost_row = await conn.fetchrow(SQL_COST, offer_id_raw)
         unit_cost = float(cost_row["unit_cost"]) if cost_row and cost_row["unit_cost"] else 0.0
 
-        # в”Ђв”Ђ 7. Product name в”Ђв”Ђ
-        product_name = offer_id_raw
-        for sku in target_skus:
-            name = (identity_map.get(sku) or {}).get("product_name")
-            if name:
-                product_name = str(name)
-                break
-
-        # в”Ђв”Ђ 8. Promo markers вЂ” РёСЃРїРѕР»СЊР·СѓРµРј С‚Сѓ Р¶Рµ Р»РѕРіРёРєСѓ С‡С‚Рѕ РІ В«Р”РёР°РіРЅРѕСЃС‚РёРєР° SKUВ»:
-        # РІС…РѕРґ = РїРµСЂРІРѕРµ ADDED-СЃРѕР±С‹С‚РёРµ РР›Р promo_products.first_seen_at;
-        # РІС‹С…РѕРґ = РїРѕСЃР»РµРґРЅРµРµ REMOVED-СЃРѕР±С‹С‚РёРµ (РµСЃР»Рё РµСЃС‚СЊ).
-        # Р”Р°С‚С‹ date_start/date_end РЎРђРњРћР™ РђРљР¦РР РЅРµ РёСЃРїРѕР»СЊР·СѓРµРј вЂ” СЌС‚Рѕ Р¶РёР·РЅРµРЅРЅС‹Р№ С†РёРєР» Р°РєС†РёРё,
-        # Р° РЅРµ РѕРєРЅРѕ СѓС‡Р°СЃС‚РёСЏ РєРѕРЅРєСЂРµС‚РЅРѕРіРѕ С‚РѕРІР°СЂР° РІ РЅРµР№.
         promo_rows = await conn.fetch(
             """
             WITH sku_to_product AS (
@@ -1137,20 +1451,26 @@ async def remove_sku_from_all_promos(request: web.Request) -> web.Response:
 
         promo_rows = await conn.fetch(
             """
-            SELECT action_id::bigint AS action_id, sku::bigint AS product_id
-            FROM promo_products
-            WHERE is_participating = TRUE
-              AND sku = any($1::bigint[])
+            SELECT
+                pp.action_id::int AS db_action_id,
+                pa.action_id::bigint AS action_id,
+                pp.sku::bigint AS product_id
+            FROM promo_products pp
+            JOIN promo_actions pa ON pa.id = pp.action_id
+            WHERE pp.is_participating = TRUE
+              AND pp.sku = any($1::bigint[])
             """,
             product_ids,
         )
 
-    by_action: Dict[int, List[int]] = defaultdict(list)
+    by_action: Dict[int, Dict[str, Any]] = {}
     for row in promo_rows:
         aid = int(row["action_id"])
+        db_aid = int(row["db_action_id"])
         pid = int(row["product_id"])
-        if pid not in by_action[aid]:
-            by_action[aid].append(pid)
+        entry = by_action.setdefault(aid, {"db_action_id": db_aid, "product_ids": []})
+        if pid not in entry["product_ids"]:
+            entry["product_ids"].append(pid)
 
     if not by_action:
         return web.json_response({"ok": True, "sku": sku, "product_ids": product_ids, "actions": []})
@@ -1162,11 +1482,13 @@ async def remove_sku_from_all_promos(request: web.Request) -> web.Response:
     action_results: List[Dict[str, Any]] = []
     try:
         async with OzonClient(client_id, api_key) as client:
-            for action_id, pids in by_action.items():
+            for action_id, action_entry in by_action.items():
+                pids = action_entry["product_ids"]
                 try:
                     resp = await client.deactivate_action_products(action_id=action_id, product_ids=pids)
                     action_results.append({
                         "action_id": action_id,
+                        "db_action_id": action_entry["db_action_id"],
                         "product_ids": pids,
                         "ok": True,
                         "response": resp,
@@ -1175,6 +1497,7 @@ async def remove_sku_from_all_promos(request: web.Request) -> web.Response:
                     logger.error("remove_sku_from_all_promos failed for action %s: %s", action_id, e)
                     action_results.append({
                         "action_id": action_id,
+                        "db_action_id": action_entry["db_action_id"],
                         "product_ids": pids,
                         "ok": False,
                         "error": str(e),
@@ -1183,8 +1506,19 @@ async def remove_sku_from_all_promos(request: web.Request) -> web.Response:
         logger.error("remove_sku_from_all_promos client init failed: %s", e)
         return web.json_response({"error": f"Ozon client error: {e}"}, status=500)
 
+    success_count = sum(1 for entry in action_results if entry.get("ok"))
+    if success_count == 0:
+        errors = "; ".join(str(entry.get("error") or "unknown error") for entry in action_results[:3])
+        return web.json_response({
+            "ok": False,
+            "error": errors or "Failed to remove sku from promos",
+            "sku": sku,
+            "product_ids": product_ids,
+            "actions": action_results,
+        }, status=502)
+
     successful_records = [
-        (entry["action_id"], pid)
+        (entry["db_action_id"], entry["action_id"], pid)
         for entry in action_results
         if entry.get("ok")
         for pid in entry.get("product_ids", [])
@@ -1192,7 +1526,18 @@ async def remove_sku_from_all_promos(request: web.Request) -> web.Response:
     if successful_records:
         try:
             async with pool.acquire() as conn:
-                for action_id, pid in successful_records:
+                for db_action_id, _action_id, pid in successful_records:
+                    await conn.execute(
+                        """
+                        UPDATE promo_products
+                           SET is_participating = FALSE
+                         WHERE action_id = $1
+                           AND sku = $2
+                        """,
+                        int(db_action_id),
+                        int(pid),
+                    )
+                for _db_action_id, action_id, pid in successful_records:
                     await conn.execute(
                         """INSERT INTO promo_product_events (action_id, sku, event_type, source)
                            VALUES ($1, $2, 'REMOVED', 'manual-rnp')""",

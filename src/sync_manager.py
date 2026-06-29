@@ -367,15 +367,18 @@ class SyncManager:
             result = await self.client.get_analytics_stocks(skus)
             items = result.get("items", []) if isinstance(result, dict) else []
             return items, []
-        except OzonAPIError as exc:
-            is_retryable_server_error = exc.status_code in {500, 502, 503, 504}
+        except (OzonAPIError, RetryError) as exc:
+            root_exc = exc.last_attempt.exception() if isinstance(exc, RetryError) and exc.last_attempt else exc
+            if not isinstance(root_exc, OzonAPIError):
+                raise
+            is_retryable_server_error = root_exc.status_code in {429, 500, 502, 503, 504}
             if not is_retryable_server_error:
                 raise
             if len(skus) == 1:
                 logger.error(
                     "analytics_stocks: skipping SKU %s after server error: %s",
                     skus[0],
-                    exc,
+                    root_exc,
                 )
                 return [], [skus[0]]
 
@@ -383,11 +386,13 @@ class SyncManager:
             left_skus = skus[:middle]
             right_skus = skus[middle:]
             logger.warning(
-                "analytics_stocks: server error for chunk of %s SKU(s), splitting into %s and %s",
+                "analytics_stocks: transient error for chunk of %s SKU(s), splitting into %s and %s: %s",
                 len(skus),
                 len(left_skus),
                 len(right_skus),
+                root_exc,
             )
+            await asyncio.sleep(1.5)
             left_items, left_skipped = await self._fetch_analytics_stocks_chunk_resilient(left_skus)
             right_items, right_skipped = await self._fetch_analytics_stocks_chunk_resilient(right_skus)
             return left_items + right_items, left_skipped + right_skipped
@@ -724,6 +729,11 @@ class SyncManager:
             return None
 
         now_utc = datetime.now(timezone.utc)
+        completed_local_date = completed_at.astimezone(MSK).date()
+        now_local_date = now_utc.astimezone(MSK).date()
+        if now_local_date > completed_local_date:
+            return None
+
         age = now_utc - completed_at
         freshness_window = timedelta(hours=refresh_hours)
         if age > freshness_window:
@@ -998,6 +1008,24 @@ class SyncManager:
                 else:
                     raise
         raise last_exc if last_exc else RuntimeError("Unknown retry error")
+
+    def _is_active_campaign_request_limit_error(self, exc: BaseException) -> bool:
+        """Return True for Performance API's one-active-report limit."""
+        if isinstance(exc, RetryError) and exc.last_attempt:
+            exc = exc.last_attempt.exception()
+        if not isinstance(exc, OzonAPIError):
+            return False
+        response_text = str((exc.response_data or {}).get("text") or "").lower()
+        message_text = str(exc).lower()
+        joined = f"{message_text} {response_text}"
+        active_limit_markers = (
+            "максимум 1",
+            "maximum 1",
+            "active requests",
+            "лимит активных запросов",
+            "active request limit",
+        )
+        return any(marker in joined for marker in active_limit_markers)
 
     async def _ensure_analytics_data_schema(self) -> None:
         """Mininal'naja migracija tablicy analytics_data dlja PostgreSQL."""
@@ -1617,7 +1645,7 @@ class SyncManager:
 
             v3_by_sku: Dict[int, Dict[str, Any]] = {}
             v4_by_sku: Dict[int, Dict[str, Any]] = {}
-            chunk_size = 100
+            chunk_size = 20
             for i in range(0, len(all_skus), chunk_size):
                 chunk = all_skus[i:i + chunk_size]
                 if not chunk:
@@ -2419,7 +2447,7 @@ class SyncManager:
         sync_log = await self._create_sync_log("analytics_product_queries")
 
         now_utc = datetime.now(timezone.utc)
-        last_complete_day = datetime(now_utc.year, now_utc.month, now_utc.day, tzinfo=timezone.utc) - timedelta(days=1)
+        last_complete_day = datetime(now_utc.year, now_utc.month, now_utc.day, tzinfo=timezone.utc) - timedelta(days=2)
         if days_back <= 0:
             days_back = 30
         granularity = "day" if days_back <= 31 else "week"
@@ -2893,12 +2921,19 @@ class SyncManager:
                     await session.execute(stmt)
                     rows_upserted += 1
 
+                stock_snapshot_rows = 0
+                try:
+                    stock_snapshot_rows = await self._capture_stock_daily_snapshot(session)
+                except Exception as snap_err:
+                    logger.error(f"stock_daily_snapshot after fbs_warehouse_stocks failed (non-fatal): {snap_err}")
+
             await self._update_sync_log(sync_log, "success", rows_upserted)
             logger.info(f"fbs_warehouse_stocks sync completed: rows_upserted={rows_upserted}")
             return {
                 "rows_upserted": rows_upserted,
                 "warehouses_queried": len(warehouse_ids),
                 "api_items_received": len(rows),
+                "stock_snapshot_rows": stock_snapshot_rows,
             }
         except Exception as e:
             logger.error(f"fbs_warehouse_stocks sync failed: {e}")
@@ -3686,7 +3721,7 @@ class SyncManager:
             date_from = date_to - timedelta(days=statistics_days_back)
             if campaign_id_map:
                 external_ids = sorted(campaign_id_map.keys())
-                batch_size = 10
+                batch_size = max(1, int(settings.campaign_report_batch_size or 10))
 
                 def _is_missing_campaign_report_error(exc: BaseException) -> bool:
                     if not isinstance(exc, OzonAPIError) or exc.status_code != 404:
@@ -3703,23 +3738,6 @@ class SyncManager:
                         message_text = str(exc).lower()
                         return "campaign report" in message_text and "not ready in time" in message_text
                     return False
-
-                def _is_active_campaign_request_limit_error(exc: BaseException) -> bool:
-                    if isinstance(exc, RetryError) and exc.last_attempt:
-                        exc = exc.last_attempt.exception()
-                    if not isinstance(exc, OzonAPIError):
-                        return False
-                    response_text = str((exc.response_data or {}).get("text") or "").lower()
-                    message_text = str(exc).lower()
-                    joined = f"{message_text} {response_text}"
-                    return (
-                        "максимум 1" in joined
-                        or "maximum 1" in joined
-                        or "active requests" in joined
-                        or "лимит активных запросов" in joined
-                        or "active request limit" in joined
-                        or "( 1)" in joined
-                    )
 
                 async def _wait_campaign_report(
                     uuid: str,
@@ -3757,8 +3775,18 @@ class SyncManager:
 
                 async def _request_campaign_report_with_retry(
                     batch_external_ids: List[int],
-                    create_attempts: int = 1,
+                    create_attempts: Optional[int] = None,
+                    active_limit_delay_seconds: Optional[float] = None,
                 ) -> Dict[str, Any]:
+                    create_attempts = max(1, int(create_attempts or settings.campaign_report_create_attempts or 6))
+                    active_limit_delay_seconds = max(
+                        1.0,
+                        float(
+                            active_limit_delay_seconds
+                            if active_limit_delay_seconds is not None
+                            else settings.campaign_report_active_limit_delay_seconds
+                        ),
+                    )
                     last_error: Optional[Exception] = None
                     for create_attempt in range(1, create_attempts + 1):
                         try:
@@ -3774,7 +3802,19 @@ class SyncManager:
                             )
                         except Exception as exc:
                             root_exc = exc.last_attempt.exception() if isinstance(exc, RetryError) and exc.last_attempt else exc
-                            if _is_active_campaign_request_limit_error(root_exc):
+                            if self._is_active_campaign_request_limit_error(root_exc):
+                                last_error = root_exc
+                                if create_attempt < create_attempts:
+                                    logger.warning(
+                                        "Campaign statistics report is blocked by Ozon active-request limit; "
+                                        "waiting %.1f sec before retrying batch %s (attempt %s/%s)",
+                                        active_limit_delay_seconds,
+                                        batch_external_ids,
+                                        create_attempt,
+                                        create_attempts,
+                                    )
+                                    await asyncio.sleep(active_limit_delay_seconds)
+                                    continue
                                 raise root_exc
                             raise
                         if not uuid:
@@ -3886,7 +3926,7 @@ class SyncManager:
                         root_exc = exc.last_attempt.exception() if isinstance(exc, RetryError) and exc.last_attempt else exc
                         if isinstance(root_exc, RateLimitError) or (
                             isinstance(root_exc, OzonAPIError) and root_exc.status_code == 429
-                        ) or _is_active_campaign_request_limit_error(root_exc):
+                        ) or self._is_active_campaign_request_limit_error(root_exc):
                             warning_message = (
                                 "Campaign statistics refresh skipped due to Performance API rate limit; "
                                 "campaign list was updated successfully"
@@ -4810,6 +4850,69 @@ class SyncManager:
 
         return updated
 
+    def _build_report_product_item_row_data(
+        self,
+        row: Dict[str, Any],
+        report_id: int,
+        line_no: int,
+    ) -> Dict[str, Any]:
+        """Normalize a row from Ozon seller_products report."""
+        return {
+            "report_id": report_id,
+            "line_no": line_no,
+            "offer_id": self._pick_value(
+                row,
+                ["Offer ID", "Артикул", "Артикул товара", "РђСЂС‚РёРєСѓР»", "РђСЂС‚РёРєСѓР» С‚РѕРІР°СЂР°", "Р С’РЎР‚РЎвЂљР С‘Р С”РЎС“Р В»"],
+            ),
+            "product_name": self._pick_value(
+                row,
+                ["Name", "Название товара", "Наименование товара", "РќР°Р·РІР°РЅРёРµ С‚РѕРІР°СЂР°", "РќР°РёРјРµРЅРѕРІР°РЅРёРµ С‚РѕРІР°СЂР°", "Р СњР В°Р В·Р Р†Р В°Р Р…Р С‘Р Вµ РЎвЂљР С•Р Р†Р В°РЎР‚Р В°"],
+            ),
+            "ozon_product_id": self._parse_int_flexible(
+                self._pick_value(row, ["Ozon Product ID", "Ozon product id", "Ozon ID", "Ozon Product Id"])
+            ),
+            "fbo_sku_id": self._parse_int_flexible(
+                self._pick_value(row, ["FBO Ozon SKU ID", "SKU FBO", "FBO SKU ID"]) or self._pick_value(row, ["SKU"])
+            ),
+            "fbs_sku_id": self._parse_int_flexible(
+                self._pick_value(row, ["FBS Ozon SKU ID", "SKU FBS", "FBS SKU ID"]) or self._pick_value(row, ["SKU"])
+            ),
+            "crossborder_sku": self._pick_value(row, ["CrossBorder Ozon SKU", "CrossBorder SKU"]),
+            "barcode": self._pick_value(row, ["Barcode", "Штрихкод", "Barcode товара", "РЁС‚СЂРёС…РєРѕРґ"]),
+            "product_status": self._pick_value(row, ["Статус товара", "Product status", "Status", "РЎС‚Р°С‚СѓСЃ С‚РѕРІР°СЂР°"]),
+            "stock_fbo_available": self._parse_int_flexible(
+                self._pick_value(row, ["Доступно на складе Ozon, шт", "Доступно на складе Ozon, шт.", "Available in Ozon warehouse, pcs", "Р”РѕСЃС‚СѓРїРЅРѕ РЅР° СЃРєР»Р°РґРµ Ozon, С€С‚"])
+                or self._pick_by_contains(row, ["доступно к продаже по схеме fbo", "доступно на складе ozon", "available in ozon warehouse", "РґРѕСЃС‚СѓРїРЅРѕ Рє РїСЂРѕРґР°Р¶Рµ РїРѕ СЃС…РµРјРµ fbo"])
+            ),
+            "stock_reserved": self._parse_int_flexible(
+                self._pick_value(row, ["Зарезервировано, шт", "Зарезервировано, шт.", "Reserved, pcs", "Р—Р°СЂРµР·РµСЂРІРёСЂРѕРІР°РЅРѕ, С€С‚"])
+                or self._pick_by_contains(row, ["зарезервировано", "reserved", "Р·Р°СЂРµР·РµСЂРІРёСЂРѕРІР°РЅРѕ"])
+            ),
+            "price_current": self._parse_decimal_flexible(
+                self._pick_value(row, ["Текущая цена с учётом скидки, руб.", "Текущая цена с учетом скидки, руб.", "Current price with discount, RUB", "РўРµРєСѓС‰Р°СЏ С†РµРЅР° СЃ СѓС‡С‘С‚РѕРј СЃРєРёРґРєРё, СЂСѓР±."])
+                or self._pick_by_contains(row, ["текущая цена", "current price", "С‚РµРєСѓС‰Р°СЏ С†РµРЅР°"])
+            ),
+            "price_base": self._parse_decimal_flexible(
+                self._pick_value(row, ["Базовая цена (цена до скидок), руб.", "Base price (before discounts), RUB", "Р‘Р°Р·РѕРІР°СЏ С†РµРЅР° (С†РµРЅР° РґРѕ СЃРєРёРґРѕРє), СЂСѓР±."])
+                or self._pick_by_contains(row, ["базовая цена", "base price", "Р±Р°Р·РѕРІР°СЏ С†РµРЅР°"])
+            ),
+            "price_premium": self._parse_decimal_flexible(
+                self._pick_value(row, ["Цена Premium, руб.", "Premium price, RUB", "Р¦РµРЅР° Premium, СЂСѓР±."])
+                or self._pick_by_contains(row, ["premium"])
+            ),
+            "price_recommended": self._parse_decimal_flexible(
+                self._pick_value(row, ["Рекомендованная цена, руб.", "Recommended price, RUB", "Р РµРєРѕРјРµРЅРґРѕРІР°РЅРЅР°СЏ С†РµРЅР°, СЂСѓР±."])
+                or self._pick_by_contains(row, ["рекомендованная цена", "recommended price", "СЂРµРєРѕРјРµРЅРґРѕРІР°РЅРЅР°СЏ С†РµРЅР°"])
+            ),
+            "recommended_price_link": self._pick_value(
+                row,
+                ["Актуальная ссылка на рекомендованную цену", "Actual link to recommended price", "РђРєС‚СѓР°Р»СЊРЅР°СЏ СЃСЃС‹Р»РєР° РЅР° СЂРµРєРѕРјРµРЅРґРѕРІР°РЅРЅСѓСЋ С†РµРЅСѓ"],
+            )
+            or self._pick_by_contains(row, ["ссылка", "link", "СЃСЃС‹Р»РєР°"]),
+            "raw_data": row,
+            "last_synced_at": datetime.now(),
+        }
+
     async def sync_products_report(self, pages: int = 10, page_size: int = 100) -> Dict[str, Any]:
         """Skachivanie seller_products otcheta i zagruzka strok v report_products_items."""
         logger.info("Starting report_products sync...")
@@ -4925,55 +5028,7 @@ class SyncManager:
                         )
 
                         for i, row in enumerate(rows, start=1):
-                            row_data = {
-                                "report_id": report_id,
-                                "line_no": i,
-                                "offer_id": self._pick_value(row, ["Offer ID", "РђСЂС‚РёРєСѓР»", "РђСЂС‚РёРєСѓР» С‚РѕРІР°СЂР°", "Р С’РЎР‚РЎвЂљР С‘Р С”РЎС“Р В»"]),
-                                "product_name": self._pick_value(row, ["Name", "РќР°Р·РІР°РЅРёРµ С‚РѕРІР°СЂР°", "РќР°РёРјРµРЅРѕРІР°РЅРёРµ С‚РѕРІР°СЂР°", "Р СњР В°Р В·Р Р†Р В°Р Р…Р С‘Р Вµ РЎвЂљР С•Р Р†Р В°РЎР‚Р В°"]),
-                                "ozon_product_id": self._parse_int_flexible(
-                                    self._pick_value(row, ["Ozon Product ID", "Ozon product id", "Ozon ID", "Ozon Product Id"])
-                                ),
-                                "fbo_sku_id": self._parse_int_flexible(
-                                    self._pick_value(row, ["FBO Ozon SKU ID", "SKU FBO", "FBO SKU ID"])
-                                    or self._pick_value(row, ["SKU"])
-                                ),
-                                "fbs_sku_id": self._parse_int_flexible(
-                                    self._pick_value(row, ["FBS Ozon SKU ID", "SKU FBS", "FBS SKU ID"])
-                                    or self._pick_value(row, ["SKU"])
-                                ),
-                                "crossborder_sku": self._pick_value(row, ["CrossBorder Ozon SKU", "CrossBorder SKU"]),
-                                "barcode": self._pick_value(row, ["Barcode", "РЁС‚СЂРёС…РєРѕРґ", "Barcode С‚РѕРІР°СЂР°"]),
-                                "product_status": self._pick_value(row, ["РЎС‚Р°С‚СѓСЃ С‚РѕРІР°СЂР°", "Product status", "Status"]),
-                                "stock_fbo_available": self._parse_int_flexible(
-                                    self._pick_value(row, ["Р”РѕСЃС‚СѓРїРЅРѕ РЅР° СЃРєР»Р°РґРµ Ozon, С€С‚", "Available in Ozon warehouse, pcs"])
-                                    or self._pick_by_contains(row, ["РґРѕСЃС‚СѓРїРЅРѕ Рє РїСЂРѕРґР°Р¶Рµ РїРѕ СЃС…РµРјРµ fbo"])
-                                ),
-                                "stock_reserved": self._parse_int_flexible(
-                                    self._pick_value(row, ["Р—Р°СЂРµР·РµСЂРІРёСЂРѕРІР°РЅРѕ, С€С‚", "Reserved, pcs"])
-                                    or self._pick_by_contains(row, ["Р·Р°СЂРµР·РµСЂРІРёСЂРѕРІР°РЅРѕ"])
-                                ),
-                                "price_current": self._parse_decimal_flexible(
-                                    self._pick_value(row, ["РўРµРєСѓС‰Р°СЏ С†РµРЅР° СЃ СѓС‡С‘С‚РѕРј СЃРєРёРґРєРё, СЂСѓР±.", "Current price with discount, RUB"])
-                                    or self._pick_by_contains(row, ["С‚РµРєСѓС‰Р°СЏ С†РµРЅР°", "current price"])
-                                ),
-                                "price_base": self._parse_decimal_flexible(
-                                    self._pick_value(row, ["Р‘Р°Р·РѕРІР°СЏ С†РµРЅР° (С†РµРЅР° РґРѕ СЃРєРёРґРѕРє), СЂСѓР±.", "Base price (before discounts), RUB"])
-                                    or self._pick_by_contains(row, ["Р±Р°Р·РѕРІР°СЏ С†РµРЅР°", "base price"])
-                                ),
-                                "price_premium": self._parse_decimal_flexible(
-                                    self._pick_value(row, ["Р¦РµРЅР° Premium, СЂСѓР±.", "Premium price, RUB"])
-                                    or self._pick_by_contains(row, ["premium"])
-                                ),
-                                "price_recommended": self._parse_decimal_flexible(
-                                    self._pick_value(row, ["Р РµРєРѕРјРµРЅРґРѕРІР°РЅРЅР°СЏ С†РµРЅР°, СЂСѓР±.", "Recommended price, RUB"])
-                                    or self._pick_by_contains(row, ["СЂРµРєРѕРјРµРЅРґРѕРІР°РЅРЅР°СЏ С†РµРЅР°", "recommended price"])
-                                ),
-                                "recommended_price_link": self._pick_value(
-                                    row, ["РђРєС‚СѓР°Р»СЊРЅР°СЏ СЃСЃС‹Р»РєР° РЅР° СЂРµРєРѕРјРµРЅРґРѕРІР°РЅРЅСѓСЋ С†РµРЅСѓ", "Actual link to recommended price"]
-                                ) or self._pick_by_contains(row, ["СЃСЃС‹Р»РєР°", "link"]),
-                                "raw_data": row,
-                                "last_synced_at": datetime.now(),
-                            }
+                            row_data = self._build_report_product_item_row_data(row, report_id=report_id, line_no=i)
                             stmt_item = pg_insert(ReportProductItem).values(**row_data)
                             stmt_item = stmt_item.on_conflict_do_update(
                                 constraint="uq_report_products_items_report_line",
@@ -5928,7 +5983,13 @@ class SyncManager:
         except Exception as e:
             logger.error(f"Realization v2 sync failed: {e}")
             results["realization_v2"] = {"error": str(e)}
-        
+
+        try:
+            results["transactions"] = await self.sync_transactions(days_back=max(days_back, 30))
+        except Exception as e:
+            logger.error(f"Transactions sync failed: {e}")
+            results["transactions"] = {"error": str(e)}
+
         try:
             results["returns"] = await self.sync_returns()
         except Exception as e:
@@ -5982,6 +6043,12 @@ class SyncManager:
         except Exception as e:
             logger.error(f"Report warehouse stock sync failed: {e}")
             results["report_warehouse_stock"] = {"error": str(e)}
+
+        try:
+            results["campaigns"] = await self.sync_campaigns()
+        except Exception as e:
+            logger.error(f"Campaigns sync failed: {e}")
+            results["campaigns"] = {"error": str(e)}
 
         logger.info("Full sync completed")
         return results

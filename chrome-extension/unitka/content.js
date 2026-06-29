@@ -1,15 +1,20 @@
 "use strict";
-// Isolated-world bridge: слушает window-события страницы и пересылает в фон.
-// Также отвечает на "ping" напрямую (быстрая проверка наличия расширения).
+// Isolated-world bridge: listens for page events and forwards them to the
+// extension background worker.
 
 window.addEventListener("ozon-unitka:request", (e) => {
   const { requestId, action, payload } = e.detail || {};
   if (!requestId || !action) return;
 
-  // Быстрый отклик для ping — не нужно дёргать background
-  if (action === "ping") {
+  if (!chrome?.runtime?.sendMessage) {
     window.dispatchEvent(new CustomEvent("ozon-unitka:response", {
-      detail: { requestId, response: { ok: true, version: "0.1.0" } },
+      detail: {
+        requestId,
+        response: {
+          ok: false,
+          error: "Extension bridge is unavailable: chrome.runtime.sendMessage is missing",
+        },
+      },
     }));
     return;
   }
@@ -17,7 +22,9 @@ window.addEventListener("ozon-unitka:request", (e) => {
   try {
     chrome.runtime.sendMessage({ action, ...(payload || {}) }, (resp) => {
       const err = chrome.runtime.lastError;
-      const response = err ? { ok: false, error: err.message } : (resp || { ok: false, error: "no response" });
+      const response = err
+        ? { ok: false, error: err.message }
+        : (resp || { ok: false, error: "no response" });
       window.dispatchEvent(new CustomEvent("ozon-unitka:response", {
         detail: { requestId, response },
       }));

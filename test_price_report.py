@@ -1,0 +1,116 @@
+from decimal import Decimal
+
+from src.dashboard.routes.prices import build_price_report_item
+from src.sync_manager import SyncManager
+
+
+def test_build_price_report_item_marks_beneficial_when_current_price_is_not_above_recommended():
+    row = {
+        "offer_id": "ART-1",
+        "product_name": "Table",
+        "ozon_product_id": 1001,
+        "fbo_sku_id": 2001,
+        "fbs_sku_id": None,
+        "price_current": Decimal("990.00"),
+        "price_base": Decimal("1290.00"),
+        "price_recommended": Decimal("1000.00"),
+        "recommended_price_link": "https://example.test/p/1",
+        "last_synced_at": None,
+    }
+
+    item = build_price_report_item(row)
+
+    assert item["offer_id"] == "ART-1"
+    assert item["price_current"] == 990.0
+    assert item["price_recommended"] == 1000.0
+    assert item["recommended_price_link"] == "https://example.test/p/1"
+    assert item["is_beneficial_price"] is True
+    assert item["beneficial_price_status"] == "Да"
+
+
+def test_build_price_report_item_marks_not_beneficial_when_current_price_is_above_recommended():
+    row = {
+        "offer_id": "ART-2",
+        "product_name": "Chair",
+        "ozon_product_id": 1002,
+        "fbo_sku_id": None,
+        "fbs_sku_id": 3002,
+        "price_current": Decimal("1200.00"),
+        "price_base": Decimal("1500.00"),
+        "price_recommended": Decimal("1000.00"),
+        "recommended_price_link": "",
+        "last_synced_at": None,
+    }
+
+    item = build_price_report_item(row)
+
+    assert item["is_beneficial_price"] is False
+    assert item["beneficial_price_status"] == "Нет"
+
+
+def test_build_price_report_item_leaves_beneficial_status_empty_without_comparable_prices():
+    row = {
+        "offer_id": "ART-3",
+        "product_name": "Shelf",
+        "ozon_product_id": 1003,
+        "fbo_sku_id": 2003,
+        "fbs_sku_id": 3003,
+        "price_current": Decimal("700.00"),
+        "price_base": Decimal("900.00"),
+        "price_recommended": None,
+        "recommended_price_link": "",
+        "last_synced_at": None,
+    }
+
+    item = build_price_report_item(row)
+
+    assert item["is_beneficial_price"] is None
+    assert item["beneficial_price_status"] == ""
+
+
+def test_sync_products_report_helpers_read_russian_ozon_price_headers():
+    manager = SyncManager(client=None)
+    row = {
+        "Артикул": "ART-4",
+        "Название товара": "Bench",
+        "Текущая цена с учётом скидки, руб.": "1 190,50",
+        "Базовая цена (цена до скидок), руб.": "1 490",
+        "Рекомендованная цена, руб.": "1 200",
+        "Актуальная ссылка на рекомендованную цену": "https://example.test/bench",
+    }
+
+    assert manager._pick_value(row, ["Артикул"]) == "ART-4"
+    assert manager._parse_decimal_flexible(
+        manager._pick_value(row, ["Текущая цена с учётом скидки, руб."])
+    ) == 1190.5
+    assert manager._parse_decimal_flexible(
+        manager._pick_by_contains(row, ["рекомендованная цена"])
+    ) == 1200.0
+    assert manager._pick_by_contains(row, ["ссылка"]) == "https://example.test/bench"
+
+
+def test_sync_products_report_row_builder_reads_russian_price_columns():
+    manager = SyncManager(client=None)
+    row = {
+        "Артикул": "ART-5",
+        "Название товара": "Rack",
+        "Ozon Product ID": "555",
+        "FBO Ozon SKU ID": "666",
+        "FBS Ozon SKU ID": "777",
+        "Текущая цена с учётом скидки, руб.": "1 190,50",
+        "Базовая цена (цена до скидок), руб.": "1 490",
+        "Рекомендованная цена, руб.": "1 200",
+        "Актуальная ссылка на рекомендованную цену": "https://example.test/rack",
+    }
+
+    data = manager._build_report_product_item_row_data(row, report_id=10, line_no=2)
+
+    assert data["offer_id"] == "ART-5"
+    assert data["product_name"] == "Rack"
+    assert data["ozon_product_id"] == 555
+    assert data["fbo_sku_id"] == 666
+    assert data["fbs_sku_id"] == 777
+    assert data["price_current"] == 1190.5
+    assert data["price_base"] == 1490.0
+    assert data["price_recommended"] == 1200.0
+    assert data["recommended_price_link"] == "https://example.test/rack"

@@ -6,7 +6,7 @@ from src.dashboard.routes.pages import (
 )
 from src.dashboard.routes.system import (
     health, restart_server, create_pool, close_pool,
-    sync_ozon_data, get_sync_status,
+    sync_ozon_data, get_sync_status, get_sync_reports,
 )
 from src.dashboard.routes.orders import get_orders, get_sales, get_articles
 from src.dashboard.routes.returns import get_returns
@@ -21,7 +21,7 @@ from src.dashboard.routes.finance import (
     analyze_finance_data, get_realization_v2, get_wb_finance_report_daily,
 )
 from src.dashboard.routes.stocks import (
-    get_warehouse_stock, get_analytics_stocks, get_stock_balances,
+    get_warehouse_stock, get_analytics_stocks, get_stock_balances, get_wb_stock_balances,
     get_analytics_turnover, get_average_delivery_time,
 )
 from src.dashboard.routes.analytics import (
@@ -33,7 +33,7 @@ from src.dashboard.routes.actions import (
     activate_action_products, deactivate_action_products,
 )
 from src.dashboard.routes.advertising import (
-    get_advertising_summary, get_advertising_report, toggle_campaign,
+    get_advertising_summary, get_advertising_report, get_wb_advertising_report, toggle_campaign,
     disable_ad_for_sku, remove_sku_from_all_promos,
 )
 from src.dashboard.routes.reviews import (
@@ -55,7 +55,7 @@ from src.dashboard.routes.unitka import (
     get_unitka_shop_averages,
     post_unitka_import_bestsellers, post_unitka_import_competitor,
     get_unitka_competitors_recent,
-    get_unitka_metrics,
+    get_unitka_metrics, get_unitka_refresh_targets, post_unitka_fetch_bestsellers_direct,
 )
 from src.dashboard.routes.supply import (
     get_supply_plan, save_supply_plan_state, reset_hidden_supply_plan_items,
@@ -79,6 +79,7 @@ from src.dashboard.routes.palletization_routes import (
     palletization_pallets_calculate,
 )
 from src.dashboard.routes.report import get_monthly_report
+from src.dashboard.routes.prices import get_price_report
 from src.dashboard.routes.serp import (
     plugin_poll, plugin_result,
     post_serp_scrape, post_serp_scrape_by_sku,
@@ -114,6 +115,7 @@ def create_app() -> web.Application:
     app.router.add_get("/api/orders", get_orders)
     app.router.add_get("/api/sales", get_sales)
     app.router.add_get("/api/actions", get_actions)
+    app.router.add_get("/api/price-report", get_price_report)
     app.router.add_get("/api/action-products", get_action_products)
     app.router.add_get("/api/returns", get_returns)
     app.router.add_get("/api/cash-flow", get_cash_flow)
@@ -125,6 +127,7 @@ def create_app() -> web.Application:
     app.router.add_get("/api/returns-analytics", get_returns_analytics)
     app.router.add_get("/api/actions-report", get_actions_report)
     app.router.add_get("/api/advertising-report", get_advertising_report)
+    app.router.add_get("/api/wb/advertising-report", get_wb_advertising_report)
     app.router.add_get("/api/reviews-report", get_reviews_report)
     app.router.add_get("/api/reviews-report/{sku}", get_reviews_report_detail)
     app.router.add_get("/api/reviews/service-status", get_reviews_service_status)
@@ -144,6 +147,7 @@ def create_app() -> web.Application:
     app.router.add_post("/api/rnp/sku/remove-promos", remove_sku_from_all_promos)
     app.router.add_get("/api/unitka/clusters", get_unitka_clusters)
     app.router.add_get("/api/unitka/offer-search", get_unitka_offer_search)
+    app.router.add_get("/api/unitka/refresh-targets", get_unitka_refresh_targets)
     app.router.add_get("/api/unitka/logistics-tariff", get_unitka_logistics_tariff)
     app.router.add_get("/api/unitka/load-fact", get_unitka_load_fact)
     app.router.add_get("/api/unitka/fetch-dimensions", get_unitka_fetch_dimensions)
@@ -153,6 +157,7 @@ def create_app() -> web.Application:
     app.router.add_post("/api/unitka/import/competitor", post_unitka_import_competitor)
     app.router.add_get("/api/unitka/competitors/recent", get_unitka_competitors_recent)
     app.router.add_get("/api/unitka/metrics", get_unitka_metrics)
+    app.router.add_post("/api/unitka/fetch-bestsellers-direct", post_unitka_fetch_bestsellers_direct)
     app.router.add_post("/api/action-products/activate", activate_action_products)
     app.router.add_post("/api/action-products/deactivate", deactivate_action_products)
     app.router.add_post("/api/finance-report/plan", save_finance_plan)
@@ -160,6 +165,7 @@ def create_app() -> web.Application:
     app.router.add_post("/api/sync-ozon", sync_ozon_data)
     app.router.add_post("/api/ozon/cluster-warehouses/sync", sync_cluster_warehouses_to_db)
     app.router.add_get("/api/sync-status", get_sync_status)
+    app.router.add_get("/api/sync-reports", get_sync_reports)
     app.router.add_get("/api/finance-costs", get_finance_costs)
     app.router.add_post("/api/finance-costs/upload", upload_finance_costs)
     app.router.add_get("/api/settings/costs", get_settings_costs)
@@ -168,6 +174,7 @@ def create_app() -> web.Application:
     app.router.add_get("/api/warehouse-stock", get_warehouse_stock)
     app.router.add_get("/api/analytics-stocks", get_analytics_stocks)
     app.router.add_get("/api/stock-balances", get_stock_balances)
+    app.router.add_get("/api/wb/stock-balances", get_wb_stock_balances)
     app.router.add_get("/api/analytics-product-queries", get_analytics_product_queries)
     app.router.add_get("/api/article-query-matrix", get_article_query_matrix)
     app.router.add_get("/api/article-analytics", get_article_analytics)

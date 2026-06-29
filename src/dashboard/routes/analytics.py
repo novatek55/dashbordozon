@@ -17,6 +17,36 @@ from src.dashboard.helpers import (
 )
 
 
+def split_pdp_visitors_by_source(
+    pdp_visitors: float,
+    campaign_clicks: float,
+    ad_impressions: float,
+    total_impressions: float,
+) -> Tuple[float, float]:
+    total = max(0.0, as_float(pdp_visitors, 0.0))
+    if total <= 0:
+        return (0.0, 0.0)
+
+    clicks = max(0.0, as_float(campaign_clicks, 0.0))
+    if clicks > 0:
+        ad_value = min(total, clicks)
+    else:
+        impressions = max(0.0, as_float(total_impressions, 0.0))
+        ad_views = max(0.0, as_float(ad_impressions, 0.0))
+        ad_value = total * min(1.0, ad_views / impressions) if impressions > 0 and ad_views > 0 else 0.0
+
+    seo_value = max(0.0, total - ad_value)
+    return (ad_value, seo_value)
+
+
+def choose_position_category(analytics_position: Any, query_position: Any) -> float:
+    analytics_value = as_float(analytics_position, 0.0)
+    if analytics_value > 0:
+        return analytics_value
+    query_value = as_float(query_position, 0.0)
+    return query_value if query_value > 0 else 0.0
+
+
 async def get_analytics_product_queries(request: web.Request) -> web.Response:
     sku_raw = (request.query.get("sku") or "").strip()
     offer_id_raw = normalize_offer_id((request.query.get("offer_id") or "").strip())
@@ -585,6 +615,21 @@ async def get_article_analytics(request: web.Request) -> web.Response:
             start_day,
             date_to_exclusive.date(),
         )
+        active_ad_rows = await _fetch_optional(
+            """
+            SELECT DISTINCT cs.sku::bigint AS sku
+            FROM campaign_statistics cs
+            JOIN campaigns c ON c.id = cs.campaign_id
+            WHERE cs.sku = any($1::bigint[])
+              AND coalesce(c.state, '') NOT IN (
+                'CAMPAIGN_STATE_STOPPED',
+                'CAMPAIGN_STATE_INACTIVE',
+                'CAMPAIGN_STATE_ARCHIVED',
+                'CAMPAIGN_STATE_FINISHED'
+              )
+            """,
+            sku_list,
+        )
 
         stock_rows = await _fetch_optional(
             """
@@ -823,6 +868,39 @@ async def get_article_analytics(request: web.Request) -> web.Response:
             start_day,
             date_to_exclusive.date(),
         )
+        stock_snapshot_daily_rows = await _fetch_optional(
+            """
+            SELECT
+                sku,
+                snapshot_date::date AS day,
+                sum(stock_total) FILTER (WHERE stock_type = 'FBO')::float8 AS stock_fbo,
+                sum(stock_total) FILTER (WHERE stock_type = 'FBS')::float8 AS stock_fbs
+            FROM stock_daily_snapshots
+            WHERE sku = any($1::bigint[])
+              AND snapshot_date::date >= $2::date
+              AND snapshot_date::date < $3::date
+            GROUP BY sku, snapshot_date::date
+            """,
+            sku_list,
+            start_day,
+            date_to_exclusive.date(),
+        )
+        query_position_daily_rows = await _fetch_optional(
+            """
+            SELECT
+                sku,
+                period_start::date AS day,
+                avg(nullif(avg_position, 0))::float8 AS avg_position
+            FROM analytics_product_query_summary
+            WHERE sku = any($1::bigint[])
+              AND period_start::date >= $2::date
+              AND period_start::date < $3::date
+            GROUP BY sku, period_start::date
+            """,
+            sku_list,
+            start_day,
+            date_to_exclusive.date(),
+        )
 
     product_map: Dict[int, Dict[str, Any]] = {
         int(r["sku"]): {
@@ -941,6 +1019,11 @@ async def get_article_analytics(request: web.Request) -> web.Response:
             "ad_spend": as_float(r["spent"], 0.0),
             "ad_revenue": as_float(r["ad_revenue"], 0.0),
         }
+    active_ad_skus = {
+        int(r["sku"])
+        for r in active_ad_rows
+        if r.get("sku") is not None
+    }
     price_daily_map: Dict[int, Dict[date, Dict[str, float]]] = {}
     for r in price_daily_rows:
         sku = int(r["sku"])
@@ -963,6 +1046,17 @@ async def get_article_analytics(request: web.Request) -> web.Response:
             bucket["ordered_units_fbo"] += qty
         elif schema in {"FBS", "RFBS"}:
             bucket["ordered_units_fbs"] += qty
+    stock_snapshot_daily_map: Dict[int, Dict[date, Dict[str, float]]] = {}
+    for r in stock_snapshot_daily_rows:
+        sku = int(r["sku"])
+        stock_snapshot_daily_map.setdefault(sku, {})[r["day"]] = {
+            "stock_fbo": as_float(r["stock_fbo"], 0.0),
+            "stock_fbs": as_float(r["stock_fbs"], 0.0),
+        }
+    query_position_daily_map: Dict[int, Dict[date, float]] = {}
+    for r in query_position_daily_rows:
+        sku = int(r["sku"])
+        query_position_daily_map.setdefault(sku, {})[r["day"]] = as_float(r["avg_position"], 0.0)
 
     sku_daily: Dict[Tuple[int, str], Dict[date, Dict[str, float]]] = {}
     for r in daily_rows:
@@ -1035,6 +1129,8 @@ async def get_article_analytics(request: web.Request) -> web.Response:
         ad_by_day = ad_daily_map.get(sku, {})
         price_by_day = price_daily_map.get(sku, {})
         stock_split_by_day = stock_split_daily_map.get(sku, {})
+        stock_snapshot_by_day = stock_snapshot_daily_map.get(sku, {})
+        query_position_by_day = query_position_daily_map.get(sku, {})
         review_by_day = review_daily_map.get(sku, {})
 
         daily_points: List[Dict[str, Any]] = []
@@ -1043,16 +1139,25 @@ async def get_article_analytics(request: web.Request) -> web.Response:
             ad_vals = ad_by_day.get(d, {})
             price_vals = price_by_day.get(d, {})
             stock_split_vals = stock_split_by_day.get(d, {})
+            stock_snapshot_vals = stock_snapshot_by_day.get(d, {})
             impressions_day = as_float(vals.get("hits_view"), 0.0)
             ad_impressions_day = as_float(ad_vals.get("ad_impressions"), 0.0)
             seo_impressions_day = max(0.0, impressions_day - ad_impressions_day)
             pdp_visitors_day = as_float(vals.get("session_view_pdp"), 0.0)
-            pdp_ad_clicks_day = as_float(ad_vals.get("ad_clicks"), 0.0)
-            pdp_seo_visitors_day = max(0.0, pdp_visitors_day - pdp_ad_clicks_day)
+            pdp_ad_clicks_day, pdp_seo_visitors_day = split_pdp_visitors_by_source(
+                pdp_visitors_day,
+                as_float(ad_vals.get("ad_clicks"), 0.0),
+                ad_impressions_day,
+                impressions_day,
+            )
             clicks_day = as_float(vals.get("hits_tocart"), 0.0)
             orders_day = as_float(vals.get("ordered_units"), 0.0)
             orders_fbo_day = as_float(stock_split_vals.get("ordered_units_fbo"), 0.0)
             orders_fbs_day = as_float(stock_split_vals.get("ordered_units_fbs"), 0.0)
+            position_day = choose_position_category(
+                vals.get("position_category"),
+                query_position_by_day.get(d),
+            )
             ctr_day = (safe_divide(clicks_day, impressions_day) or 0.0) * 100.0
             conversion_day = (safe_divide(orders_day, clicks_day) or 0.0) * 100.0
             daily_points.append(
@@ -1068,10 +1173,12 @@ async def get_article_analytics(request: web.Request) -> web.Response:
                     "ordered_units": orders_day,
                     "ordered_units_fbo": orders_fbo_day,
                     "ordered_units_fbs": orders_fbs_day,
+                    "stock_fbo": as_float(stock_snapshot_vals.get("stock_fbo"), 0.0),
+                    "stock_fbs": as_float(stock_snapshot_vals.get("stock_fbs"), 0.0),
                     "revenue": as_float(vals.get("revenue"), 0.0),
                     "ctr": ctr_day,
                     "conversion": conversion_day,
-                    "position_category": as_float(vals.get("position_category"), 0.0),
+                    "position_category": position_day,
                     "ad_spend": as_float(ad_vals.get("ad_spend"), 0.0),
                     "ad_revenue": as_float(ad_vals.get("ad_revenue"), 0.0),
                     "avg_seller_price": as_float(price_vals.get("avg_seller_price"), 0.0),
@@ -1091,7 +1198,7 @@ async def get_article_analytics(request: web.Request) -> web.Response:
         returns_30d = _sum_metric(day_map, "returns_units")
         cancellations_30d = _sum_metric(day_map, "cancellations")
         ad_impressions_30d = sum(as_float(v.get("ad_impressions"), 0.0) for v in ad_by_day.values())
-        ad_clicks_30d = sum(as_float(v.get("ad_clicks"), 0.0) for v in ad_by_day.values())
+        ad_clicks_30d = sum(as_float(p.get("pdp_ad_clicks"), 0.0) for p in daily_points)
         seo_impressions_30d = max(0.0, impressions_30d - ad_impressions_30d)
 
         ctr_30d = (safe_divide(clicks_30d, impressions_30d) or 0.0) * 100.0
@@ -1104,8 +1211,12 @@ async def get_article_analytics(request: web.Request) -> web.Response:
         conv_previous = safe_divide(_sum_metric(day_map, "ordered_units", previous_days), _sum_metric(day_map, "hits_tocart", previous_days)) or 0.0
         revenue_current = _sum_metric(day_map, "revenue", current_days)
         revenue_previous = _sum_metric(day_map, "revenue", previous_days)
-        pos_current = _avg_metric(day_map, "position_category", current_days)
-        pos_previous = _avg_metric(day_map, "position_category", previous_days)
+        position_by_day = {
+            datetime.fromisoformat(str(p["day"])).date(): {"position_category": as_float(p.get("position_category"), 0.0)}
+            for p in daily_points
+        }
+        pos_current = _avg_metric(position_by_day, "position_category", current_days)
+        pos_previous = _avg_metric(position_by_day, "position_category", previous_days)
 
         ctr_delta = _pct_delta(ctr_current, ctr_previous)
         conversion_delta = _pct_delta(conv_current, conv_previous)
@@ -1229,7 +1340,7 @@ async def get_article_analytics(request: web.Request) -> web.Response:
                 "returns_30d": returns_30d,
                 "cancellations_30d": cancellations_30d,
                 "delivered_units_30d": delivered_units_30d,
-                "position_category_30d": _avg_metric(day_map, "position_category"),
+                "position_category_30d": _avg_metric(position_by_day, "position_category"),
                 "trend_window_days": trend_window,
                 "kpi_score": score,
                 "kpi_status": kpi_status,
@@ -1247,6 +1358,7 @@ async def get_article_analytics(request: web.Request) -> web.Response:
                     "session_search_30d": _sum_metric(day_map, "session_view_search"),
                     "session_pdp_30d": _sum_metric(day_map, "session_view_pdp"),
                 },
+                "has_active_ads": sku in active_ad_skus,
                 "promos": promo_map.get(sku, []),
                 "daily": daily_points,
             }

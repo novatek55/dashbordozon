@@ -10,6 +10,48 @@ import asyncpg
 logger = logging.getLogger(__name__)
 
 
+async def _load_our_skus(conn: asyncpg.Connection) -> set[int]:
+    rows = await conn.fetch(
+        """
+        SELECT DISTINCT sku
+        FROM (
+            SELECT product_id::bigint AS sku
+            FROM products
+            WHERE product_id IS NOT NULL
+              AND COALESCE(is_visible, TRUE) = TRUE
+
+            UNION
+            SELECT ((raw_data::jsonb)->'product_info_v3'->>'sku')::bigint AS sku
+            FROM products
+            WHERE COALESCE(is_visible, TRUE) = TRUE
+              AND (raw_data::jsonb)->'product_info_v3'->>'sku' ~ '^[0-9]+$'
+
+            UNION
+            SELECT ozon_product_id::bigint AS sku
+            FROM report_products_items
+            WHERE ozon_product_id IS NOT NULL
+
+            UNION
+            SELECT fbo_sku_id::bigint AS sku
+            FROM report_products_items
+            WHERE fbo_sku_id IS NOT NULL
+
+            UNION
+            SELECT fbs_sku_id::bigint AS sku
+            FROM report_products_items
+            WHERE fbs_sku_id IS NOT NULL
+
+            UNION
+            SELECT sku::bigint AS sku
+            FROM fact_order_items
+            WHERE sku IS NOT NULL
+        ) src
+        WHERE sku IS NOT NULL
+        """
+    )
+    return {int(r["sku"]) for r in rows if r["sku"] is not None}
+
+
 # ────────────────────────────────────────────────────────────────────────────
 # Снимки выдачи
 # ────────────────────────────────────────────────────────────────────────────
@@ -22,9 +64,9 @@ async def save_snapshot(
 ) -> int:
     """Сохраняет снимок выдачи в БД. Возвращает snapshot_id."""
     async with pool.acquire() as conn:
-        # SKU наших товаров
-        our_skus_rows = await conn.fetch("SELECT product_id FROM products WHERE is_visible = true")
-        our_skus = {r["product_id"] for r in our_skus_rows}
+        # SKU наших товаров: карточка Ozon может совпасть с product_id, sku из product_info_v3,
+        # ozon_product_id или FBO/FBS SKU из seller-products отчета.
+        our_skus = await _load_our_skus(conn)
 
         # SKU конкурентов из справочника
         comp_rows = await conn.fetch("SELECT sku FROM serp_competitors")
@@ -49,9 +91,9 @@ async def save_snapshot(
                 """
                 INSERT INTO serp_positions
                     (snapshot_id, position, sku, title, brand, price, price_before,
-                     rating, review_count, stock, promo_label, thumbnail_url,
-                     revenue_30d, sales_per_day, is_our_product, is_competitor)
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+                     rating, review_count, stock, promo_label, delivery_text, thumbnail_url,
+                     revenue_30d, sales_per_day, bestsellers_data, is_our_product, is_competitor)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16::jsonb,$17,$18)
                 ON CONFLICT (snapshot_id, position) DO NOTHING
                 """,
                 snapshot_id,
@@ -65,9 +107,11 @@ async def save_snapshot(
                 _to_int(pos.get("review_count")),
                 _to_int(pos.get("stock")),
                 (pos.get("promo_label") or "")[:100] or None,
+                (pos.get("delivery_text") or "")[:120] or None,
                 pos.get("thumbnail_url") or None,
                 _to_decimal(pos.get("revenue_30d")),
                 _to_float(pos.get("sales_per_day")),
+                json.dumps(pos.get("bestsellers_data")) if pos.get("bestsellers_data") is not None else None,
                 bool(sku and sku in our_skus),
                 bool(sku and sku in competitor_skus),
             )
@@ -93,21 +137,28 @@ async def get_latest_snapshot(pool: asyncpg.Pool, query_text: str) -> Optional[D
         positions = await conn.fetch(
             """
             SELECT position, sku, title, brand, price, price_before,
-                   rating, review_count, stock, promo_label, thumbnail_url,
-                   revenue_30d, sales_per_day, is_our_product, is_competitor
+                   rating, review_count, stock, promo_label, delivery_text, thumbnail_url,
+                   revenue_30d, sales_per_day, bestsellers_data, is_our_product, is_competitor
             FROM serp_positions
             WHERE snapshot_id = $1
             ORDER BY position
             """,
             snap["id"],
         )
+        our_skus = await _load_our_skus(conn)
+
+    serialized_positions = [_serialize_row(p) for p in positions]
+    for pos in serialized_positions:
+        sku = _to_bigint(pos.get("sku"))
+        if sku in our_skus:
+            pos["is_our_product"] = True
 
     return {
         "snapshot_id": snap["id"],
         "query_text": snap["query_text"],
         "scraped_at": snap["scraped_at"].isoformat(),
         "position_count": snap["position_count"],
-        "positions": [_serialize_row(p) for p in positions],
+        "positions": serialized_positions,
     }
 
 
@@ -295,13 +346,15 @@ async def get_article_serp_report(pool: asyncpg.Pool, sku: int) -> Dict:
             "snapshot_id": None,
         }
 
+    report_positions = build_serp_report_rows(snapshot["positions"], sku)
     our_pos = next((p for p in snapshot["positions"] if p.get("sku") == sku), None)
     return {
         "primary_query": primary["query_text"],
         "set_manually": primary["set_manually"],
         "our_position": our_pos["position"] if our_pos else None,
         "our_price": our_pos["price"] if our_pos else None,
-        "positions": snapshot["positions"],
+        "positions": report_positions,
+        "snapshot_position_count": len(snapshot["positions"]),
         "scraped_at": snapshot["scraped_at"],
         "snapshot_id": snapshot["snapshot_id"],
     }
@@ -353,3 +406,49 @@ def _serialize_row(row) -> Dict:
         else:
             result[key] = val
     return result
+
+
+def build_serp_report_rows(
+    positions: List[Dict[str, Any]],
+    our_sku: Optional[int] = None,
+    top_n: int = 30,
+) -> List[Dict[str, Any]]:
+    """Возвращает top-N + наш SKU + отмеченных конкурентов вне top-N."""
+    safe_positions = [dict(item) for item in (positions or []) if isinstance(item, dict)]
+    if not safe_positions:
+        return []
+
+    normalized_our_sku = _to_bigint(our_sku)
+    top_rows = safe_positions[:top_n]
+    seen_skus = {(_to_bigint(row.get("sku")), _to_int(row.get("position"))) for row in top_rows}
+    extra_rows: List[Dict[str, Any]] = []
+
+    for row in safe_positions[top_n:]:
+        row_sku = _to_bigint(row.get("sku"))
+        row_pos = _to_int(row.get("position"))
+        is_our_row = normalized_our_sku is not None and row_sku == normalized_our_sku
+        is_marked_competitor = bool(row.get("is_competitor"))
+        if not is_our_row and not is_marked_competitor:
+            continue
+        key = (row_sku, row_pos)
+        if key in seen_skus:
+            continue
+        row["outside_top30"] = True
+        if is_our_row:
+            row["is_our_product"] = True
+        row["report_group"] = "our" if is_our_row else "competitor"
+        extra_rows.append(row)
+        seen_skus.add(key)
+
+    report_rows: List[Dict[str, Any]] = []
+    for idx, row in enumerate(top_rows):
+        row_is_our = normalized_our_sku is not None and _to_bigint(row.get("sku")) == normalized_our_sku
+        if row_is_our:
+            row["is_our_product"] = True
+        row["outside_top30"] = False
+        row["report_group"] = "our" if row_is_our or row.get("is_our_product") else (
+            "competitor" if row.get("sku") and not row.get("is_our_product") else "other"
+        )
+        report_rows.append(row)
+    report_rows.extend(extra_rows)
+    return report_rows

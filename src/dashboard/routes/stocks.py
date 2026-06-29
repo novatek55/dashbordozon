@@ -1043,6 +1043,119 @@ async def get_stock_balances(request: web.Request) -> web.Response:
     })
 
 
+async def get_wb_stock_balances(request: web.Request) -> web.Response:
+    """WB stock balances shaped like Ozon stock_balances for shared UI."""
+    offer_id = (request.query.get("offer_id") or "").strip()
+
+    params: List[Any] = []
+    conditions: List[str] = []
+    idx = 1
+    if offer_id:
+        conditions.append(f"(supplier_article = ${idx} OR nm_id::text = ${idx})")
+        params.append(offer_id)
+        idx += 1
+    where_sql = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+    pool: asyncpg.Pool = request.app["pool"]
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            f"""
+            SELECT
+                nm_id,
+                supplier_article,
+                max(coalesce(subject, category, brand, supplier_article, nm_id::text)) AS name,
+                warehouse_name,
+                sum(coalesce(quantity, 0))::bigint AS quantity,
+                sum(coalesce(in_way_to_client, 0))::bigint AS in_way_to_client,
+                sum(coalesce(in_way_from_client, 0))::bigint AS in_way_from_client,
+                sum(coalesce(quantity_full, quantity, 0))::bigint AS quantity_full,
+                max(last_synced_at) AS last_synced_at
+            FROM wb_stocks
+            {where_sql}
+            GROUP BY nm_id, supplier_article, warehouse_name
+            ORDER BY supplier_article, warehouse_name
+            """,
+            *params,
+        )
+
+    article_map: Dict[str, Dict[str, Any]] = {}
+    warehouse_names: set = set()
+    for row in rows:
+        offer = str(row["supplier_article"] or row["nm_id"] or "").strip()
+        key = normalize_offer_id(offer)
+        if not key:
+            continue
+        if key not in article_map:
+            article_map[key] = {
+                "offer_id": offer,
+                "name": row["name"],
+                "nm_id": int(row["nm_id"] or 0),
+                "fbo_total": 0,
+                "fbs_total": 0,
+                "fbo_clusters": {},
+                "fbs_warehouses": {},
+                "last_synced_at": None,
+            }
+        article = article_map[key]
+        if row["name"] and not article.get("name"):
+            article["name"] = row["name"]
+        if row["nm_id"] and not article.get("nm_id"):
+            article["nm_id"] = int(row["nm_id"])
+
+        warehouse = row["warehouse_name"] or "WB"
+        warehouse_names.add(warehouse)
+        quantity = int(row["quantity"] or 0)
+        quantity_full = int(row["quantity_full"] or quantity)
+        in_way_to_client = int(row["in_way_to_client"] or 0)
+        in_way_from_client = int(row["in_way_from_client"] or 0)
+        article["fbo_total"] += quantity_full
+        article["fbo_clusters"][warehouse] = {
+            "total": quantity_full,
+            "available": quantity,
+            "acceptance": 0,
+            "supply": in_way_from_client,
+            "transit": in_way_to_client,
+        }
+        synced = row["last_synced_at"]
+        if synced and (article["last_synced_at"] is None or synced > article["last_synced_at"]):
+            article["last_synced_at"] = synced
+
+    clusters_sorted = sorted(warehouse_names)
+    items: List[Dict[str, Any]] = []
+    for article in article_map.values():
+        total = int(article["fbo_total"] or 0) + int(article["fbs_total"] or 0)
+        items.append({
+            "offer_id": article["offer_id"],
+            "name": article["name"],
+            "nm_id": article["nm_id"],
+            "total": total,
+            "fbo_total": article["fbo_total"],
+            "fbs_total": article["fbs_total"],
+            "fbo_clusters_detail": {
+                c: v for c, v in article["fbo_clusters"].items() if int(v.get("total") or 0) > 0
+            },
+            "fbs_wh_detail": {},
+            "last_synced_at": article["last_synced_at"].isoformat() if article["last_synced_at"] else None,
+        })
+    items.sort(key=lambda x: -(int(x["total"] or 0)))
+
+    summary = {
+        "articles": len(items),
+        "total": sum(int(x["total"] or 0) for x in items),
+        "fbo_total": sum(int(x["fbo_total"] or 0) for x in items),
+        "fbs_total": 0,
+    }
+
+    return web.json_response(clean_nan_values({
+        "marketplace": "wb",
+        "count": len(items),
+        "items": items,
+        "clusters": clusters_sorted,
+        "fbs_warehouses": [],
+        "summary": summary,
+    }))
+
+
 async def get_analytics_turnover(request: web.Request) -> web.Response:
     date_from_raw = (request.query.get("date_from") or "").strip()
     date_to_raw = (request.query.get("date_to") or "").strip()

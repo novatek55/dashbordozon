@@ -11,6 +11,8 @@ Endpoints:
 from __future__ import annotations
 
 import logging
+import os
+import json
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
@@ -19,8 +21,10 @@ import aiohttp
 import asyncpg
 from aiohttp import web
 
+from src.dashboard.bestsellers import normalize_bestsellers_percent
 from src.dashboard.constants import MSK
 from src.dashboard.helpers import normalize_offer_id
+from src.supply_warehouse_scanner import CdpRelayClient
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +47,9 @@ CLUSTER_ALIASES = {
 }
 
 CROSS_CLUSTER_RATE = Decimal("0.08")  # 8% наценка при cluster_from != cluster_to
-INTERNAL_BASE_URL = "http://127.0.0.1:8088"
+INTERNAL_BASE_URL = os.getenv("DASHBOARD_INTERNAL_BASE_URL", "http://127.0.0.1:8088")
+DEFAULT_RELAY_HTTP = os.getenv("OZON_RELAY_HTTP", "http://127.0.0.1:19000")
+DEFAULT_RELAY_TOKEN = os.getenv("OZON_RELAY_TOKEN", "codex-browser-relay-dev-token")
 
 
 def _cluster_alias(name: Optional[str]) -> str:
@@ -80,40 +86,151 @@ async def get_unitka_offer_search(request: web.Request) -> web.Response:
     pool: asyncpg.Pool = request.app["pool"]
     like = f"%{q.lower()}%"
     prefix = f"{q.lower()}%"
-    # Ищем по offer_id, name, product_id И по sku (sku лежит в raw_data.product_info_v3.sku).
+    # Ищем по offer_id, name и всем известным SKU: product_id, product_info_v3.sku,
+    # ozon_product_id, fbo_sku_id, fbs_sku_id, fact_order_items.sku.
     async with pool.acquire() as conn:
         rows = await conn.fetch(
             """
-            SELECT offer_id, name,
-                   (raw_data::jsonb)->'product_info_v3'->>'sku' AS sku
-            FROM products
-            WHERE offer_id IS NOT NULL AND offer_id <> ''
-              AND COALESCE(is_visible, TRUE) = TRUE
-              AND NOT (
-                COALESCE(lower(status), '') LIKE '%archiv%'
-                OR COALESCE(lower(status), '') LIKE '%delete%'
-                OR COALESCE(lower(status), '') LIKE '%не прода%'
-                OR COALESCE(lower(status), '') LIKE '%not for sale%'
-                OR COALESCE(lower(status), '') LIKE '%removed%'
-              )
-              AND (
-                lower(offer_id) LIKE $1
-                OR lower(name) LIKE $2
-                OR product_id::text LIKE $1
-                OR (raw_data::jsonb)->'product_info_v3'->>'sku' LIKE $1
-              )
+            WITH candidates AS (
+                SELECT offer_id, name, product_id::text AS sku, 0 AS source_rank
+                FROM products
+                WHERE offer_id IS NOT NULL AND offer_id <> ''
+                  AND COALESCE(is_visible, TRUE) = TRUE
+                  AND product_id IS NOT NULL
+
+                UNION ALL
+                SELECT offer_id, name, (raw_data::jsonb)->'product_info_v3'->>'sku' AS sku, 1 AS source_rank
+                FROM products
+                WHERE offer_id IS NOT NULL AND offer_id <> ''
+                  AND COALESCE(is_visible, TRUE) = TRUE
+                  AND (raw_data::jsonb)->'product_info_v3'->>'sku' IS NOT NULL
+
+                UNION ALL
+                SELECT offer_id, product_name AS name, ozon_product_id::text AS sku, 2 AS source_rank
+                FROM report_products_items
+                WHERE offer_id IS NOT NULL AND offer_id <> ''
+                  AND ozon_product_id IS NOT NULL
+
+                UNION ALL
+                SELECT offer_id, product_name AS name, fbo_sku_id::text AS sku, 3 AS source_rank
+                FROM report_products_items
+                WHERE offer_id IS NOT NULL AND offer_id <> ''
+                  AND fbo_sku_id IS NOT NULL
+
+                UNION ALL
+                SELECT offer_id, product_name AS name, fbs_sku_id::text AS sku, 4 AS source_rank
+                FROM report_products_items
+                WHERE offer_id IS NOT NULL AND offer_id <> ''
+                  AND fbs_sku_id IS NOT NULL
+
+                UNION ALL
+                SELECT foi.offer_id, COALESCE(p.name, foi.product_name) AS name, foi.sku::text AS sku, 5 AS source_rank
+                FROM fact_order_items foi
+                LEFT JOIN products p ON p.offer_id = foi.offer_id
+                WHERE foi.offer_id IS NOT NULL AND foi.offer_id <> ''
+                  AND foi.sku IS NOT NULL
+            ),
+            ranked AS (
+                SELECT
+                    offer_id,
+                    MAX(COALESCE(name, '')) AS name,
+                    sku,
+                    MIN(
+                        CASE
+                            WHEN sku = $4 THEN 0
+                            WHEN lower(offer_id) = $4 THEN 1
+                            WHEN lower(offer_id) LIKE $3 THEN 2
+                            WHEN sku LIKE $3 THEN 3
+                            WHEN lower(COALESCE(name, '')) LIKE $2 THEN 4
+                            ELSE 5
+                        END + source_rank
+                    ) AS rank
+                FROM candidates
+                WHERE sku IS NOT NULL AND sku <> ''
+                  AND (
+                    lower(offer_id) LIKE $1
+                    OR lower(COALESCE(name, '')) LIKE $2
+                    OR sku LIKE $1
+                  )
+                GROUP BY offer_id, sku
+            )
+            SELECT offer_id, name, sku
+            FROM ranked
             ORDER BY
-              (CASE WHEN lower(offer_id) LIKE $3 THEN 0
-                    WHEN (raw_data::jsonb)->'product_info_v3'->>'sku' LIKE $3 THEN 1
-                    ELSE 2 END),
+              rank,
               offer_id
             LIMIT 20
             """,
-            like, like, prefix,
+            like, like, prefix, q.lower(),
         )
     items = [{"offer_id": r["offer_id"], "name": r["name"] or "",
               "sku": r["sku"] or ""} for r in rows]
     return web.json_response({"items": items})
+
+
+async def get_unitka_refresh_targets(request: web.Request) -> web.Response:
+    """Список наших товаров, которым нужен свежий snapshot bestsellers."""
+    max_age_hours_raw = (request.query.get("max_age_hours") or "18").strip()
+    limit_raw = (request.query.get("limit") or "0").strip()
+    try:
+        max_age_hours = max(1, min(24 * 30, int(max_age_hours_raw)))
+    except ValueError:
+        max_age_hours = 18
+    try:
+        limit = max(0, int(limit_raw))
+    except ValueError:
+        limit = 0
+
+    pool: asyncpg.Pool = request.app["pool"]
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            WITH recent_bestsellers AS (
+                SELECT DISTINCT sku
+                FROM competitor_snapshots
+                WHERE source = 'bestsellers'
+                  AND captured_at >= now() - ($1::int * interval '1 hour')
+            )
+            SELECT
+                p.offer_id,
+                p.name,
+                (p.raw_data::jsonb)->'product_info_v3'->>'sku' AS sku
+            FROM products p
+            LEFT JOIN recent_bestsellers rb
+              ON rb.sku = (p.raw_data::jsonb)->'product_info_v3'->>'sku'
+            WHERE coalesce(trim(p.offer_id), '') <> ''
+              AND coalesce(trim(p.name), '') <> ''
+              AND coalesce((p.raw_data::jsonb)->'product_info_v3'->>'sku', '') <> ''
+              AND coalesce(p.is_visible, TRUE) = TRUE
+              AND rb.sku IS NULL
+              AND NOT (
+                coalesce(lower(p.status), '') LIKE '%archiv%'
+                OR coalesce(lower(p.status), '') LIKE '%delete%'
+                OR coalesce(lower(p.status), '') LIKE '%не прода%'
+                OR coalesce(lower(p.status), '') LIKE '%not for sale%'
+                OR coalesce(lower(p.status), '') LIKE '%removed%'
+              )
+            ORDER BY p.offer_id
+            """,
+            max_age_hours,
+        )
+
+    items: List[Dict[str, str]] = []
+    for row in rows:
+        sku = str(row["sku"] or "").strip()
+        offer_id = normalize_offer_id(row["offer_id"])
+        name = str(row["name"] or "").strip()
+        if not sku or not offer_id or not name:
+            continue
+        items.append({"sku": sku, "offer_id": offer_id, "name": name})
+        if limit and len(items) >= limit:
+            break
+
+    return web.json_response({
+        "items": items,
+        "count": len(items),
+        "max_age_hours": max_age_hours,
+    })
 
 
 # ====================================================================
@@ -223,8 +340,12 @@ async def _fetch_accruals_for_offer(
 
     target_norm = normalize_offer_id(offer_id).lower()
     for item in data.get("items", []) or []:
-        cur = normalize_offer_id(item.get("offer_id_normalized") or item.get("offer_id") or "").lower()
-        if cur == target_norm:
+        candidates = {
+            normalize_offer_id(item.get("offer_id") or "").lower(),
+            normalize_offer_id(item.get("offer_id_normalized") or "").lower(),
+        }
+        candidates.discard("")
+        if target_norm in candidates:
             return item
     return None
 
@@ -564,6 +685,110 @@ async def get_unitka_shop_averages(request: web.Request) -> web.Response:
     })
 
 
+async def _fetch_article_analytics_metrics(base_url: str, offer_id: str, days: int) -> Optional[Dict[str, Any]]:
+    timeout = aiohttp.ClientTimeout(total=120)
+    try:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(
+                f"{base_url}/api/article-analytics",
+                params={"offer_id": offer_id, "limit": "1"},
+            ) as resp:
+                if resp.status != 200:
+                    return None
+                data = await resp.json()
+    except Exception:
+        return None
+
+    items = data.get("items") or []
+    if not items:
+        return None
+
+    item = items[0]
+    traffic = item.get("traffic_sources") or {}
+    daily = item.get("daily") or []
+    clusters = item.get("clusters") or []
+
+    def _f(key: str, default: Optional[float] = None) -> Optional[float]:
+        val = item.get(key, default)
+        try:
+            return float(val) if val is not None else default
+        except (TypeError, ValueError):
+            return default
+
+    def _safe_ratio(num: float, den: float) -> Optional[float]:
+        if not den:
+            return None
+        return num / den
+
+    sold_units = _f("orders_30d", 0.0) or 0.0
+    sold_sum = _f("revenue_30d", 0.0) or 0.0
+    impressions = _f("impressions_30d", 0.0) or 0.0
+    clicks = _f("clicks_30d", 0.0) or 0.0
+    search_views = float(traffic.get("search_views_30d") or 0.0)
+    search_tocart = float(traffic.get("search_tocart_30d") or 0.0)
+    pdp_views = float(traffic.get("pdp_views_30d") or 0.0)
+    pdp_visitors = float(traffic.get("pdp_visitors_30d") or 0.0)
+    pdp_tocart = float(traffic.get("pdp_tocart_30d") or 0.0)
+
+    min_price = None
+    buyer_prices = []
+    for point in daily:
+        try:
+            price = float(point.get("avg_buyer_paid") or 0.0)
+        except (TypeError, ValueError):
+            price = 0.0
+        if price > 0:
+            buyer_prices.append(price)
+    if buyer_prices:
+        min_price = min(buyer_prices)
+
+    avg_delivery_days = None
+    delivery_values = [float(c.get("avg_delivery_time")) for c in clusters if c.get("avg_delivery_time") is not None]
+    if delivery_values:
+        avg_delivery_days = sum(delivery_values) / len(delivery_values)
+
+    oos_days = _f("oos_days_30d")
+    avg_price = _f("avg_check_30d")
+    lost_sales = None
+    if avg_price and oos_days:
+        lost_sales = round((sold_units / max(days, 1)) * oos_days * avg_price, 2)
+
+    delivered = float(item.get("delivered_units_30d") or 0.0)
+    returns = float(item.get("returns_30d") or 0.0)
+    cancellations = float(item.get("cancellations_30d") or 0.0)
+    buyout_base = delivered + returns + cancellations
+
+    return {
+        "source": "article_analytics",
+        "captured_at": datetime.now(MSK).isoformat(),
+        "sold_sum": sold_sum,
+        "sold_units": int(round(sold_units)),
+        "avg_price": avg_price,
+        "min_price": min_price,
+        "dynamic_pct": _f("revenue_delta_7v7"),
+        "daily_sales": round(sold_units / max(days, 1), 4),
+        "discount": _f("marketplace_discount_pct"),
+        "buyout_rate": _safe_ratio(delivered, buyout_base),
+        "lost_sales": lost_sales,
+        "days_without_stock": oos_days,
+        "stock": _f("stock_now"),
+        "views": impressions,
+        "session_count_search": float(traffic.get("session_search_30d") or 0.0),
+        "qty_view_pdp": pdp_views,
+        "session_count": pdp_visitors,
+        "conv_view_to_order": _safe_ratio(sold_units, impressions),
+        "conv_to_cart_search": _safe_ratio(search_tocart, search_views),
+        "conv_to_cart": _safe_ratio(clicks, impressions),
+        "conv_to_cart_pdp": (_safe_ratio(pdp_tocart, pdp_visitors) or 0.0) * 100.0 if pdp_visitors else None,
+        "search_position": _f("position_category_30d"),
+        "promo_revenue_share": _f("ad_share"),
+        "days_in_promo": len(item.get("promos") or []),
+        "days_with_trafarets": days if item.get("has_active_ads") else 0,
+        "drr": _f("drr"),
+        "avg_delivery_days": avg_delivery_days,
+    }
+
+
 # ====================================================================
 # /api/unitka/metrics — метрики товара (30д): продажи, выкуп, позиция
 #   Для конкурента — последний snapshot из competitor_snapshots (bestsellers)
@@ -628,8 +853,8 @@ async def get_unitka_metrics(request: web.Request) -> web.Response:
             "avg_price": float(row["avg_price"]) if row["avg_price"] is not None else None,
             "min_price": float(row["min_price"]) if row["min_price"] is not None else None,
             "session_count": row["session_count"],
-            "conv_to_cart": float(row["conv_to_cart"]) if row["conv_to_cart"] is not None else None,
-            "buyout_rate": float(row["buyout_rate"]) if row["buyout_rate"] is not None else None,
+            "conv_to_cart": normalize_bestsellers_percent(row["conv_to_cart"]),
+            "buyout_rate": normalize_bestsellers_percent(row["buyout_rate"]),
             "lost_sales": float(row["lost_sales"]) if row["lost_sales"] is not None else None,
             "days_without_stock": row["days_without_stock"],
             "daily_sales": float(row["daily_sales"]) if row["daily_sales"] is not None else None,
@@ -640,14 +865,14 @@ async def get_unitka_metrics(request: web.Request) -> web.Response:
             "views": _fint("views"),                                 # Показы всего
             "session_count_search": _fint("sessionCountSearch"),     # Показы в поиске и каталоге
             "qty_view_pdp": _fint("qtyViewPdp"),                     # Посещения карточки
-            "conv_view_to_order": _fnum("convViewToOrder"),          # Конв. показ→заказ (доля)
-            "conv_to_cart_search": _fnum("convToCartSearch"),        # Конв. поиск→корзина (доля)
-            "conv_to_cart_pdp": _fnum("convToCartPdp", "pdpToCartConversion"),  # В корзину из карточки (%)
+            "conv_view_to_order": normalize_bestsellers_percent(_fnum("convViewToOrder")),          # Конв. показ→заказ (доля)
+            "conv_to_cart_search": normalize_bestsellers_percent(_fnum("convToCartSearch")),        # Конв. поиск→корзина (доля)
+            "conv_to_cart_pdp": normalize_bestsellers_percent(_fnum("convToCartPdp", "pdpToCartConversion")),  # В корзину из карточки (%)
             "discount": _fnum("discount"),                           # Скидка от вашей цены, %
-            "promo_revenue_share": _fnum("promoRevenueShare"),       # Доля оборота в акциях, %
+            "promo_revenue_share": normalize_bestsellers_percent(_fnum("promoRevenueShare")),       # Доля оборота в акциях, %
             "days_in_promo": _fint("daysInPromo"),                   # Дней в акциях
             "days_with_trafarets": _fint("daysWithTrafarets"),       # Дней с продвижением
-            "drr": _fnum("drr"),                                     # Общая ДРР, %
+            "drr": normalize_bestsellers_percent(_fnum("drr")),      # Общая ДРР, %
             "stock": _fint("stock"),                                 # Остаток на конец периода
             "volume_l": _fnum("volume"),                             # Объём, л
             "sales_schema": rd.get("salesSchema"),                   # Схема работы
@@ -705,7 +930,14 @@ async def get_unitka_metrics(request: web.Request) -> web.Response:
                 # sku нашли, но snapshot-а нет — вернём, чтобы фронт мог авто-подтянуть
                 out["resolved_sku"] = resolved_sku
 
-    # 2. Fallback: для нашего offer_id — из fact_order_items за период
+    # 2. Live fallback: для своего offer_id обновляем показатели из отчёта article-analytics.
+    if offer_id:
+        article_metrics = await _fetch_article_analytics_metrics(INTERNAL_BASE_URL, offer_id, days)
+        if article_metrics:
+            out.update(article_metrics)
+            return web.json_response(out)
+
+    # 3. Последний fallback: для нашего offer_id — из fact_order_items за период
     if offer_id:
         from datetime import date, datetime, timedelta, timezone
         today_msk = datetime.now(MSK).date()
@@ -731,6 +963,7 @@ async def get_unitka_metrics(request: web.Request) -> web.Response:
         if row and row["units"]:
             out.update({
                 "source": "fact_orders",
+                "captured_at": datetime.now(MSK).isoformat(),
                 "sold_units": row["units"],
                 "sold_sum": row["sum_buyer"],
                 "avg_price": row["avg_price"],
@@ -794,6 +1027,184 @@ async def get_unitka_competitors_recent(request: web.Request) -> web.Response:
             "captured_at": r["captured_at"].isoformat() if r["captured_at"] else None,
         })
     return web.json_response({"items": items, "count": len(items)})
+
+
+async def post_unitka_fetch_bestsellers_direct(request: web.Request) -> web.Response:
+    """Прямой fallback: читает what_to_sell/data/v3 из открытой seller-вкладки через CDP relay."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    options = body.get("options") if isinstance(body, dict) else {}
+    if not isinstance(options, dict):
+        options = {}
+
+    period = str(options.get("period") or "monthly").strip() or "monthly"
+    search = str(options.get("search") or "").strip()
+    try:
+        limit = max(1, min(200, int(options.get("limit") or 50)))
+    except (TypeError, ValueError):
+        limit = 50
+    try:
+        offset = max(0, int(options.get("offset") or 0))
+    except (TypeError, ValueError):
+        offset = 0
+
+    debug: Dict[str, Any] = {
+        "requested_url": "https://seller.ozon.ru/app/analytics/what-to-sell/ozon-bestsellers",
+        "request_mode": "cdp-direct-fetch",
+        "relay_http": DEFAULT_RELAY_HTTP,
+        "tab_found_before_open": False,
+        "ready_confirmed": False,
+        "final_url": "",
+        "item_count": 0,
+        "search": search,
+        "period": period,
+    }
+
+    expected_path = "/app/analytics/what-to-sell/ozon-bestsellers"
+    body_payload: Dict[str, Any] = {
+        "limit": str(limit),
+        "offset": str(offset),
+        "filter": {"stock": "any_stock", "period": period},
+        "sort": {"key": "sum_gmv_desc"},
+    }
+    if search:
+        body_payload["filter"]["name"] = search
+
+    try:
+        async with CdpRelayClient(DEFAULT_RELAY_HTTP, DEFAULT_RELAY_TOKEN) as cdp:
+            tabs = await cdp.list_tabs()
+            seller_tabs = [
+                t for t in (tabs or [])
+                if "seller.ozon.ru" in str(t.get("url", ""))
+                and expected_path in str(t.get("url", ""))
+            ]
+            if not seller_tabs:
+                return web.json_response({
+                    "ok": False,
+                    "error": "NO_SELLER_TAB",
+                    "debug": debug,
+                }, status=409)
+
+            tab = seller_tabs[0]
+            target_id = str(tab.get("id") or "")
+            debug["tab_found_before_open"] = True
+            debug["ready_confirmed"] = True
+            debug["final_url"] = str(tab.get("url") or "")
+            cookies = await cdp.get_cookies(target_id, "https://seller.ozon.ru")
+            cookie_company_id = str(cookies.get("sc_company_id") or "").strip()
+            result = await cdp._cdp_command(
+                target_id,
+                [
+                    ("Runtime.enable", {}),
+                    (
+                        "Runtime.evaluate",
+                        {
+                            "expression": """
+(async () => {
+  const body = %s;
+  const cookieCompanyId = %s;
+  const headers = {
+    "Accept": "application/json, text/plain, */*",
+    "Content-Type": "application/json",
+    "x-o3-app-name": "seller-ui",
+    "x-o3-language": "ru",
+    "x-o3-page-type": "analytics_platform",
+  };
+  if (cookieCompanyId) headers["x-o3-company-id"] = cookieCompanyId;
+  try {
+    const r = await fetch("/api/site/seller-analytics/what_to_sell/data/v3", {
+      method: "POST",
+      headers,
+      credentials: "include",
+      body: JSON.stringify(body),
+    });
+    const text = await r.text();
+    let data = null;
+    try { data = JSON.parse(text); } catch (e) {}
+    return {
+      status: r.status,
+      cid_used: cookieCompanyId || "",
+      data,
+      text_preview: data ? null : text.slice(0, 500),
+    };
+  } catch (e) {
+    return { status: 0, cid_used: cookieCompanyId || "", error: String(e) };
+  }
+})()
+"""
+                            % (
+                                json.dumps(body_payload, ensure_ascii=False),
+                                json.dumps(cookie_company_id, ensure_ascii=False),
+                            ),
+                            "returnByValue": True,
+                            "awaitPromise": True,
+                        },
+                    ),
+                ],
+            )
+            result = (result.get("result") or {}).get("value")
+    except Exception as e:
+        logger.exception("direct bestsellers via relay failed")
+        return web.json_response({
+            "ok": False,
+            "error": f"direct relay fetch failed: {e}",
+            "debug": debug,
+        }, status=500)
+
+    if not isinstance(result, dict):
+        return web.json_response({
+            "ok": False,
+            "error": "No response from seller tab",
+            "debug": debug,
+        }, status=502)
+
+    status = int(result.get("status") or 0)
+    raw = result.get("data") or {}
+    items = raw.get("items") or raw.get("data") or []
+    debug["item_count"] = len(items) if isinstance(items, list) else 0
+    debug["cid_used"] = result.get("cid_used") or ""
+    if status != 200:
+        return web.json_response({
+            "ok": False,
+            "error": f"seller HTTP {status}: {result.get('text_preview') or result.get('error') or ''}",
+            "debug": debug,
+        }, status=502)
+
+    if isinstance(items, list):
+        sample = []
+        for item in items[:5]:
+            if not isinstance(item, dict):
+                continue
+            sample.append(
+                {
+                    "sku": item.get("sku"),
+                    "variantId": item.get("variantId"),
+                    "article": item.get("article"),
+                    "name": item.get("name") or item.get("skuName"),
+                    "sellerName": item.get("sellerName"),
+                    "link": item.get("link") or item.get("productUrl") or item.get("url"),
+                    "soldSum": item.get("soldSum") or item.get("gmvSum"),
+                    "views": item.get("views"),
+                    "qtyViewPdp": item.get("qtyViewPdp"),
+                    "sessionCountSearch": item.get("sessionCountSearch"),
+                }
+            )
+        logger.info(
+            "bestsellers direct fetch: search=%r period=%s count=%s sample=%s",
+            search,
+            period,
+            len(items),
+            sample,
+        )
+
+    return web.json_response({
+        "ok": True,
+        "items": items if isinstance(items, list) else [],
+        "debug": debug,
+    })
 
 
 # ====================================================================
@@ -888,12 +1299,24 @@ async def post_unitka_import_bestsellers(request: web.Request) -> web.Response:
 
     pool: asyncpg.Pool = request.app["pool"]
     inserted = 0
+    skipped = 0
+    samples: List[Dict[str, Any]] = []
     async with pool.acquire() as conn:
         for item in items:
             if not isinstance(item, dict):
+                skipped += 1
                 continue
             extracted = _extract_bestseller_row(item)
             if not extracted["sku"]:
+                skipped += 1
+                logger.warning(
+                    "bestsellers import skipped row without sku: article=%r name=%r seller=%r link=%r raw_keys=%s",
+                    item.get("article"),
+                    item.get("name") or item.get("skuName") or item.get("title"),
+                    item.get("sellerName"),
+                    item.get("link") or item.get("productUrl") or item.get("url"),
+                    sorted(item.keys()),
+                )
                 continue
             import json as _json
             await conn.execute(
@@ -922,8 +1345,31 @@ async def post_unitka_import_bestsellers(request: web.Request) -> web.Response:
                 _json.dumps(item, ensure_ascii=False),
             )
             inserted += 1
+            if len(samples) < 10:
+                samples.append(
+                    {
+                        "saved_sku": extracted["sku"],
+                        "variantId": item.get("variantId"),
+                        "article": item.get("article"),
+                        "name": extracted["name"],
+                        "sellerName": item.get("sellerName"),
+                        "product_url": extracted["product_url"],
+                        "sold_sum": extracted["sold_sum"],
+                        "views": item.get("views"),
+                        "qtyViewPdp": item.get("qtyViewPdp"),
+                        "sessionCountSearch": item.get("sessionCountSearch"),
+                    }
+                )
 
-    return web.json_response({"inserted": inserted, "period": period})
+    logger.info(
+        "bestsellers import completed: period=%s inserted=%s skipped=%s sample=%s",
+        period,
+        inserted,
+        skipped,
+        samples,
+    )
+
+    return web.json_response({"inserted": inserted, "skipped": skipped, "period": period})
 
 
 async def post_unitka_import_competitor(request: web.Request) -> web.Response:

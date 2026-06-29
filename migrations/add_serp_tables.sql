@@ -26,15 +26,19 @@ CREATE TABLE IF NOT EXISTS serp_positions (
     review_count    INTEGER,
     stock           INTEGER,
     promo_label     VARCHAR(100),
+    delivery_text   VARCHAR(120),
     thumbnail_url   TEXT,
     revenue_30d     NUMERIC(15,2),
     sales_per_day   FLOAT,
+    bestsellers_data JSONB,
     is_our_product  BOOLEAN NOT NULL DEFAULT false,
     is_competitor   BOOLEAN NOT NULL DEFAULT false,
     UNIQUE (snapshot_id, position)
 );
 CREATE INDEX IF NOT EXISTS idx_serp_pos_snapshot ON serp_positions (snapshot_id);
 CREATE INDEX IF NOT EXISTS idx_serp_pos_sku      ON serp_positions (sku);
+ALTER TABLE serp_positions ADD COLUMN IF NOT EXISTS delivery_text VARCHAR(120);
+ALTER TABLE serp_positions ADD COLUMN IF NOT EXISTS bestsellers_data JSONB;
 
 -- 3. Справочник конкурентов (глобальный)
 CREATE TABLE IF NOT EXISTS serp_competitors (

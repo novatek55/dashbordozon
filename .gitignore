@@ -24,6 +24,7 @@ uploads/
 *.xls
 *.csv
 cookies.txt
+deploy/ACCESS.local.txt
 tmp_*.json
 tmp_*.txt
 tmp_*.xlsx

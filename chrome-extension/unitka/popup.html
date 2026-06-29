@@ -59,7 +59,15 @@
 
   <div class="settings">
     <label style="font-size: 11px; color: #64748b;">Дашборд URL</label>
-    <input type="text" id="dashboardUrl" value="http://127.0.0.1:8088">
+    <input type="text" id="dashboardUrl" value="http://80.87.203.161">
+    <label style="font-size: 11px; color: #64748b; margin-top: 6px;">Логин дашборда</label>
+    <input type="text" id="dashboardLogin" autocomplete="username" placeholder="login">
+    <label style="font-size: 11px; color: #64748b; margin-top: 6px;">Пароль дашборда</label>
+    <input type="password" id="dashboardPassword" autocomplete="current-password" placeholder="password">
+    <label style="display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 11px; color: #64748b;">
+      <input type="checkbox" id="rememberDashboardCredentials" style="width: auto;">
+      Хранить логин и пароль
+    </label>
     <label style="font-size: 11px; color: #64748b; margin-top: 6px;">Company ID (для seller BFF)</label>
     <input type="text" id="companyId" placeholder="146478">
   </div>

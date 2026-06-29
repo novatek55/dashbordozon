@@ -19,6 +19,8 @@ from src.wb_finance_sync import (
     rebuild_wb_finance_daily_vitrine,
     sync_wb_finance_raw,
 )
+from src.wb_advertising_sync import sync_wb_advertising
+from src.wb_stocks_sync import sync_wb_stocks
 
 
 # Nastrojka logirovanija
@@ -323,6 +325,29 @@ async def rebuild_wb_finance_daily():
     logging.info(f"WB finance daily rebuild result: {result}")
 
 
+async def sync_wb_advertising_report(days_back: int = None):
+    """Sync WB Promotion API daily advertising stats."""
+    api_key = settings.wb_advertising_api_key or settings.wb_api_key
+    if not api_key:
+        raise ValueError("WB_ADVERTISING_API_KEY or WB_API_KEY is not set in environment")
+    effective_days = days_back if days_back is not None else 30
+    logging.info("=== Syncing WB Advertising ===")
+    result = await sync_wb_advertising(
+        api_key=api_key,
+        days_back=effective_days,
+    )
+    logging.info(f"WB advertising sync result: {result}")
+
+
+async def sync_wb_stocks_report():
+    """Sync WB supplier stock balances."""
+    if not settings.wb_api_key:
+        raise ValueError("WB_API_KEY is not set in environment")
+    logging.info("=== Syncing WB Stocks ===")
+    result = await sync_wb_stocks(api_key=settings.wb_api_key)
+    logging.info(f"WB stocks sync result: {result}")
+
+
 async def main():
     """Glavnaja funkcija."""
     parser = argparse.ArgumentParser(description="Ozon API Data Sync Tool")
@@ -333,7 +358,7 @@ async def main():
                  "report_postings", "report_products", "report_returns", "report_compensation", "report_warehouse_stock",
                  "fbs_warehouse_stocks",
                  "analytics_data", "analytics_product_queries", "analytics_stocks", "analytics_turnover", "average_delivery_time", "realization_v2",
-                 "dimensions", "wb_finance_raw", "wb_finance_normalize", "wb_finance_daily"],
+                 "dimensions", "wb_finance_raw", "wb_finance_normalize", "wb_finance_daily", "wb_advertising", "wb_stocks"],
         default="full",
         help="Sync mode (default: full)"
     )
@@ -461,6 +486,10 @@ async def main():
                 await normalize_wb_finance()
             elif args.mode == "wb_finance_daily":
                 await rebuild_wb_finance_daily()
+            elif args.mode == "wb_advertising":
+                await sync_wb_advertising_report(args.days_back)
+            elif args.mode == "wb_stocks":
+                await sync_wb_stocks_report()
         
         logger.info("=" * 50)
         logger.info("Sync completed successfully!")

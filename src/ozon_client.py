@@ -1649,9 +1649,11 @@ class OzonClient:
         date_to: datetime,
     ) -> str:
         """Запрос JSON-отчёта по заказам CPO (Оплата за заказ). Возвращает UUID."""
+        from_ts = date_from.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        to_ts = date_to.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         data = {
-            "from": date_from.strftime("%Y-%m-%d"),
-            "to": date_to.strftime("%Y-%m-%d"),
+            "from": from_ts,
+            "to": to_ts,
         }
         result = await self._make_request(
             "POST",

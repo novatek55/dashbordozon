@@ -1,4 +1,5 @@
 import asyncio
+import os
 import signal
 
 from aiohttp import web
@@ -10,7 +11,9 @@ async def _run() -> None:
     app = orders_dashboard.create_app()
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, host="127.0.0.1", port=8088)
+    host = os.getenv("DASHBOARD_HOST", "127.0.0.1")
+    port = int(os.getenv("DASHBOARD_PORT", "8088"))
+    site = web.TCPSite(runner, host=host, port=port)
     await site.start()
 
     stop_event = asyncio.Event()

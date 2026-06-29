@@ -1,0 +1,131 @@
+"""Price report route handlers."""
+from __future__ import annotations
+
+from decimal import Decimal
+from typing import Any, Dict, Optional
+
+import asyncpg
+from aiohttp import web
+
+
+def _to_float(value: Any) -> Optional[float]:
+    if value is None:
+        return None
+    if isinstance(value, Decimal):
+        return float(value)
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def build_price_report_item(row: Any) -> Dict[str, Any]:
+    current_price = _to_float(row["price_current"])
+    recommended_price = _to_float(row["price_recommended"])
+    is_beneficial: Optional[bool] = None
+    if current_price is not None and recommended_price is not None and recommended_price > 0:
+        is_beneficial = current_price <= recommended_price
+
+    return {
+        "offer_id": row["offer_id"],
+        "product_name": row["product_name"],
+        "ozon_product_id": row["ozon_product_id"],
+        "fbo_sku_id": row["fbo_sku_id"],
+        "fbs_sku_id": row["fbs_sku_id"],
+        "price_current": current_price,
+        "price_base": _to_float(row["price_base"]),
+        "price_recommended": recommended_price,
+        "recommended_price_link": row["recommended_price_link"] or "",
+        "is_beneficial_price": is_beneficial,
+        "beneficial_price_status": "Да" if is_beneficial is True else "Нет" if is_beneficial is False else "",
+        "last_synced_at": row["last_synced_at"].isoformat() if row["last_synced_at"] else None,
+    }
+
+
+async def get_price_report(request: web.Request) -> web.Response:
+    """Return latest Ozon product-price report rows from report_products_items."""
+    limit_raw = (request.query.get("limit") or "500").strip()
+    try:
+        limit = max(1, min(2000, int(limit_raw)))
+    except ValueError:
+        limit = 500
+    offer_id = (request.query.get("offer_id") or "").strip()
+
+    latest_report_sql = """
+        SELECT report_id
+        FROM report_products_items
+        ORDER BY last_synced_at DESC NULLS LAST, report_id DESC
+        LIMIT 1
+    """
+    where_parts = [f"report_id = ({latest_report_sql})"]
+    params: list[Any] = []
+    if offer_id:
+        params.append(f"%{offer_id}%")
+        where_parts.append(f"offer_id ILIKE ${len(params)}")
+    params.append(limit)
+    limit_placeholder = f"${len(params)}"
+
+    sql = f"""
+        SELECT
+            offer_id,
+            product_name,
+            ozon_product_id,
+            fbo_sku_id,
+            fbs_sku_id,
+            price_current,
+            price_base,
+            price_recommended,
+            recommended_price_link,
+            last_synced_at
+        FROM report_products_items
+        WHERE {" AND ".join(where_parts)}
+        ORDER BY
+            CASE WHEN price_recommended IS NOT NULL AND recommended_price_link IS NOT NULL THEN 0 ELSE 1 END,
+            offer_id NULLS LAST,
+            line_no
+        LIMIT {limit_placeholder}
+    """
+
+    try:
+        pool: asyncpg.Pool = request.app["pool"]
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(sql, *params)
+            source = await conn.fetchrow(
+                """
+                SELECT
+                    report_id,
+                    max(last_synced_at) AS last_synced_at,
+                    count(*)::int AS total_rows
+                FROM report_products_items
+                WHERE report_id = (
+                    SELECT report_id
+                    FROM report_products_items
+                    ORDER BY last_synced_at DESC NULLS LAST, report_id DESC
+                    LIMIT 1
+                )
+                GROUP BY report_id
+                """
+            )
+    except asyncpg.UndefinedTableError:
+        return web.json_response(
+            {
+                "items": [],
+                "count": 0,
+                "source": {"type": "ozon_report_products", "status": "missing_table"},
+            }
+        )
+
+    items = [build_price_report_item(row) for row in rows]
+    return web.json_response(
+        {
+            "items": items,
+            "count": len(items),
+            "source": {
+                "type": "ozon_report_products",
+                "table": "report_products_items",
+                "report_id": source["report_id"] if source else None,
+                "last_synced_at": source["last_synced_at"].isoformat() if source and source["last_synced_at"] else None,
+                "total_rows": int(source["total_rows"] or 0) if source else 0,
+            },
+        }
+    )

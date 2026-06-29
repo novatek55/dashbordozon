@@ -24,9 +24,13 @@ class Settings(BaseSettings):
 
     # Wildberries Finance API (optional, required for WB sync mode)
     wb_api_key: Optional[str] = Field(default=None, alias="WB_API_KEY")
+    wb_advertising_api_key: Optional[str] = Field(default=None, alias="WB_ADVERTISING_API_KEY")
 
     # Database
     database_url: str = Field(alias="DATABASE_URL")
+    db_source_mode: str = Field(default="server", alias="DB_SOURCE_MODE")
+    allow_local_database: bool = Field(default=False, alias="ALLOW_LOCAL_DATABASE")
+    expected_db_host: Optional[str] = Field(default=None, alias="EXPECTED_DB_HOST")
 
     # Sync settings
     sync_days_back: int = Field(default=30, alias="SYNC_DAYS_BACK")
@@ -40,6 +44,12 @@ class Settings(BaseSettings):
     ozon_force_ipv4: bool = Field(default=False, alias="OZON_FORCE_IPV4")
     async_report_refresh_hours: int = Field(default=24, alias="ASYNC_REPORT_REFRESH_HOURS")
     campaigns_refresh_hours: int = Field(default=6, alias="CAMPAIGNS_REFRESH_HOURS")
+    campaign_report_create_attempts: int = Field(default=6, alias="CAMPAIGN_REPORT_CREATE_ATTEMPTS")
+    campaign_report_active_limit_delay_seconds: float = Field(
+        default=120.0,
+        alias="CAMPAIGN_REPORT_ACTIVE_LIMIT_DELAY_SECONDS",
+    )
+    campaign_report_batch_size: int = Field(default=10, alias="CAMPAIGN_REPORT_BATCH_SIZE")
 
     # FBS warehouse IDs for stock sync (comma-separated)
     # Format: id1,id2 or id1:Name1,id2:Name2

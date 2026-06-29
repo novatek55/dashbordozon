@@ -5,7 +5,11 @@ from src.dashboard.constants import HTML_PATH, COSTS_HTML_PATH, PALLETIZATION_WE
 
 
 async def index(_: web.Request) -> web.Response:
-    return web.FileResponse(path=HTML_PATH)
+    response = web.FileResponse(path=HTML_PATH)
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 async def finance_costs_page(_: web.Request) -> web.Response:

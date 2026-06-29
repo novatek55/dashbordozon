@@ -100,7 +100,21 @@ async def get_articles(request: web.Request) -> web.Response:
     # Нормализация offer_id: убираем ведущие апострофы и пробелы
     _norm = "trim(both '''' from trim(coalesce({src}, '')))"
 
-    if source == "sales":
+    if source == "current_products":
+        sql = f"""
+            SELECT DISTINCT {_norm.format(src='offer_id')} AS offer_id
+            FROM products
+            WHERE coalesce(trim(offer_id), '') <> ''
+              AND coalesce(is_visible, true) IS TRUE
+              AND lower(coalesce(status, '')) NOT IN ('archived', 'autoarchived', 'deleted')
+              AND lower(coalesce(raw_data::jsonb->>'archived', 'false')) <> 'true'
+              AND lower(coalesce(raw_data::jsonb->>'is_archived', 'false')) <> 'true'
+              AND lower(coalesce(raw_data::jsonb->>'is_autoarchived', 'false')) <> 'true'
+              {f"AND lower(coalesce(offer_id, '')) LIKE lower(${idx})" if query else ""}
+            ORDER BY offer_id
+            LIMIT {limit}
+        """
+    elif source == "sales":
         sql = f"""
             SELECT DISTINCT {_norm.format(src="e->>'offer_id'")} AS offer_id
             FROM fact_orders, jsonb_array_elements(items::jsonb) AS e

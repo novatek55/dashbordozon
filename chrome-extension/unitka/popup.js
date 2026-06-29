@@ -9,24 +9,55 @@ const els = {
   bestBtn: document.getElementById("bestBtn"),
   status: document.getElementById("status"),
   dashboardUrl: document.getElementById("dashboardUrl"),
+  dashboardLogin: document.getElementById("dashboardLogin"),
+  dashboardPassword: document.getElementById("dashboardPassword"),
+  rememberDashboardCredentials: document.getElementById("rememberDashboardCredentials"),
   companyId: document.getElementById("companyId"),
 };
 
 // ─── storage ───────────────────────────────────────────
 (async function loadSettings() {
-  const { dashboardUrl, companyId } = await chrome.storage.sync.get(["dashboardUrl", "companyId"]);
+  const { dashboardUrl, companyId, dashboardLogin, rememberDashboardCredentials } =
+    await chrome.storage.sync.get([
+      "dashboardUrl",
+      "companyId",
+      "dashboardLogin",
+      "rememberDashboardCredentials",
+    ]);
+  const { dashboardPassword } = await chrome.storage.local.get(["dashboardPassword"]);
   if (dashboardUrl) els.dashboardUrl.value = dashboardUrl;
   if (companyId) els.companyId.value = companyId;
+  if (dashboardLogin) els.dashboardLogin.value = dashboardLogin;
+  els.rememberDashboardCredentials.checked = Boolean(rememberDashboardCredentials);
+  if (rememberDashboardCredentials && dashboardPassword) els.dashboardPassword.value = dashboardPassword;
 })();
 
-[els.dashboardUrl, els.companyId].forEach((el) => {
+[els.dashboardUrl, els.companyId, els.dashboardLogin].forEach((el) => {
   el.addEventListener("change", () => {
     chrome.storage.sync.set({
       dashboardUrl: els.dashboardUrl.value.trim(),
       companyId: els.companyId.value.trim(),
+      dashboardLogin: els.dashboardLogin.value.trim(),
     });
   });
 });
+
+async function saveDashboardPasswordPreference() {
+  const remember = els.rememberDashboardCredentials.checked;
+  await chrome.storage.sync.set({
+    dashboardLogin: els.dashboardLogin.value.trim(),
+    rememberDashboardCredentials: remember,
+  });
+  if (remember) {
+    await chrome.storage.local.set({ dashboardPassword: els.dashboardPassword.value });
+  } else {
+    await chrome.storage.local.remove("dashboardPassword");
+    els.dashboardPassword.value = "";
+  }
+}
+
+els.dashboardPassword.addEventListener("change", saveDashboardPasswordPreference);
+els.rememberDashboardCredentials.addEventListener("change", saveDashboardPasswordPreference);
 
 // ─── helpers ───────────────────────────────────────────
 function setStatus(text, kind = "info") {
@@ -35,10 +66,16 @@ function setStatus(text, kind = "info") {
 }
 
 function postDashboard(path, body) {
-  const base = (els.dashboardUrl.value || "http://127.0.0.1:8088").replace(/\/+$/, "");
+  const base = (els.dashboardUrl.value || "http://80.87.203.161").replace(/\/+$/, "");
+  const headers = { "Content-Type": "application/json" };
+  const login = els.dashboardLogin.value.trim();
+  const password = els.dashboardPassword.value;
+  if (login && password) {
+    headers.Authorization = `Basic ${btoa(unescape(encodeURIComponent(`${login}:${password}`)))}`;
+  }
   return fetch(`${base}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(body),
   }).then(async (r) => {
     const text = await r.text();

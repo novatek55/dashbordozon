@@ -245,8 +245,7 @@ async def get_actions_report(request: web.Request) -> web.Response:
     except ValueError:
         tax_rate = 0.0
 
-    # Р‘РµСЂС‘Рј РїРѕСЂС‚ РёР· app config вЂ” РІРЅСѓС‚СЂРµРЅРЅРёР№ URL
-    base_url = "http://127.0.0.1:8088"
+    base_url = os.getenv("DASHBOARD_INTERNAL_BASE_URL", "http://127.0.0.1:8088")
 
     pool: asyncpg.Pool = request.app["pool"]
     today_msk = datetime.now(MSK).date()

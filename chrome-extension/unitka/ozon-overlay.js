@@ -4,7 +4,7 @@
 //   - на товаре: кнопка «Отправить в Юнитку» (определяет SKU из URL)
 //   - в поиске/категории: кнопка «Собрать со страницы» (скрейпит DOM)
 
-const DASHBOARD_DEFAULT = "http://127.0.0.1:8088";
+const DASHBOARD_DEFAULT = "http://80.87.203.161";
 
 async function getDashboardUrl() {
   const { dashboardUrl } = await chrome.storage.sync.get(["dashboardUrl"]);

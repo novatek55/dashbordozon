@@ -6,12 +6,14 @@ alembic==1.13.1
 pydantic==2.5.3
 pydantic-settings==2.1.0
 python-dotenv==1.0.0
+wildberries-sdk==0.1.117
 
 # Логирование и утилиты
 structlog==23.2.0
 tenacity==8.2.3
 aiofiles==23.2.1
 schedule==1.2.0
+requests==2.31.0
 
 # База данных
 psycopg2-binary==2.9.9
