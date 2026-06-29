@@ -1819,6 +1819,7 @@ class SyncManager:
         sync_log = await self._create_sync_log("prices")
         
         records_processed = 0
+        price_indexes_upserted = 0
         
         try:
             async for items in self.client.get_all_product_prices():
@@ -1838,10 +1839,44 @@ class SyncManager:
                             product.min_ozon_price = self._parse_decimal(item.get("min_ozon_price"))
                             product.last_synced_at = datetime.now()
                             records_processed += 1
+
+                        price_indexes = item.get("price_indexes")
+                        sku = self._parse_int_flexible(
+                            item.get("sku")
+                            or item.get("fbo_sku")
+                            or item.get("fbs_sku")
+                            or item.get("product_id")
+                        )
+                        if offer_id and isinstance(price_indexes, dict):
+                            detail_data = {
+                                "sku": sku if sku and sku > 0 else None,
+                                "offer_id": offer_id,
+                                "customer_price": None,
+                                "price": self._extract_price_object_value(item.get("price")),
+                                "price_indexes": price_indexes,
+                                "details_status": "ok",
+                                "error_message": None,
+                                "raw_data": item,
+                                "last_synced_at": datetime.now(),
+                            }
+                            stmt_detail = pg_insert(ProductPriceDetail).values(**detail_data)
+                            if detail_data["sku"]:
+                                stmt_detail = stmt_detail.on_conflict_do_update(
+                                    index_elements=["sku"],
+                                    set_={k: v for k, v in detail_data.items() if k != "sku"},
+                                )
+                            else:
+                                stmt_detail = stmt_detail.on_conflict_do_update(
+                                    index_elements=["offer_id"],
+                                    index_where=ProductPriceDetail.offer_id.isnot(None),
+                                    set_={k: v for k, v in detail_data.items() if k != "offer_id"},
+                                )
+                            await session.execute(stmt_detail)
+                            price_indexes_upserted += 1
             
             await self._update_sync_log(sync_log, "success", records_processed)
-            logger.info(f"Prices sync completed: {records_processed} updated")
-            return {"processed": records_processed}
+            logger.info(f"Prices sync completed: {records_processed} updated, price_indexes={price_indexes_upserted}")
+            return {"processed": records_processed, "price_indexes_upserted": price_indexes_upserted}
             
         except Exception as e:
             logger.error(f"Prices sync failed: {e}")

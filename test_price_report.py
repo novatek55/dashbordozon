@@ -42,6 +42,50 @@ def test_build_price_report_item_marks_beneficial_when_current_price_is_not_abov
     assert item["beneficial_price_status"] == "Да"
 
 
+def test_build_price_report_item_uses_v5_price_indexes_for_market_cards():
+    row = {
+        "offer_id": "ART-INDEX",
+        "product_name": "Indexed",
+        "ozon_product_id": 1004,
+        "fbo_sku_id": 2004,
+        "fbs_sku_id": None,
+        "price_current": Decimal("1000.00"),
+        "price_base": Decimal("1300.00"),
+        "customer_price": None,
+        "price_indexes": {
+            "ozon_index_data": {
+                "minimal_price": "724",
+                "price_index_value": "1.38",
+            },
+            "self_marketplaces_index_data": {
+                "minimal_price": "788",
+                "price_index_value": "1.22",
+                "minimal_price_link": "https://wildberries.ru/catalog/1/detail.aspx",
+            },
+            "external_index_data": {
+                "minimal_price": "799",
+                "price_index_value": "1.25",
+                "minimal_price_link": "https://market.yandex.ru/product/1",
+            },
+        },
+        "price_recommended": None,
+        "recommended_price_link": "",
+        "price_details_synced_at": None,
+        "last_synced_at": None,
+    }
+
+    item = build_price_report_item(row)
+
+    assert item["ozon_competitor_prices"]["price"] == 724.0
+    assert item["ozon_competitor_prices"]["index"] == 1.38
+    assert item["own_other_marketplace_prices"]["price"] == 788.0
+    assert item["own_other_marketplace_prices"]["index"] == 1.22
+    assert item["own_other_marketplace_prices"]["source"] == "wildberries.ru"
+    assert item["other_marketplace_competitor_prices"]["price"] == 799.0
+    assert item["other_marketplace_competitor_prices"]["index"] == 1.25
+    assert item["other_marketplace_competitor_prices"]["source"] == "market.yandex.ru"
+
+
 def test_build_price_report_item_marks_not_beneficial_when_current_price_is_above_recommended():
     row = {
         "offer_id": "ART-2",
@@ -183,3 +227,20 @@ def test_product_price_details_client_filters_zero_skus_before_request():
     asyncio.run(client.get_product_price_details([0, 123, None, -5, 456]))
 
     assert client.payload == {"skus": ["123", "456"]}
+
+
+def test_product_prices_client_uses_v5_endpoint():
+    class DummyClient(OzonClient):
+        def __init__(self):
+            super().__init__(client_id="dummy", api_key="dummy")
+            self.endpoint = None
+
+        async def _make_request(self, method, endpoint, data=None, **kwargs):
+            self.endpoint = endpoint
+            return {"items": []}
+
+    client = DummyClient()
+
+    asyncio.run(client.get_product_prices())
+
+    assert client.endpoint == "/v5/product/info/prices"

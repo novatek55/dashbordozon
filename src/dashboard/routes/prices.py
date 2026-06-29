@@ -34,6 +34,35 @@ def _row_get(row: Any, key: str, default: Any = None) -> Any:
         return default
 
 
+def _first_present(data: Dict[str, Any], keys: tuple[str, ...]) -> Any:
+    for key in keys:
+        value = data.get(key)
+        if value not in (None, ""):
+            return value
+    return None
+
+
+def _market_card_from_price_index(price_indexes: Any, key: str) -> Dict[str, Any]:
+    if not isinstance(price_indexes, dict):
+        return {"status": "missing", "index": None, "price": None, "source": "", "link": ""}
+    block = price_indexes.get(key) or {}
+    if not isinstance(block, dict):
+        return {"status": "missing", "index": None, "price": None, "source": "", "link": ""}
+    price = _to_float(_first_present(block, ("minimal_price", "min_price", "price")))
+    index = _to_float(_first_present(block, ("price_index_value", "index", "value")))
+    link = str(_first_present(block, ("minimal_price_link", "link", "url", "product_url")) or "")
+    source = str(_first_present(block, ("source", "marketplace", "marketplace_name", "domain")) or "")
+    if not source and link:
+        source = _source_from_url(link)
+    return {
+        "status": "ok" if price is not None or index is not None else "missing",
+        "index": index,
+        "price": price,
+        "source": source,
+        "link": link,
+    }
+
+
 def build_price_report_item(row: Any) -> Dict[str, Any]:
     current_price = _to_float(row["price_current"])
     customer_price = _to_float(_row_get(row, "customer_price"))
@@ -41,19 +70,27 @@ def build_price_report_item(row: Any) -> Dict[str, Any]:
     recommended_price_link = row["recommended_price_link"] or ""
     customer_price_status = _row_get(row, "price_details_status") or ("ok" if customer_price is not None else "missing")
     price_details_synced_at = _row_get(row, "price_details_synced_at")
+    price_indexes = _row_get(row, "price_indexes")
     is_beneficial: Optional[bool] = None
     if current_price is not None and recommended_price is not None and recommended_price > 0:
         is_beneficial = current_price <= recommended_price
     price_index = None
     if current_price is not None and recommended_price is not None and recommended_price > 0:
         price_index = round(current_price / recommended_price, 2)
-    other_marketplace = {
+    fallback_other_marketplace = {
         "status": "ok" if recommended_price is not None else "missing",
         "index": price_index,
         "price": recommended_price,
         "source": _source_from_url(recommended_price_link) if recommended_price_link else "",
         "link": recommended_price_link,
     }
+    ozon_competitor_prices = _market_card_from_price_index(price_indexes, "ozon_index_data")
+    own_other_marketplace_prices = _market_card_from_price_index(price_indexes, "self_marketplaces_index_data")
+    other_marketplace_competitor_prices = _market_card_from_price_index(price_indexes, "external_index_data")
+    if own_other_marketplace_prices["status"] == "missing":
+        own_other_marketplace_prices = fallback_other_marketplace
+    if other_marketplace_competitor_prices["status"] == "missing":
+        other_marketplace_competitor_prices = fallback_other_marketplace.copy()
 
     return {
         "offer_id": row["offer_id"],
@@ -69,9 +106,9 @@ def build_price_report_item(row: Any) -> Dict[str, Any]:
         "recommended_price_link": recommended_price_link,
         "price_index": price_index,
         "price_index_status": "beneficial" if is_beneficial is True else "not_beneficial" if is_beneficial is False else "no_index",
-        "ozon_competitor_prices": {"status": "missing", "index": None, "price": None, "source": "", "link": ""},
-        "own_other_marketplace_prices": other_marketplace,
-        "other_marketplace_competitor_prices": other_marketplace.copy(),
+        "ozon_competitor_prices": ozon_competitor_prices,
+        "own_other_marketplace_prices": own_other_marketplace_prices,
+        "other_marketplace_competitor_prices": other_marketplace_competitor_prices,
         "is_beneficial_price": is_beneficial,
         "beneficial_price_status": "Да" if is_beneficial is True else "Нет" if is_beneficial is False else "",
         "price_details_synced_at": price_details_synced_at.isoformat() if price_details_synced_at else None,
@@ -112,6 +149,7 @@ async def get_price_report(request: web.Request) -> web.Response:
             rpi.price_current,
             rpi.price_base,
             ppd.customer_price,
+            ppd.price_indexes,
             ppd.details_status AS price_details_status,
             ppd.last_synced_at AS price_details_synced_at,
             rpi.price_recommended,
@@ -119,9 +157,10 @@ async def get_price_report(request: web.Request) -> web.Response:
             rpi.last_synced_at
         FROM report_products_items rpi
         LEFT JOIN LATERAL (
-            SELECT customer_price, details_status, last_synced_at
+            SELECT customer_price, price_indexes, details_status, last_synced_at
             FROM product_price_details ppd
             WHERE ppd.sku IN (rpi.fbo_sku_id, rpi.fbs_sku_id)
+               OR ppd.offer_id = rpi.offer_id
             ORDER BY ppd.last_synced_at DESC NULLS LAST
             LIMIT 1
         ) ppd ON TRUE

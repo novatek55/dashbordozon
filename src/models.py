@@ -1485,7 +1485,7 @@ class ProductPriceDetail(Base):
     __tablename__ = "product_price_details"
 
     id = Column(Integer, primary_key=True)
-    sku = Column(BigInteger, nullable=False, unique=True, index=True)
+    sku = Column(BigInteger, unique=True, index=True)
     offer_id = Column(String(255), index=True)
     customer_price = Column(Numeric(15, 2))
     price = Column(Numeric(15, 2))
