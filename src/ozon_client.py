@@ -390,7 +390,7 @@ class OzonClient:
     
     async def get_product_prices(self, limit: int = 1000, last_id: Optional[str] = None) -> Dict[str, Any]:
         """Poluchenie cen tovarov."""
-        data = {"limit": limit, "last_id": last_id or ""}
+        data = {"filter": {"visibility": "ALL"}, "limit": limit, "last_id": last_id or ""}
         return await self._make_request("POST", "/v5/product/info/prices", data)
 
     async def get_product_price_details(self, skus: List[int]) -> Dict[str, Any]:

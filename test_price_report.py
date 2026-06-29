@@ -234,9 +234,11 @@ def test_product_prices_client_uses_v5_endpoint():
         def __init__(self):
             super().__init__(client_id="dummy", api_key="dummy")
             self.endpoint = None
+            self.payload = None
 
         async def _make_request(self, method, endpoint, data=None, **kwargs):
             self.endpoint = endpoint
+            self.payload = data
             return {"items": []}
 
     client = DummyClient()
@@ -244,3 +246,4 @@ def test_product_prices_client_uses_v5_endpoint():
     asyncio.run(client.get_product_prices())
 
     assert client.endpoint == "/v5/product/info/prices"
+    assert client.payload == {"filter": {"visibility": "ALL"}, "limit": 1000, "last_id": ""}
