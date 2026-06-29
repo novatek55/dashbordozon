@@ -56,6 +56,10 @@ def _market_card_from_price_index(price_indexes: Any, key: str) -> Dict[str, Any
         return {"status": "missing", "index": None, "price": None, "source": "", "link": ""}
     price = _to_float(_first_present(block, ("minimal_price", "min_price", "price")))
     index = _to_float(_first_present(block, ("price_index_value", "index", "value")))
+    if price is not None and price <= 0:
+        price = None
+    if index is not None and index <= 0:
+        index = None
     link = str(_first_present(block, ("minimal_price_link", "link", "url", "product_url")) or "")
     source = str(_first_present(block, ("source", "marketplace", "marketplace_name", "domain")) or "")
     if not source and link:

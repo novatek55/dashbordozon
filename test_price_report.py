@@ -87,6 +87,35 @@ def test_build_price_report_item_uses_v5_price_indexes_for_market_cards():
     assert item["other_marketplace_competitor_prices"]["source"] == "market.yandex.ru"
 
 
+def test_build_price_report_item_treats_zero_v5_index_prices_as_missing():
+    row = {
+        "offer_id": "ART-ZERO",
+        "product_name": "Zero",
+        "ozon_product_id": 1005,
+        "fbo_sku_id": 2005,
+        "fbs_sku_id": None,
+        "price_current": Decimal("1000.00"),
+        "price_base": Decimal("1300.00"),
+        "customer_price": None,
+        "price_indexes": json.dumps({
+            "ozon_index_data": {"min_price": 0, "price_index_value": 0},
+            "self_marketplaces_index_data": {"min_price": 0, "price_index_value": 0},
+            "external_index_data": {"min_price": 3694, "price_index_value": 1.19},
+        }),
+        "price_recommended": None,
+        "recommended_price_link": "",
+        "price_details_synced_at": None,
+        "last_synced_at": None,
+    }
+
+    item = build_price_report_item(row)
+
+    assert item["ozon_competitor_prices"]["status"] == "missing"
+    assert item["own_other_marketplace_prices"]["status"] == "missing"
+    assert item["other_marketplace_competitor_prices"]["status"] == "ok"
+    assert item["other_marketplace_competitor_prices"]["price"] == 3694.0
+
+
 def test_build_price_report_item_marks_not_beneficial_when_current_price_is_above_recommended():
     row = {
         "offer_id": "ART-2",
