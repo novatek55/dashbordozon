@@ -4889,15 +4889,15 @@ class SyncManager:
                 or self._pick_by_contains(row, ["зарезервировано", "reserved", "Р·Р°СЂРµР·РµСЂРІРёСЂРѕРІР°РЅРѕ"])
             ),
             "price_current": self._parse_decimal_flexible(
-                self._pick_value(row, ["Текущая цена с учётом скидки, руб.", "Текущая цена с учетом скидки, руб.", "Current price with discount, RUB", "РўРµРєСѓС‰Р°СЏ С†РµРЅР° СЃ СѓС‡С‘С‚РѕРј СЃРєРёРґРєРё, СЂСѓР±."])
+                self._pick_value(row, ["Текущая цена с учётом скидки, руб.", "Текущая цена с учетом скидки, руб.", "Текущая цена с учетом скидки, ₽", "Current price with discount, RUB", "РўРµРєСѓС‰Р°СЏ С†РµРЅР° СЃ СѓС‡С‘С‚РѕРј СЃРєРёРґРєРё, СЂСѓР±."])
                 or self._pick_by_contains(row, ["текущая цена", "current price", "С‚РµРєСѓС‰Р°СЏ С†РµРЅР°"])
             ),
             "price_base": self._parse_decimal_flexible(
-                self._pick_value(row, ["Базовая цена (цена до скидок), руб.", "Base price (before discounts), RUB", "Р‘Р°Р·РѕРІР°СЏ С†РµРЅР° (С†РµРЅР° РґРѕ СЃРєРёРґРѕРє), СЂСѓР±."])
-                or self._pick_by_contains(row, ["базовая цена", "base price", "Р±Р°Р·РѕРІР°СЏ С†РµРЅР°"])
+                self._pick_value(row, ["Базовая цена (цена до скидок), руб.", "Цена до скидки (перечеркнутая цена), ₽", "Base price (before discounts), RUB", "Р‘Р°Р·РѕРІР°СЏ С†РµРЅР° (С†РµРЅР° РґРѕ СЃРєРёРґРѕРє), СЂСѓР±."])
+                or self._pick_by_contains(row, ["базовая цена", "цена до скидки", "перечеркнутая цена", "base price", "Р±Р°Р·РѕРІР°СЏ С†РµРЅР°"])
             ),
             "price_premium": self._parse_decimal_flexible(
-                self._pick_value(row, ["Цена Premium, руб.", "Premium price, RUB", "Р¦РµРЅР° Premium, СЂСѓР±."])
+                self._pick_value(row, ["Цена Premium, руб.", "Цена Premium, ₽", "Premium price, RUB", "Р¦РµРЅР° Premium, СЂСѓР±."])
                 or self._pick_by_contains(row, ["premium"])
             ),
             "price_recommended": self._parse_decimal_flexible(

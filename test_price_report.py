@@ -122,3 +122,21 @@ def test_sync_products_report_row_builder_reads_russian_price_columns():
     assert data["price_base"] == 1490.0
     assert data["price_recommended"] == 1200.0
     assert data["recommended_price_link"] == "https://example.test/rack"
+
+
+def test_sync_products_report_row_builder_reads_current_ozon_price_headers():
+    manager = SyncManager(client=None)
+    row = {
+        "Артикул": "ART-6",
+        "Название товара": "Stand",
+        "Текущая цена с учетом скидки, ₽": "1 669,00",
+        "Цена до скидки (перечеркнутая цена), ₽": "4 400,00",
+        "Цена Premium, ₽": "",
+    }
+
+    data = manager._build_report_product_item_row_data(row, report_id=11, line_no=3)
+
+    assert data["offer_id"] == "ART-6"
+    assert data["product_name"] == "Stand"
+    assert data["price_current"] == 1669.0
+    assert data["price_base"] == 4400.0
