@@ -1,6 +1,8 @@
 from decimal import Decimal
+import asyncio
 
 from src.dashboard.routes.prices import build_price_report_item
+from src.ozon_client import OzonClient
 from src.sync_manager import SyncManager
 
 
@@ -164,3 +166,20 @@ def test_product_price_details_row_builder_reads_customer_price_object():
     assert data["price"] == 1600.0
     assert data["details_status"] == "ok"
     assert data["price_indexes"] == [{"type": "external_marketplace", "index": "1.22"}]
+
+
+def test_product_price_details_client_filters_zero_skus_before_request():
+    class DummyClient(OzonClient):
+        def __init__(self):
+            super().__init__(client_id="dummy", api_key="dummy")
+            self.payload = None
+
+        async def _make_request(self, method, endpoint, data=None, **kwargs):
+            self.payload = data
+            return {"prices": []}
+
+    client = DummyClient()
+
+    asyncio.run(client.get_product_price_details([0, 123, None, -5, 456]))
+
+    assert client.payload == {"skus": ["123", "456"]}

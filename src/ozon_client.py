@@ -395,11 +395,19 @@ class OzonClient:
 
     async def get_product_price_details(self, skus: List[int]) -> Dict[str, Any]:
         """Get detailed product site prices from Premium Pro price endpoint."""
-        if not skus:
+        normalized_skus: List[int] = []
+        for sku in skus:
+            try:
+                sku_int = int(sku)
+            except (TypeError, ValueError):
+                continue
+            if sku_int > 0:
+                normalized_skus.append(sku_int)
+        if not normalized_skus:
             raise OzonAPIError("skus must not be empty")
-        if len(skus) > 1000:
+        if len(normalized_skus) > 1000:
             raise OzonAPIError("skus must contain at most 1000 items")
-        data = {"skus": [str(sku) for sku in skus]}
+        data = {"skus": [str(sku) for sku in normalized_skus]}
         return await self._make_request("POST", "/v1/product/prices/details", data)
     
     async def get_all_product_prices(self) -> AsyncGenerator[List[Dict], None]:
