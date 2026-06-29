@@ -1841,24 +1841,10 @@ class SyncManager:
                             records_processed += 1
 
                         price_indexes = item.get("price_indexes")
-                        sku = self._parse_int_flexible(
-                            item.get("sku")
-                            or item.get("fbo_sku")
-                            or item.get("fbs_sku")
-                            or item.get("product_id")
-                        )
                         if offer_id and isinstance(price_indexes, dict):
-                            detail_data = {
-                                "sku": sku if sku and sku > 0 else None,
-                                "offer_id": offer_id,
-                                "customer_price": None,
-                                "price": self._extract_price_object_value(item.get("price")),
-                                "price_indexes": price_indexes,
-                                "details_status": "ok",
-                                "error_message": None,
-                                "raw_data": item,
-                                "last_synced_at": datetime.now(),
-                            }
+                            detail_data = self._build_product_price_detail_row_data(item)
+                            if not detail_data["sku"] or detail_data["sku"] <= 0:
+                                detail_data["sku"] = None
                             stmt_detail = pg_insert(ProductPriceDetail).values(**detail_data)
                             if detail_data["sku"]:
                                 stmt_detail = stmt_detail.on_conflict_do_update(
@@ -4959,11 +4945,20 @@ class SyncManager:
 
     def _build_product_price_detail_row_data(self, row: Dict[str, Any]) -> Dict[str, Any]:
         """Normalize one item from /v1/product/prices/details."""
+        price_obj = row.get("price")
+        customer_price = self._extract_price_object_value(row.get("customer_price"))
+        if customer_price is None and isinstance(price_obj, dict):
+            customer_price = self._extract_price_object_value(price_obj.get("marketing_seller_price"))
         return {
-            "sku": self._parse_int_flexible(row.get("sku")),
+            "sku": self._parse_int_flexible(
+                row.get("sku")
+                or row.get("product_id")
+                or row.get("fbo_sku")
+                or row.get("fbs_sku")
+            ),
             "offer_id": row.get("offer_id"),
-            "customer_price": self._extract_price_object_value(row.get("customer_price")),
-            "price": self._extract_price_object_value(row.get("price")),
+            "customer_price": customer_price,
+            "price": self._extract_price_object_value(price_obj),
             "price_indexes": row.get("price_indexes") or [],
             "details_status": "ok",
             "error_message": None,
