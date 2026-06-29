@@ -1480,6 +1480,27 @@ class ReportProductItem(Base):
     )
 
 
+class ProductPriceDetail(Base):
+    """Detailed Ozon site prices from /v1/product/prices/details."""
+    __tablename__ = "product_price_details"
+
+    id = Column(Integer, primary_key=True)
+    sku = Column(BigInteger, nullable=False, unique=True, index=True)
+    offer_id = Column(String(255), index=True)
+    customer_price = Column(Numeric(15, 2))
+    price = Column(Numeric(15, 2))
+    price_indexes = Column(JSON)
+    details_status = Column(String(50), nullable=False, default="ok")
+    error_message = Column(Text)
+    raw_data = Column(JSON)
+    last_synced_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index("idx_product_price_details_offer", "offer_id"),
+        Index("idx_product_price_details_synced", "last_synced_at"),
+    )
+
+
 class ReportReturnItem(Base):
     """Stroki CSV otcheta po vozvratam (/v2/report/returns/create)."""
     __tablename__ = "report_returns_items"

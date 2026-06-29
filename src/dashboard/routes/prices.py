@@ -27,10 +27,20 @@ def _source_from_url(url: str) -> str:
     return host
 
 
+def _row_get(row: Any, key: str, default: Any = None) -> Any:
+    try:
+        return row[key]
+    except (KeyError, IndexError, TypeError):
+        return default
+
+
 def build_price_report_item(row: Any) -> Dict[str, Any]:
     current_price = _to_float(row["price_current"])
+    customer_price = _to_float(_row_get(row, "customer_price"))
     recommended_price = _to_float(row["price_recommended"])
     recommended_price_link = row["recommended_price_link"] or ""
+    customer_price_status = _row_get(row, "price_details_status") or ("ok" if customer_price is not None else "missing")
+    price_details_synced_at = _row_get(row, "price_details_synced_at")
     is_beneficial: Optional[bool] = None
     if current_price is not None and recommended_price is not None and recommended_price > 0:
         is_beneficial = current_price <= recommended_price
@@ -52,6 +62,8 @@ def build_price_report_item(row: Any) -> Dict[str, Any]:
         "fbo_sku_id": row["fbo_sku_id"],
         "fbs_sku_id": row["fbs_sku_id"],
         "price_current": current_price,
+        "customer_price": customer_price,
+        "customer_price_status": customer_price_status,
         "price_base": _to_float(row["price_base"]),
         "price_recommended": recommended_price,
         "recommended_price_link": recommended_price_link,
@@ -62,6 +74,7 @@ def build_price_report_item(row: Any) -> Dict[str, Any]:
         "other_marketplace_competitor_prices": other_marketplace.copy(),
         "is_beneficial_price": is_beneficial,
         "beneficial_price_status": "Да" if is_beneficial is True else "Нет" if is_beneficial is False else "",
+        "price_details_synced_at": price_details_synced_at.isoformat() if price_details_synced_at else None,
         "last_synced_at": row["last_synced_at"].isoformat() if row["last_synced_at"] else None,
     }
 
@@ -81,32 +94,42 @@ async def get_price_report(request: web.Request) -> web.Response:
         ORDER BY last_synced_at DESC NULLS LAST, report_id DESC
         LIMIT 1
     """
-    where_parts = [f"report_id = ({latest_report_sql})"]
+    where_parts = [f"rpi.report_id = ({latest_report_sql})"]
     params: list[Any] = []
     if offer_id:
         params.append(f"%{offer_id}%")
-        where_parts.append(f"offer_id ILIKE ${len(params)}")
+        where_parts.append(f"rpi.offer_id ILIKE ${len(params)}")
     params.append(limit)
     limit_placeholder = f"${len(params)}"
 
     sql = f"""
         SELECT
-            offer_id,
-            product_name,
-            ozon_product_id,
-            fbo_sku_id,
-            fbs_sku_id,
-            price_current,
-            price_base,
-            price_recommended,
-            recommended_price_link,
-            last_synced_at
-        FROM report_products_items
+            rpi.offer_id,
+            rpi.product_name,
+            rpi.ozon_product_id,
+            rpi.fbo_sku_id,
+            rpi.fbs_sku_id,
+            rpi.price_current,
+            rpi.price_base,
+            ppd.customer_price,
+            ppd.details_status AS price_details_status,
+            ppd.last_synced_at AS price_details_synced_at,
+            rpi.price_recommended,
+            rpi.recommended_price_link,
+            rpi.last_synced_at
+        FROM report_products_items rpi
+        LEFT JOIN LATERAL (
+            SELECT customer_price, details_status, last_synced_at
+            FROM product_price_details ppd
+            WHERE ppd.sku IN (rpi.fbo_sku_id, rpi.fbs_sku_id)
+            ORDER BY ppd.last_synced_at DESC NULLS LAST
+            LIMIT 1
+        ) ppd ON TRUE
         WHERE {" AND ".join(where_parts)}
         ORDER BY
-            CASE WHEN price_recommended IS NOT NULL AND recommended_price_link IS NOT NULL THEN 0 ELSE 1 END,
-            offer_id NULLS LAST,
-            line_no
+            CASE WHEN rpi.price_recommended IS NOT NULL AND rpi.recommended_price_link IS NOT NULL THEN 0 ELSE 1 END,
+            rpi.offer_id NULLS LAST,
+            rpi.line_no
         LIMIT {limit_placeholder}
     """
 

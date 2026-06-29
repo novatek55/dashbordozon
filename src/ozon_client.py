@@ -392,6 +392,15 @@ class OzonClient:
         """Poluchenie cen tovarov."""
         data = {"limit": limit, "last_id": last_id or ""}
         return await self._make_request("POST", "/v4/product/info/prices", data)
+
+    async def get_product_price_details(self, skus: List[int]) -> Dict[str, Any]:
+        """Get detailed product site prices from Premium Pro price endpoint."""
+        if not skus:
+            raise OzonAPIError("skus must not be empty")
+        if len(skus) > 1000:
+            raise OzonAPIError("skus must contain at most 1000 items")
+        data = {"skus": [str(sku) for sku in skus]}
+        return await self._make_request("POST", "/v1/product/prices/details", data)
     
     async def get_all_product_prices(self) -> AsyncGenerator[List[Dict], None]:
         """Poluchenie vseh cen s paginaciej."""

@@ -13,8 +13,10 @@ def test_build_price_report_item_marks_beneficial_when_current_price_is_not_abov
         "fbs_sku_id": None,
         "price_current": Decimal("990.00"),
         "price_base": Decimal("1290.00"),
+        "customer_price": Decimal("880.00"),
         "price_recommended": Decimal("1000.00"),
         "recommended_price_link": "https://example.test/p/1",
+        "price_details_synced_at": None,
         "last_synced_at": None,
     }
 
@@ -22,6 +24,8 @@ def test_build_price_report_item_marks_beneficial_when_current_price_is_not_abov
 
     assert item["offer_id"] == "ART-1"
     assert item["price_current"] == 990.0
+    assert item["customer_price"] == 880.0
+    assert item["customer_price_status"] == "ok"
     assert item["price_recommended"] == 1000.0
     assert item["recommended_price_link"] == "https://example.test/p/1"
     assert item["is_beneficial_price"] is True
@@ -140,3 +144,23 @@ def test_sync_products_report_row_builder_reads_current_ozon_price_headers():
     assert data["product_name"] == "Stand"
     assert data["price_current"] == 1669.0
     assert data["price_base"] == 4400.0
+
+
+def test_product_price_details_row_builder_reads_customer_price_object():
+    manager = SyncManager(client=None)
+    row = {
+        "sku": 123456789,
+        "offer_id": "ART-7",
+        "customer_price": {"price": "984.00"},
+        "price": {"price": "1600.00"},
+        "price_indexes": [{"type": "external_marketplace", "index": "1.22"}],
+    }
+
+    data = manager._build_product_price_detail_row_data(row)
+
+    assert data["sku"] == 123456789
+    assert data["offer_id"] == "ART-7"
+    assert data["customer_price"] == 984.0
+    assert data["price"] == 1600.0
+    assert data["details_status"] == "ok"
+    assert data["price_indexes"] == [{"type": "external_marketplace", "index": "1.22"}]

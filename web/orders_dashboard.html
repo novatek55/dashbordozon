@@ -3513,6 +3513,7 @@
       price_report: [
         { key: "name_offer", label: "Название и артикул" },
         { key: "price_current", label: "Ваша цена" },
+        { key: "customer_price", label: "Цена для покупателя" },
         { key: "price_index", label: "Индекс цен" },
         { key: "ozon_competitor_prices", label: "Цены конкурентов на Ozon" },
         { key: "own_other_marketplace_prices", label: "Ваши цены на других площадках" },
@@ -4786,6 +4787,11 @@
           }
           if (key === "price_current") {
             return `<td class="price-money">${escapePriceHtml(money(row.price_current))}${row.price_base ? `<span class="price-old">${escapePriceHtml(money(row.price_base))}</span>` : ""}</td>`;
+          }
+          if (key === "customer_price") {
+            const status = String(row.customer_price_status || "");
+            const emptyText = status === "forbidden" ? "Нет доступа" : "";
+            return `<td class="price-money">${row.customer_price !== null && row.customer_price !== undefined && row.customer_price !== "" ? escapePriceHtml(money(row.customer_price)) : `<span class="market-empty">${escapePriceHtml(emptyText)}</span>`}</td>`;
           }
           if (key === "price_index") {
             return `<td>${renderIndexChip(row)}</td>`;

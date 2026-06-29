@@ -27,7 +27,7 @@ from src.models import (
     SellerRating, SellerRatingHistory, Review, ReviewComment, ReviewRatingSnapshot,
     Question, QuestionAnswer, ChatThread, ChatMessage,
     PromoAction, PromoProduct, AsyncReport, RealizationReport,
-    RealizationReportDetail, FactOrder, FactOrderItem, ReportProductItem,
+    RealizationReportDetail, FactOrder, FactOrderItem, ReportProductItem, ProductPriceDetail,
     ReportReturnItem, ReportWarehouseStockItem, ReportCompensationItem, ReportDownloadRetry,
     TransactionItem, TransactionService, FBSWarehouseStock,
     AnalyticsProductQuerySummary, AnalyticsProductQueryDetail,
@@ -4913,6 +4913,144 @@ class SyncManager:
             "last_synced_at": datetime.now(),
         }
 
+    def _extract_price_object_value(self, value: Any) -> Optional[float]:
+        if isinstance(value, dict):
+            for key in ("price", "value", "amount", "discounted_price", "current_price", "ozon_price"):
+                parsed = self._parse_decimal_flexible(value.get(key))
+                if parsed is not None:
+                    return parsed
+            return None
+        return self._parse_decimal_flexible(value)
+
+    def _build_product_price_detail_row_data(self, row: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize one item from /v1/product/prices/details."""
+        return {
+            "sku": self._parse_int_flexible(row.get("sku")),
+            "offer_id": row.get("offer_id"),
+            "customer_price": self._extract_price_object_value(row.get("customer_price")),
+            "price": self._extract_price_object_value(row.get("price")),
+            "price_indexes": row.get("price_indexes") or [],
+            "details_status": "ok",
+            "error_message": None,
+            "raw_data": row,
+            "last_synced_at": datetime.now(),
+        }
+
+    async def _load_report_product_skus(self, report_ids: Optional[List[int]] = None) -> List[int]:
+        conditions = []
+        params: Dict[str, Any] = {}
+        if report_ids:
+            conditions.append("report_id = ANY(:report_ids)")
+            params["report_ids"] = report_ids
+        else:
+            conditions.append(
+                """
+                report_id = (
+                    SELECT report_id
+                    FROM report_products_items
+                    ORDER BY last_synced_at DESC NULLS LAST, report_id DESC
+                    LIMIT 1
+                )
+                """
+            )
+        where_sql = " AND ".join(conditions)
+        async with db_manager.session() as session:
+            result = await session.execute(
+                text(
+                    f"""
+                    SELECT DISTINCT sku
+                    FROM (
+                        SELECT fbo_sku_id AS sku
+                        FROM report_products_items
+                        WHERE {where_sql}
+                        UNION
+                        SELECT fbs_sku_id AS sku
+                        FROM report_products_items
+                        WHERE {where_sql}
+                    ) product_skus
+                    WHERE sku IS NOT NULL
+                    ORDER BY sku
+                    """
+                ),
+                params,
+            )
+            return [int(row[0]) for row in result.fetchall() if row and row[0] is not None]
+
+    async def _mark_product_price_details_forbidden(self, skus: List[int], error_message: str) -> int:
+        if not skus:
+            return 0
+        now_ts = datetime.now()
+        rows = [
+            {
+                "sku": sku,
+                "offer_id": None,
+                "customer_price": None,
+                "price": None,
+                "price_indexes": [],
+                "details_status": "forbidden",
+                "error_message": error_message[:1000],
+                "raw_data": {"error": error_message},
+                "last_synced_at": now_ts,
+            }
+            for sku in skus
+        ]
+        async with db_manager.session() as session:
+            stmt = pg_insert(ProductPriceDetail).values(rows)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["sku"],
+                set_={
+                    "details_status": stmt.excluded.details_status,
+                    "error_message": stmt.excluded.error_message,
+                    "raw_data": stmt.excluded.raw_data,
+                    "last_synced_at": stmt.excluded.last_synced_at,
+                },
+            )
+            await session.execute(stmt)
+        return len(rows)
+
+    async def sync_product_price_details_for_report_products(
+        self,
+        report_ids: Optional[List[int]] = None,
+    ) -> Dict[str, Any]:
+        """Sync detailed Ozon site prices for SKUs from report_products_items."""
+        skus = await self._load_report_product_skus(report_ids)
+        if not skus:
+            return {"status": "no_skus", "skus": 0, "updated": 0}
+
+        updated = 0
+        forbidden_marked = 0
+        for offset in range(0, len(skus), 1000):
+            chunk = skus[offset : offset + 1000]
+            try:
+                response = await self.client.get_product_price_details(chunk)
+            except OzonAPIError as exc:
+                if exc.status_code == 403:
+                    forbidden_marked += await self._mark_product_price_details_forbidden(chunk, str(exc))
+                    continue
+                raise
+            prices = response.get("prices") or (response.get("result") or {}).get("prices") or []
+            rows = []
+            for item in prices:
+                if not isinstance(item, dict):
+                    continue
+                row_data = self._build_product_price_detail_row_data(item)
+                if row_data["sku"] is None:
+                    continue
+                rows.append(row_data)
+            if not rows:
+                continue
+            async with db_manager.session() as session:
+                stmt = pg_insert(ProductPriceDetail).values(rows)
+                stmt = stmt.on_conflict_do_update(
+                    index_elements=["sku"],
+                    set_={k: getattr(stmt.excluded, k) for k in rows[0].keys() if k != "sku"},
+                )
+                await session.execute(stmt)
+            updated += len(rows)
+
+        status = "forbidden" if forbidden_marked and updated == 0 else "ok"
+        return {"status": status, "skus": len(skus), "updated": updated, "forbidden_marked": forbidden_marked}
+
     async def sync_products_report(self, pages: int = 10, page_size: int = 100) -> Dict[str, Any]:
         """Skachivanie seller_products otcheta i zagruzka strok v report_products_items."""
         logger.info("Starting report_products sync...")
@@ -4933,7 +5071,8 @@ class SyncManager:
                 )
                 recent_report_ids = [int(r[0]) for r in recent_ids_res.fetchall() if r and r[0] is not None]
             offer_backfilled = await self._backfill_report_products_offer_ids(recent_report_ids)
-            return {**skip_result, "offer_backfilled": offer_backfilled}
+            price_details = await self.sync_product_price_details_for_report_products(recent_report_ids)
+            return {**skip_result, "offer_backfilled": offer_backfilled, "price_details": price_details}
 
         reports_processed = 0
         rows_upserted = 0
@@ -5040,6 +5179,7 @@ class SyncManager:
                     reports_processed += 1
 
             offer_backfilled = await self._backfill_report_products_offer_ids(processed_report_ids)
+            price_details = await self.sync_product_price_details_for_report_products(processed_report_ids)
 
             await self._update_sync_log(
                 sync_log,
@@ -5051,7 +5191,12 @@ class SyncManager:
             logger.info(
                 f"report_products sync completed: reports={reports_processed}, rows_upserted={rows_upserted}, offer_backfilled={offer_backfilled}"
             )
-            return {"reports_processed": reports_processed, "rows_upserted": rows_upserted, "offer_backfilled": offer_backfilled}
+            return {
+                "reports_processed": reports_processed,
+                "rows_upserted": rows_upserted,
+                "offer_backfilled": offer_backfilled,
+                "price_details": price_details,
+            }
         except Exception as e:
             logger.error(f"report_products sync failed: {e}")
             await self._update_sync_log(sync_log, "error", error_message=str(e))
