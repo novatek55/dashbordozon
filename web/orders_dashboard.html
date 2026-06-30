@@ -3515,7 +3515,6 @@
         { key: "price_current", label: "Ваша цена" },
         { key: "customer_price", label: "Цена для покупателя" },
         { key: "price_index", label: "Индекс цен" },
-        { key: "ozon_competitor_prices", label: "Цены конкурентов на Ozon" },
         { key: "own_other_marketplace_prices", label: "Ваши цены на других площадках" },
         { key: "other_marketplace_competitor_prices", label: "Цены конкурентов на других площадках" },
       ],
@@ -4795,9 +4794,6 @@
           }
           if (key === "price_index") {
             return `<td>${renderIndexChip(row)}</td>`;
-          }
-          if (key === "ozon_competitor_prices") {
-            return `<td>${renderMarketCard(row.ozon_competitor_prices, true)}</td>`;
           }
           if (key === "own_other_marketplace_prices") {
             return `<td>${renderMarketCard(row.own_other_marketplace_prices)}</td>`;

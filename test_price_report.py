@@ -1,10 +1,19 @@
 from decimal import Decimal
 import asyncio
 import json
+from pathlib import Path
 
 from src.dashboard.routes.prices import build_price_report_item
 from src.ozon_client import OzonClient
 from src.sync_manager import SyncManager
+
+
+def test_price_report_columns_do_not_include_ozon_competitor_prices():
+    html = Path("web/orders_dashboard.html").read_text(encoding="utf-8")
+    columns_block = html.split("price_report: [", 1)[1].split("],", 1)[0]
+
+    assert "ozon_competitor_prices" not in columns_block
+    assert "Цены конкурентов на Ozon" not in columns_block
 
 
 def test_build_price_report_item_marks_beneficial_when_current_price_is_not_above_recommended():
