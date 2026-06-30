@@ -242,7 +242,7 @@ def test_product_price_details_row_builder_reads_customer_price_object():
     assert data["price_indexes"] == [{"type": "external_marketplace", "index": "1.22"}]
 
 
-def test_product_price_details_row_builder_reads_v5_marketing_seller_price_as_customer_price():
+def test_product_price_details_row_builder_does_not_use_v5_marketing_seller_price_as_customer_price():
     manager = SyncManager(client=None)
     row = {
         "product_id": 4571462801,
@@ -259,7 +259,7 @@ def test_product_price_details_row_builder_reads_v5_marketing_seller_price_as_cu
 
     assert data["sku"] == 4571462801
     assert data["offer_id"] == "405-40"
-    assert data["customer_price"] == 1013.0
+    assert data["customer_price"] is None
     assert data["price"] == 1650.0
 
 

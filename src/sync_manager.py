@@ -4947,8 +4947,6 @@ class SyncManager:
         """Normalize one item from /v1/product/prices/details."""
         price_obj = row.get("price")
         customer_price = self._extract_price_object_value(row.get("customer_price"))
-        if customer_price is None and isinstance(price_obj, dict):
-            customer_price = self._extract_price_object_value(price_obj.get("marketing_seller_price"))
         return {
             "sku": self._parse_int_flexible(
                 row.get("sku")
