@@ -11,5 +11,5 @@ WorkingDirectory=/opt/ozon-dashboard
 EnvironmentFile=/etc/ozon-dashboard.env
 Environment=PYTHONUNBUFFERED=1
 Environment=PYTHONUTF8=1
-Environment=OZON_CHROMIUM_PATH=/snap/bin/chromium
+Environment=OZON_CHROMIUM_PATH=/usr/bin/google-chrome
 ExecStart=/usr/bin/flock -n /opt/ozon-dashboard/logs/ozon-price-control-sync.lock /opt/ozon-dashboard/.venv/bin/python -m src.seller_price_control_sync --apply --seconds 75 --output /opt/ozon-dashboard/exports/price_control_sync.json
