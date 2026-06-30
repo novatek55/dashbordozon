@@ -30,6 +30,11 @@ def parse_args() -> argparse.Namespace:
         help="Comma-separated substrings to filter URLs (e.g. upsert-items,supplier-drafts)",
     )
     p.add_argument("--seconds", type=int, default=30, help="Capture duration")
+    p.add_argument(
+        "--navigate-url",
+        default="",
+        help="Optional URL to navigate the matched tab to after Network.enable",
+    )
     p.add_argument("--max-post-bytes", type=int, default=1024 * 1024)
     p.add_argument("--output", default="exports/cdp_network_capture.json")
     return p.parse_args()
@@ -39,11 +44,23 @@ async def find_target_id(
     session: aiohttp.ClientSession, relay_http: str, relay_token: str, url_contains: str
 ) -> tuple[str, str]:
     async with session.get(f"{relay_http}/json/list?token={relay_token}") as resp:
-        tabs = await resp.json()
+        payload = await resp.json()
+    tabs = payload if isinstance(payload, list) else payload.get("value", [])
+    matches = []
     for t in tabs:
         url = str(t.get("url", ""))
         if url_contains in url:
-            return str(t.get("id")), url
+            matches.append(t)
+    if matches:
+        selected = next(
+            (
+                t
+                for t in matches
+                if "signin" not in str(t.get("url", "")) and "login" not in str(t.get("url", ""))
+            ),
+            matches[0],
+        )
+        return str(selected.get("id")), str(selected.get("url", ""))
     raise RuntimeError(f"No tab found with url containing: {url_contains}")
 
 
@@ -74,7 +91,10 @@ async def run_capture(args: argparse.Namespace) -> dict[str, Any]:
                 cmd_id += 1
 
             await send("Runtime.enable")
+            await send("Page.enable")
             await send("Network.enable", {"maxPostDataSize": args.max_post_bytes})
+            if args.navigate_url:
+                await send("Page.navigate", {"url": args.navigate_url})
 
             deadline = time.time() + args.seconds
             while time.time() < deadline:
