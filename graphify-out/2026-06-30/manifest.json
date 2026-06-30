@@ -170,8 +170,8 @@
     "semantic_hash": "092808fb56b082c8fd63fae344a8fdb9"
   },
   "deploy/install_ozon_dashboard.sh": {
-    "mtime": 1782755000.1428778,
-    "ast_hash": "9711f8c69471720826da26ddfa89fab8",
+    "mtime": 1782843607.397309,
+    "ast_hash": "e0a724206ca1c82be791ebfba65bcd2f",
     "semantic_hash": ""
   },
   "export_report_row_sources_xlsx.py": {
@@ -1302,6 +1302,16 @@
   "test_seller_price_control.py": {
     "mtime": 1782842941.2822,
     "ast_hash": "227b130fdabb663a12878383a507276e",
+    "semantic_hash": ""
+  },
+  "src/seller_price_control_sync.py": {
+    "mtime": 1782843541.6162152,
+    "ast_hash": "05e61d0f367a860cd84cdfc5c0415739",
+    "semantic_hash": ""
+  },
+  "test_seller_price_control_sync.py": {
+    "mtime": 1782843632.8715043,
+    "ast_hash": "7d5fb5aafe1f8ee7c4c5156844cad846",
     "semantic_hash": ""
   }
 }

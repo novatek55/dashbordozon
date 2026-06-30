@@ -39,6 +39,7 @@ def find_chromium_executable(explicit: str = "") -> str:
     candidates = [
         explicit,
         os.getenv("OZON_CHROMIUM_PATH", ""),
+        "/snap/bin/chromium",
         "/usr/bin/chromium",
         "/usr/bin/chromium-browser",
         "/usr/bin/google-chrome",

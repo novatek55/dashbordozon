@@ -18,6 +18,7 @@ def test_find_chromium_executable_errors_when_not_found(monkeypatch):
 
     def fake_exists(self):
         if str(self) in {
+            "/snap/bin/chromium",
             "/usr/bin/chromium",
             "/usr/bin/chromium-browser",
             "/usr/bin/google-chrome",

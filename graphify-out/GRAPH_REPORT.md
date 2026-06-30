@@ -1,16 +1,16 @@
 # Graph Report - ozonapi-clean-prices  (2026-06-30)
 
 ## Corpus Check
-- 243 files · ~555,850 words
+- 243 files · ~555,852 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3063 nodes · 6604 edges · 191 communities (157 shown, 34 thin omitted)
+- 3063 nodes · 6604 edges · 192 communities (157 shown, 35 thin omitted)
 - Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 689 edges (avg confidence: 0.53)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `bd689bea`
+- Built from commit: `c34da5ab`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -186,6 +186,7 @@
 - [[_COMMUNITY_Community 183|Community 183]]
 - [[_COMMUNITY_Community 184|Community 184]]
 - [[_COMMUNITY_Community 185|Community 185]]
+- [[_COMMUNITY_Community 190|Community 190]]
 - [[_COMMUNITY_Community 191|Community 191]]
 
 ## God Nodes (most connected - your core abstractions)
@@ -233,7 +234,7 @@
 - 1-file cycle: `src/services/returns_analytics.py -> src/services/returns_analytics.py`
 - 1-file cycle: `src/supply_scan_warehouses_ui.py -> src/supply_scan_warehouses_ui.py`
 
-## Communities (191 total, 34 thin omitted)
+## Communities (192 total, 35 thin omitted)
 
 ### Community 0 - "Ozon Client"
 Cohesion: 0.04
@@ -312,7 +313,7 @@ Cohesion: 0.12
 Nodes (24): calculatePallets(), clearShipment(), closeModal(), currentProducts, currentShipment, deleteProduct(), deleteShipmentItem(), editProduct() (+16 more)
 
 ### Community 19 - "month bounds()"
-Cohesion: 0.11
+Cohesion: 0.12
 Nodes (23): normalize_wb_finance(), Raw-sync WB finance detailed report into shared DB., Normalize WB raw rows into wb_fact_finance., Rebuild WB daily finance vitrine with final-day marker., rebuild_wb_finance_daily(), sync_wb_finance(), _is_retryable(), BaseException (+15 more)
 
 ### Community 20 - "Client Session"
@@ -377,7 +378,7 @@ Nodes (32): async_main(), build_items(), build_parser(), choose_fact_order_id(),
 
 ### Community 35 - "scan and set warehouses()"
 Cohesion: 0.14
-Nodes (27): _activate_cluster_request_items_tab(), _close_modal(), _get_clusters_from_table(), _normalize_cluster_key(), _open_cluster_items_modal(), Any, supply_scan_warehouses_ui.py — Сканирование складов через UI seller.ozon.ru (Pla, Закрыть модальное окно — нажать крестик или Escape. (+19 more)
+Nodes (27): _activate_cluster_request_items_tab(), _close_modal(), _get_clusters_from_table(), _normalize_cluster_key(), pick_optimal_warehouses(), Any, supply_scan_warehouses_ui.py — Сканирование складов через UI seller.ozon.ru (Pla, Закрыть модальное окно — нажать крестик или Escape. (+19 more)
 
 ### Community 36 - "export analytics endpoints.py"
 Cohesion: 0.21
@@ -420,8 +421,8 @@ Cohesion: 0.05
 Nodes (39): FBO (Fulfillment by Ozon), FBS (Fulfillment by Seller), Ozon Seller API - Сжатая инструкция по всем методам, 📊 PERFORMANCE API (Реклама), rFBS (real FBS), rFBS Возвраты, 🎁 АКЦИИ И ПРОМО (Promo), 📊 АНАЛИТИКА (Analytics) (+31 more)
 
 ### Community 46 - "WB Finance Client"
-Cohesion: 0.12
-Nodes (13): _is_retryable(), Any, BaseException, Client for Wildberries Promotion API., Minimal WB Promotion API client for advertising spend ingestion., WBAdvertisingClient, Any, Wildberries API error. (+5 more)
+Cohesion: 0.14
+Nodes (10): _is_retryable(), Any, BaseException, Client for Wildberries Promotion API., Minimal WB Promotion API client for advertising spend ingestion., WBAdvertisingClient, Any, Wildberries API error. (+2 more)
 
 ### Community 47 - "export finance reports.py"
 Cohesion: 0.11
@@ -449,7 +450,7 @@ Nodes (30): BaseSettings, month_bounds(), to_asyncpg_dsn(), analyze_finance_data
 
 ### Community 53 - "OzonAPI Error"
 Cohesion: 0.05
-Nodes (24): OzonClient, Inicializacija sessii., Poluchenie spiska skladov prodavca (FBO/FBS)., Poluchenie spiska otzyvov., Poluchenie vseh otzyvov s paginaciej., Poluchenie kommentariev k otzyvu., Poluchenie spiska voprosov., Poluchenie vseh voprosov s paginaciej. (+16 more)
+Nodes (22): OzonClient, Inicializacija sessii., Poluchenie spiska skladov prodavca (FBO/FBS)., Poluchenie spiska otzyvov., Poluchenie vseh otzyvov s paginaciej., Poluchenie kommentariev k otzyvu., Poluchenie spiska voprosov., Poluchenie vseh voprosov s paginaciej. (+14 more)
 
 ### Community 54 - "export weekly accruals 2026.py"
 Cohesion: 0.20
@@ -508,8 +509,8 @@ Cohesion: 0.11
 Nodes (18): 1) Pages In Scope, 2) Baseline Audit Artifacts, 3.1 Typography, 3.2 Color Tokens, 3.3 Buttons, 3.4 Tables, 3.5 Layout & Spacing, 3) Unified Design Standard (Target) (+10 more)
 
 ### Community 68 - "Community 68"
-Cohesion: 0.20
-Nodes (14): Sync WB supplier stock balances., sync_wb_stocks_report(), Minimal WB statistics API client for stock balances., WBStocksClient, _as_bool(), _as_float(), _as_int(), _normalize_row() (+6 more)
+Cohesion: 0.16
+Nodes (17): Sync WB supplier stock balances., sync_wb_stocks_report(), _is_retryable(), BaseException, Client for Wildberries stocks API., Minimal WB statistics API client for stock balances., WBStocksClient, _as_bool() (+9 more)
 
 ### Community 69 - "scan all storage timeslots.py"
 Cohesion: 0.14
@@ -749,7 +750,7 @@ Nodes (7): find_target_id(), main(), parse_args(), Any, ClientSession, Namespace
 
 ### Community 174 - "Community 174"
 Cohesion: 0.28
-Nodes (9): _click_select_for_cluster(), _log(), pick_optimal_warehouses(), Ввести имя склада в поле 'Наименование или адрес'.      Label перекрывает inpu, Выбрать оптимальный склад для каждого кластера.      Алгоритм:     1. Найти с, Для каждого кластера: открыть модалку, ввести склад, нажать     "Выбрать точку", Найти строку кластера по имени, кликнуть кнопку в последнем столбце.     Исполь, set_warehouses_for_draft() (+1 more)
+Nodes (9): _click_select_for_cluster(), _log(), _open_cluster_items_modal(), Открыть модалку товаров кластера из строки таблицы черновика., Ввести имя склада в поле 'Наименование или адрес'.      Label перекрывает inpu, Для каждого кластера: открыть модалку, ввести склад, нажать     "Выбрать точку", Найти строку кластера по имени, кликнуть кнопку в последнем столбце.     Исполь, set_warehouses_for_draft() (+1 more)
 
 ### Community 175 - "Community 175"
 Cohesion: 0.12
@@ -790,12 +791,12 @@ Nodes (6): Лог синхронизации данных., SyncLog, Vozvrat pos
 ## Knowledge Gaps
 - **533 isolated node(s):** `node`, `CODEX_BROWSER_RELAY_TOKEN`, `CODEX_BROWSER_RELAY_PORT`, `WebSocket`, `WebSocket` (+528 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **34 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **35 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `OzonClient` connect `OzonAPI Error` to `Ozon Client`, `models.py`, `. update sync log()`, `app.py`, `main.py`, `palletization routes.py`, `Community 156`, `Ozon Analytics`, `backfill missing posting items.py`, `export analytics endpoints.py`, `export finance reports.py`, `Community 175`, `Community 177`, `Community 178`, `Community 191`, `.get returns list()`, `Sync Log`, `supply crossdock test.py`, `.get cash flow statement()`, `Community 95`?**
+- **Why does `OzonClient` connect `OzonAPI Error` to `Ozon Client`, `models.py`, `. update sync log()`, `app.py`, `main.py`, `palletization routes.py`, `Community 156`, `Ozon Analytics`, `backfill missing posting items.py`, `export analytics endpoints.py`, `export finance reports.py`, `Community 175`, `Community 177`, `Community 178`, `Community 190`, `Community 191`, `.get returns list()`, `Sync Log`, `supply crossdock test.py`, `.get cash flow statement()`, `Community 95`?**
   _High betweenness centrality (0.155) - this node is a cross-community bridge._
 - **Why does `SyncManager` connect `. update sync log()` to `models.py`, `Ozon Analytics`, `backfill missing posting items.py`, `main.py`, `import finance exports.py`, `export finance reports.py`, `Community 175`, `supply crossdock test.py`, `Community 178`, `OzonAPI Error`, `Community 182`, `Community 185`?**
   _High betweenness centrality (0.066) - this node is a cross-community bridge._
