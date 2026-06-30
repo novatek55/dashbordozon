@@ -87,6 +87,30 @@ def test_build_price_report_item_uses_v5_price_indexes_for_market_cards():
     assert item["other_marketplace_competitor_prices"]["source"] == "market.yandex.ru"
 
 
+def test_build_price_report_item_marks_customer_price_missing_when_detail_row_has_no_price():
+    row = {
+        "offer_id": "ART-NO-CUSTOMER",
+        "product_name": "No customer price",
+        "ozon_product_id": 1006,
+        "fbo_sku_id": 2006,
+        "fbs_sku_id": None,
+        "price_current": Decimal("1000.00"),
+        "price_base": Decimal("1300.00"),
+        "customer_price": None,
+        "price_details_status": "ok",
+        "price_indexes": None,
+        "price_recommended": None,
+        "recommended_price_link": "",
+        "price_details_synced_at": None,
+        "last_synced_at": None,
+    }
+
+    item = build_price_report_item(row)
+
+    assert item["customer_price"] is None
+    assert item["customer_price_status"] == "missing"
+
+
 def test_build_price_report_item_treats_zero_v5_index_prices_as_missing():
     row = {
         "offer_id": "ART-ZERO",

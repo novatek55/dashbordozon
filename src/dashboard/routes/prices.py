@@ -78,7 +78,8 @@ def build_price_report_item(row: Any) -> Dict[str, Any]:
     customer_price = _to_float(_row_get(row, "customer_price"))
     recommended_price = _to_float(row["price_recommended"])
     recommended_price_link = row["recommended_price_link"] or ""
-    customer_price_status = _row_get(row, "price_details_status") or ("ok" if customer_price is not None else "missing")
+    detail_status = _row_get(row, "price_details_status")
+    customer_price_status = "ok" if customer_price is not None else ("forbidden" if detail_status == "forbidden" else "missing")
     price_details_synced_at = _row_get(row, "price_details_synced_at")
     price_indexes = _row_get(row, "price_indexes")
     is_beneficial: Optional[bool] = None
