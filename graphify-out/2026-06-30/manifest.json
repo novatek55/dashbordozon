@@ -1,0 +1,1307 @@
+{
+  ".claude/settings.json": {
+    "mtime": 1782755000.1214898,
+    "ast_hash": "7bf81dca0376bde3a32244b82bc7cbc0",
+    "semantic_hash": "7bf81dca0376bde3a32244b82bc7cbc0"
+  },
+  ".claude/settings.local.json": {
+    "mtime": 1782755000.1214898,
+    "ast_hash": "c5fad668aa6d6ef89504250332585f4b",
+    "semantic_hash": ""
+  },
+  ".codex/hooks.json": {
+    "mtime": 1782755000.1214898,
+    "ast_hash": "e14284ef8ef73d0bdc3a6f4af73e68a2",
+    "semantic_hash": "e14284ef8ef73d0bdc3a6f4af73e68a2"
+  },
+  ".mcp.json": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "3959fedb3d2f07265c90bb305ca8d807",
+    "semantic_hash": "3959fedb3d2f07265c90bb305ca8d807"
+  },
+  "_find_offer.py": {
+    "mtime": 1782755000.13753,
+    "ast_hash": "040bbe1189eb447702c81b0bdbf1c8e3",
+    "semantic_hash": ""
+  },
+  "_test_adv.py": {
+    "mtime": 1782755000.13753,
+    "ast_hash": "2e17e105e27d1bd3c6ad5df5164a1df6",
+    "semantic_hash": ""
+  },
+  "analytics_reviews.py": {
+    "mtime": 1782754974.6254544,
+    "ast_hash": "fc1c50f726cb3c584d11e438918a0259",
+    "semantic_hash": "fc1c50f726cb3c584d11e438918a0259"
+  },
+  "analyze_product_page.js": {
+    "mtime": 1782754974.6254544,
+    "ast_hash": "aeccd1c9fa91792db47f5c5a1e863563",
+    "semantic_hash": "aeccd1c9fa91792db47f5c5a1e863563"
+  },
+  "analyze_product_page2.js": {
+    "mtime": 1782754974.6254544,
+    "ast_hash": "93f5c2f7697d56ebe5c72a09ca737a73",
+    "semantic_hash": "93f5c2f7697d56ebe5c72a09ca737a73"
+  },
+  "analyze_wb_simple.js": {
+    "mtime": 1782754974.6254544,
+    "ast_hash": "aba95ed8ba2b16cf653469bb4f06cfc8",
+    "semantic_hash": "aba95ed8ba2b16cf653469bb4f06cfc8"
+  },
+  "analyze_wb_stats.js": {
+    "mtime": 1782754974.6254544,
+    "ast_hash": "8f04274d8cda787a9cf6106fabe955c2",
+    "semantic_hash": "8f04274d8cda787a9cf6106fabe955c2"
+  },
+  "api_contract/contract_report.json": {
+    "mtime": 1782755000.1380444,
+    "ast_hash": "5b2fa542414dc4033d56f0c0353ac974",
+    "semantic_hash": "5b2fa542414dc4033d56f0c0353ac974"
+  },
+  "api_contract/used_methods.json": {
+    "mtime": 1782755000.138557,
+    "ast_hash": "9d4bcdcc05e3a5d76ee35284779954be",
+    "semantic_hash": "9d4bcdcc05e3a5d76ee35284779954be"
+  },
+  "api_used_methods_project.json": {
+    "mtime": 1782755000.138557,
+    "ast_hash": "9d4bcdcc05e3a5d76ee35284779954be",
+    "semantic_hash": "9d4bcdcc05e3a5d76ee35284779954be"
+  },
+  "api_used_methods_with_docs.json": {
+    "mtime": 1782755000.139778,
+    "ast_hash": "4665033e626f621ec74c145f4c9f4b07",
+    "semantic_hash": "4665033e626f621ec74c145f4c9f4b07"
+  },
+  "capture_ozon_flow.js": {
+    "mtime": 1782754974.6274579,
+    "ast_hash": "904d0d00ab4f88b240a6b58de88558ad",
+    "semantic_hash": ""
+  },
+  "capture_target_network.js": {
+    "mtime": 1782754974.6274579,
+    "ast_hash": "a352fe879c97b185fc11eee233d31fc0",
+    "semantic_hash": ""
+  },
+  "cdp_direct.js": {
+    "mtime": 1782754974.6274579,
+    "ast_hash": "16584518dfa5f52f1391b017a88fe11e",
+    "semantic_hash": "16584518dfa5f52f1391b017a88fe11e"
+  },
+  "cdp_simple.js": {
+    "mtime": 1782754974.6274579,
+    "ast_hash": "53b1dbd84c9d22c4197dd20f1d48a034",
+    "semantic_hash": "53b1dbd84c9d22c4197dd20f1d48a034"
+  },
+  "check_compensations.py": {
+    "mtime": 1782754974.6274579,
+    "ast_hash": "09e60a981445a3f299142bc1f28bd87c",
+    "semantic_hash": "09e60a981445a3f299142bc1f28bd87c"
+  },
+  "check_js.py": {
+    "mtime": 1782754974.6274579,
+    "ast_hash": "9644dfeee91f6f50f424281e226ccf75",
+    "semantic_hash": "9644dfeee91f6f50f424281e226ccf75"
+  },
+  "check_page.js": {
+    "mtime": 1782754974.6274579,
+    "ast_hash": "689320bd7f1c3891690b093adcf7cbae",
+    "semantic_hash": "689320bd7f1c3891690b093adcf7cbae"
+  },
+  "check_prev_month.py": {
+    "mtime": 1782754974.6274579,
+    "ast_hash": "0324359a18b6cb6e826437cf1c88cffa",
+    "semantic_hash": "0324359a18b6cb6e826437cf1c88cffa"
+  },
+  "chrome-extension/unitka/background.js": {
+    "mtime": 1782755000.140812,
+    "ast_hash": "fba84502a7ebed529fa157a5ac16c3a0",
+    "semantic_hash": ""
+  },
+  "chrome-extension/unitka/background.ui.test.js": {
+    "mtime": 1782755000.1413283,
+    "ast_hash": "62cd771be1b8c206d76db307e719c681",
+    "semantic_hash": ""
+  },
+  "chrome-extension/unitka/content.js": {
+    "mtime": 1782755000.1413283,
+    "ast_hash": "07e8b2df78ad8b07fc9efd11e5439512",
+    "semantic_hash": ""
+  },
+  "chrome-extension/unitka/injected.js": {
+    "mtime": 1782754974.6294603,
+    "ast_hash": "9790afc7708b12dc80af113fdd0d78d8",
+    "semantic_hash": ""
+  },
+  "chrome-extension/unitka/manifest.json": {
+    "mtime": 1782755000.1418445,
+    "ast_hash": "3afd340b1b5989d9baa6569eb9c80498",
+    "semantic_hash": ""
+  },
+  "chrome-extension/unitka/ozon-overlay.js": {
+    "mtime": 1782755000.1418445,
+    "ast_hash": "bfa03bcc4ae0b0625555f7516fad4e3f",
+    "semantic_hash": ""
+  },
+  "chrome-extension/unitka/popup.js": {
+    "mtime": 1782755000.142362,
+    "ast_hash": "23615722862dfa6516290721a44ff4e8",
+    "semantic_hash": ""
+  },
+  "cleanup_products.py": {
+    "mtime": 1782754974.6294603,
+    "ast_hash": "6e1b891b8738342dd1188b38666ec79e",
+    "semantic_hash": ""
+  },
+  "create_supply_draft.py": {
+    "mtime": 1782754974.6294603,
+    "ast_hash": "69b0e204d0a6c1e3029797f32c51249e",
+    "semantic_hash": "69b0e204d0a6c1e3029797f32c51249e"
+  },
+  "debug_cdp.js": {
+    "mtime": 1782754974.6294603,
+    "ast_hash": "b98f2a7bab7f74d534748f284142d150",
+    "semantic_hash": "b98f2a7bab7f74d534748f284142d150"
+  },
+  "debug_console.js": {
+    "mtime": 1782754974.6294603,
+    "ast_hash": "092808fb56b082c8fd63fae344a8fdb9",
+    "semantic_hash": "092808fb56b082c8fd63fae344a8fdb9"
+  },
+  "deploy/install_ozon_dashboard.sh": {
+    "mtime": 1782755000.1428778,
+    "ast_hash": "9711f8c69471720826da26ddfa89fab8",
+    "semantic_hash": ""
+  },
+  "export_report_row_sources_xlsx.py": {
+    "mtime": 1782754974.6349351,
+    "ast_hash": "aaa56740102eaab346f8d0d51d7d2b48",
+    "semantic_hash": ""
+  },
+  "export_weekly_accruals_2026.py": {
+    "mtime": 1782754974.6349351,
+    "ast_hash": "f3dee66245969c2845372f03cff8fdc9",
+    "semantic_hash": ""
+  },
+  "final_fix.js": {
+    "mtime": 1782754974.6349351,
+    "ast_hash": "2eb688c9a091310fd75058c3966f827c",
+    "semantic_hash": "2eb688c9a091310fd75058c3966f827c"
+  },
+  "fix_encoding.py": {
+    "mtime": 1782754974.635631,
+    "ast_hash": "757b06eb52549a327ae5afa8247c61e5",
+    "semantic_hash": "757b06eb52549a327ae5afa8247c61e5"
+  },
+  "get_campaign_stats.js": {
+    "mtime": 1782754974.635631,
+    "ast_hash": "509db484f85a9c30df0e1bb42c0ca452",
+    "semantic_hash": "509db484f85a9c30df0e1bb42c0ca452"
+  },
+  "get_detailed_data.js": {
+    "mtime": 1782754974.6361327,
+    "ast_hash": "2705b25e2106105b4825fe705a7b79e3",
+    "semantic_hash": "2705b25e2106105b4825fe705a7b79e3"
+  },
+  "get_full_plugin_data.js": {
+    "mtime": 1782754974.636488,
+    "ast_hash": "445e77415893edf5df565b8110758f23",
+    "semantic_hash": "445e77415893edf5df565b8110758f23"
+  },
+  "get_page_content.js": {
+    "mtime": 1782754974.6367965,
+    "ast_hash": "8233e81399aa22769c17c99fe45a9a2c",
+    "semantic_hash": "8233e81399aa22769c17c99fe45a9a2c"
+  },
+  "get_page_simple.js": {
+    "mtime": 1782754974.6367965,
+    "ast_hash": "6887de1cec8bd7aba035517ae14c0058",
+    "semantic_hash": "6887de1cec8bd7aba035517ae14c0058"
+  },
+  "get_plugin_details.js": {
+    "mtime": 1782754974.6367965,
+    "ast_hash": "3c5d43f4f1d2a5c95da19f1c792226a7",
+    "semantic_hash": "3c5d43f4f1d2a5c95da19f1c792226a7"
+  },
+  "get_search_queries.js": {
+    "mtime": 1782754974.6367965,
+    "ast_hash": "764697c9ed2aaf1b5ac36a1a2ea5218a",
+    "semantic_hash": "764697c9ed2aaf1b5ac36a1a2ea5218a"
+  },
+  "metabase_queries/action_products.sql": {
+    "mtime": 1782754974.6367965,
+    "ast_hash": "080eafb809b48d84824ffb5e71046f0d",
+    "semantic_hash": ""
+  },
+  "metabase_queries/actions.sql": {
+    "mtime": 1782754974.6367965,
+    "ast_hash": "f99d314c5f18380fccb06d61e77fef2c",
+    "semantic_hash": ""
+  },
+  "metabase_queries/article_analytics.sql": {
+    "mtime": 1782754974.6367965,
+    "ast_hash": "9d088c976ca0e39bb1c49c0e55754464",
+    "semantic_hash": ""
+  },
+  "metabase_queries/article_analytics_daily_30d_summary.sql": {
+    "mtime": 1782754974.6367965,
+    "ast_hash": "162a4944bfffc7195ddd1e0a66e54786",
+    "semantic_hash": ""
+  },
+  "metabase_queries/article_analytics_daily_full.sql": {
+    "mtime": 1782754974.6386251,
+    "ast_hash": "d4fb269bef759f30b7470ba528311b1c",
+    "semantic_hash": ""
+  },
+  "metabase_queries/sales.sql": {
+    "mtime": 1782754974.6386251,
+    "ast_hash": "70238e8fb7af7dee88d66a9481ddd9a9",
+    "semantic_hash": ""
+  },
+  "migrations/add_campaign_statistics_sku_date_idx.sql": {
+    "mtime": 1782755000.2822042,
+    "ast_hash": "a5d0db0e07b113319a513b09325bcdc9",
+    "semantic_hash": ""
+  },
+  "migrations/add_serp_tables.sql": {
+    "mtime": 1782755000.28272,
+    "ast_hash": "cb9156a70edfa6afeb31c7188be81380",
+    "semantic_hash": ""
+  },
+  "openapi_tracker.py": {
+    "mtime": 1782755000.283756,
+    "ast_hash": "dd3e6c78ae7ba7bd75dafc427b5c9de8",
+    "semantic_hash": ""
+  },
+  "orders_dashboard.py": {
+    "mtime": 1782754974.6391273,
+    "ast_hash": "c2df6532a9101de2699f82f20a13c492",
+    "semantic_hash": "c2df6532a9101de2699f82f20a13c492"
+  },
+  "package.json": {
+    "mtime": 1782754974.6401515,
+    "ast_hash": "ed09963c5c2eb44ff46f3b6bcf5cf39d",
+    "semantic_hash": "ed09963c5c2eb44ff46f3b6bcf5cf39d"
+  },
+  "pallets_result.json": {
+    "mtime": 1782754974.6406624,
+    "ast_hash": "04b92fe4a1fd56f5ca11758a9edffc4d",
+    "semantic_hash": "04b92fe4a1fd56f5ca11758a9edffc4d"
+  },
+  "pw_check.js": {
+    "mtime": 1782754974.6411722,
+    "ast_hash": "49e7e588be945f16f6d298590ff0eddd",
+    "semantic_hash": "49e7e588be945f16f6d298590ff0eddd"
+  },
+  "pw_ws.js": {
+    "mtime": 1782754974.6411722,
+    "ast_hash": "ab98929c6978e889b857507508f6a3dc",
+    "semantic_hash": "ab98929c6978e889b857507508f6a3dc"
+  },
+  "read_excel.py": {
+    "mtime": 1782754974.641683,
+    "ast_hash": "cb7ed60717443e1f662f89f6ffc334ff",
+    "semantic_hash": "cb7ed60717443e1f662f89f6ffc334ff"
+  },
+  "read_excel2.py": {
+    "mtime": 1782754974.641683,
+    "ast_hash": "9f8226ab086dc212786fb173de4241e5",
+    "semantic_hash": "9f8226ab086dc212786fb173de4241e5"
+  },
+  "response.json": {
+    "mtime": 1782754974.6421943,
+    "ast_hash": "ca69902be10acad54ae1beee1aaee23b",
+    "semantic_hash": "ca69902be10acad54ae1beee1aaee23b"
+  },
+  "restart_dashboard.ps1": {
+    "mtime": 1782754974.6421943,
+    "ast_hash": "6d21b155dac9e38dac96e976da3f561a",
+    "semantic_hash": ""
+  },
+  "run_dashboard.ps1": {
+    "mtime": 1782754974.6427062,
+    "ast_hash": "403ffd9380c33272963ad5fd8ae1b9f2",
+    "semantic_hash": ""
+  },
+  "run_dashboard_server.py": {
+    "mtime": 1782755000.284789,
+    "ast_hash": "0308eb87219561ee16160e8bdc9160cc",
+    "semantic_hash": ""
+  },
+  "scheduler.py": {
+    "mtime": 1782754974.6432168,
+    "ast_hash": "996a4139160e4ed445f90a21402111d1",
+    "semantic_hash": ""
+  },
+  "scripts/build_deploy_package.ps1": {
+    "mtime": 1782755000.284789,
+    "ast_hash": "3afe8b664605e2eefa34119ac348752c",
+    "semantic_hash": ""
+  },
+  "scripts/cart_to_order_lag_analysis.py": {
+    "mtime": 1782754974.6437285,
+    "ast_hash": "de31ffb324759e7be314b3bfad89abc9",
+    "semantic_hash": ""
+  },
+  "scripts/check_db_source.py": {
+    "mtime": 1782755000.2853072,
+    "ast_hash": "5e8ea1dc05b5d279d498def78432f1fc",
+    "semantic_hash": ""
+  },
+  "scripts/check_unmapped_expenses.py": {
+    "mtime": 1782754974.6437285,
+    "ast_hash": "6499b17d156e9fb08a742a64f3e181d7",
+    "semantic_hash": ""
+  },
+  "scripts/compare_wb_xlsx_vs_vitrine.py": {
+    "mtime": 1782755000.2853072,
+    "ast_hash": "eca21dd0d65fa56456aa49ae1c5d99f4",
+    "semantic_hash": ""
+  },
+  "scripts/export_wb_finance_report.py": {
+    "mtime": 1782755000.2853072,
+    "ast_hash": "d82a5698a3da9e6fef9fd5c5223d37b1",
+    "semantic_hash": ""
+  },
+  "scripts/fix_finance_operation_dates.py": {
+    "mtime": 1782754974.6442401,
+    "ast_hash": "1935d2ada692ee7b76caa8a761ce93a6",
+    "semantic_hash": ""
+  },
+  "scripts/monitor_ozon_step.js": {
+    "mtime": 1782754974.6442401,
+    "ast_hash": "533e19039fdc0880a4cd686530635012",
+    "semantic_hash": ""
+  },
+  "scripts/sales_drop_draft.py": {
+    "mtime": 1782754974.6447515,
+    "ast_hash": "ccb27af5e5655ba951af6ca12e325245",
+    "semantic_hash": ""
+  },
+  "src/__init__.py": {
+    "mtime": 1782754974.6447515,
+    "ast_hash": "617dc78c29e8cafd7d6ef4fc6cb5e3f2",
+    "semantic_hash": ""
+  },
+  "src/analytics.py": {
+    "mtime": 1782754974.6452644,
+    "ast_hash": "8968f60d3329af11bada8630b92782db",
+    "semantic_hash": ""
+  },
+  "src/archive_posting_transactions.py": {
+    "mtime": 1782754974.6452644,
+    "ast_hash": "7505be75e52a29f5d73a9cada76927c1",
+    "semantic_hash": ""
+  },
+  "src/backfill_missing_posting_items.py": {
+    "mtime": 1782754974.6457775,
+    "ast_hash": "434337795608f3ce3c9c9f17be719144",
+    "semantic_hash": ""
+  },
+  "src/cdp_network_capture.py": {
+    "mtime": 1782843020.2290118,
+    "ast_hash": "6b0646c15d4940be1406e686fffed683",
+    "semantic_hash": ""
+  },
+  "src/chrome_browser.py": {
+    "mtime": 1782754974.6462872,
+    "ast_hash": "f3149e1e46451b7cddc27ec7a6ff5703",
+    "semantic_hash": "f3149e1e46451b7cddc27ec7a6ff5703"
+  },
+  "src/config.py": {
+    "mtime": 1782755000.285823,
+    "ast_hash": "65168174891289ae2ca18e43dd704a27",
+    "semantic_hash": ""
+  },
+  "src/dashboard/__init__.py": {
+    "mtime": 1782754974.6462872,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "src/dashboard/app.py": {
+    "mtime": 1782755000.2863839,
+    "ast_hash": "b3f79d549befce6b496db6897b7fe937",
+    "semantic_hash": ""
+  },
+  "src/dashboard/bestsellers.py": {
+    "mtime": 1782755000.2869,
+    "ast_hash": "9f8b34feab0f4b82a5086e8a005c1a33",
+    "semantic_hash": ""
+  },
+  "src/dashboard/constants.py": {
+    "mtime": 1782755000.2869,
+    "ast_hash": "bf14f2af746972ef3a55e961829e3d00",
+    "semantic_hash": ""
+  },
+  "src/dashboard/helpers.py": {
+    "mtime": 1782755000.2879303,
+    "ast_hash": "79f36ea65ead48cc5d12836f3bce1631",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/__init__.py": {
+    "mtime": 1782754974.6473072,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "src/dashboard/routes/actions.py": {
+    "mtime": 1782755000.2879303,
+    "ast_hash": "96c3775da69e965b51529141ad760d38",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/advertising.py": {
+    "mtime": 1782755000.2887466,
+    "ast_hash": "549ca35b508648315f9265f76f857608",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/analytics.py": {
+    "mtime": 1782755000.2887466,
+    "ast_hash": "923ee8bb335e9c402930e9d6eaead34a",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/chats.py": {
+    "mtime": 1782755000.2887466,
+    "ast_hash": "8cd5c8fe0de7c760751ee0edc7050374",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/finance.py": {
+    "mtime": 1782755000.2887466,
+    "ast_hash": "feceb3d89c4c9f7f470835c6cec0ef2d",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/orders.py": {
+    "mtime": 1782755000.2887466,
+    "ast_hash": "c3b3bb2aa60bed0eead7f94479dbcd34",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/pages.py": {
+    "mtime": 1782755000.2887466,
+    "ast_hash": "278b390028e4f8c413a8c75974b78fb0",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/palletization_routes.py": {
+    "mtime": 1782754974.6498604,
+    "ast_hash": "32f5da3724394cc200bc14fc9c21fae0",
+    "semantic_hash": "32f5da3724394cc200bc14fc9c21fae0"
+  },
+  "src/dashboard/routes/questions.py": {
+    "mtime": 1782755000.2887466,
+    "ast_hash": "07d1d04b7a89dfccd22a929d222ca261",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/report.py": {
+    "mtime": 1782755000.2930877,
+    "ast_hash": "30dc524363d3f326ea41d7199946c0d1",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/returns.py": {
+    "mtime": 1782754974.6498604,
+    "ast_hash": "07d40b462a7d504dc5a9956c87de5daa",
+    "semantic_hash": "07d40b462a7d504dc5a9956c87de5daa"
+  },
+  "src/dashboard/routes/reviews.py": {
+    "mtime": 1782754974.6498604,
+    "ast_hash": "6b390d7139ca8cc028ac9e42a2fc5f88",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/serp.py": {
+    "mtime": 1782755000.2930877,
+    "ast_hash": "3c133ad949d59a33e02b8690975e6aca",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/stocks.py": {
+    "mtime": 1782755000.2930877,
+    "ast_hash": "a8797be1517c2ed4f1fd63aecda7b12e",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/supply.py": {
+    "mtime": 1782754974.6518629,
+    "ast_hash": "9970485c3de8bdfaee484c14447e48a5",
+    "semantic_hash": "9970485c3de8bdfaee484c14447e48a5"
+  },
+  "src/dashboard/routes/supply_chrome.py": {
+    "mtime": 1782754974.6524546,
+    "ast_hash": "a8b3a7917f1e21e1e4c6956f37feb6dd",
+    "semantic_hash": "a8b3a7917f1e21e1e4c6956f37feb6dd"
+  },
+  "src/dashboard/routes/system.py": {
+    "mtime": 1782755000.2930877,
+    "ast_hash": "b42dc47405a80f9600cb83547671e7be",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/unitka.py": {
+    "mtime": 1782755000.2930877,
+    "ast_hash": "7d3e39964e57ac44b213b0f6b9d95414",
+    "semantic_hash": ""
+  },
+  "src/dashboard/state.py": {
+    "mtime": 1782755000.29509,
+    "ast_hash": "978fafbc3b8f34164d3aa36e00caecf0",
+    "semantic_hash": ""
+  },
+  "src/database.py": {
+    "mtime": 1782755000.29509,
+    "ast_hash": "d9bf5170b12c137e6868739666e41faa",
+    "semantic_hash": ""
+  },
+  "src/database_sqlite.py": {
+    "mtime": 1782754974.6539044,
+    "ast_hash": "d577e262d69a03cb9cdb841cd7b713f2",
+    "semantic_hash": "d577e262d69a03cb9cdb841cd7b713f2"
+  },
+  "src/db_source_guard.py": {
+    "mtime": 1782755000.29509,
+    "ast_hash": "341a76b4943f7845d3a4f1314e5df934",
+    "semantic_hash": ""
+  },
+  "src/economics_engine.py": {
+    "mtime": 1782754974.6544402,
+    "ast_hash": "f19de2fa3bc36ea893cca0d387f21ad0",
+    "semantic_hash": ""
+  },
+  "src/export_analytics_endpoints.py": {
+    "mtime": 1782754974.6544402,
+    "ast_hash": "98067a961decf02cc5b43f079ffa17c3",
+    "semantic_hash": ""
+  },
+  "src/export_analytics_excel.py": {
+    "mtime": 1782754974.6549525,
+    "ast_hash": "171dc33213a068778b022fa93e269f2d",
+    "semantic_hash": ""
+  },
+  "src/export_article_abc_report.py": {
+    "mtime": 1782755000.29509,
+    "ast_hash": "df1a33d8e3eb93d67ab0fec0a4cf7fa7",
+    "semantic_hash": ""
+  },
+  "src/export_article_accruals_report.py": {
+    "mtime": 1782755000.2959495,
+    "ast_hash": "0aaf66f7877bba5f0781cf09572196f8",
+    "semantic_hash": ""
+  },
+  "src/export_finance_report.py": {
+    "mtime": 1782755000.2959495,
+    "ast_hash": "5649c19983aad2ed5ee842d5d8b6fe34",
+    "semantic_hash": ""
+  },
+  "src/export_finance_reports.py": {
+    "mtime": 1782754974.6549525,
+    "ast_hash": "7c3b573f71c6996a2e7641c5fbb67041",
+    "semantic_hash": ""
+  },
+  "src/export_monthly_report.py": {
+    "mtime": 1782755000.296451,
+    "ast_hash": "29d2c889e4008129b6c5918f2ae377af",
+    "semantic_hash": ""
+  },
+  "src/import_finance_exports.py": {
+    "mtime": 1782754974.6554635,
+    "ast_hash": "f9bb4e48f2250bad08eb925e5ffb630d",
+    "semantic_hash": ""
+  },
+  "src/import_logistics_tariffs.py": {
+    "mtime": 1782754974.6554635,
+    "ast_hash": "b901b9102ba26a5da49260fcd112cef3",
+    "semantic_hash": ""
+  },
+  "src/main.py": {
+    "mtime": 1782755000.296451,
+    "ast_hash": "ab65b81250150e00f87ab7cc4a583e2a",
+    "semantic_hash": ""
+  },
+  "src/models.py": {
+    "mtime": 1782757218.5750818,
+    "ast_hash": "8bb69bdaee9cb8f8a19ae882a9f30904",
+    "semantic_hash": ""
+  },
+  "src/ozon_client.py": {
+    "mtime": 1782757505.530109,
+    "ast_hash": "abe3e159f6db285266dfc34a4238b7ce",
+    "semantic_hash": ""
+  },
+  "src/palletization/api.py": {
+    "mtime": 1782754974.656995,
+    "ast_hash": "033a4a23e9d141eea25586051b83fcf7",
+    "semantic_hash": "033a4a23e9d141eea25586051b83fcf7"
+  },
+  "src/palletization/calculator.py": {
+    "mtime": 1782754974.6575043,
+    "ast_hash": "5018e69a27c098299ec4c7984f2012be",
+    "semantic_hash": "5018e69a27c098299ec4c7984f2012be"
+  },
+  "src/palletization/database.py": {
+    "mtime": 1782754974.6575043,
+    "ast_hash": "fe141df228acb8db62479e6cfb9be223",
+    "semantic_hash": "fe141df228acb8db62479e6cfb9be223"
+  },
+  "src/palletization/supply_bff.py": {
+    "mtime": 1782754974.6580155,
+    "ast_hash": "b6a840462f8ff7b4a187758c49d6b77c",
+    "semantic_hash": "b6a840462f8ff7b4a187758c49d6b77c"
+  },
+  "src/parse_devtools_har.py": {
+    "mtime": 1782754974.6580155,
+    "ast_hash": "eaa753e9cebf54ed6f8262e5267213db",
+    "semantic_hash": ""
+  },
+  "src/scan_all_storage_timeslots.py": {
+    "mtime": 1782754974.6585288,
+    "ast_hash": "9eea5388e35d06e1629cf87433babef1",
+    "semantic_hash": ""
+  },
+  "src/scan_dropoff_points_availability.py": {
+    "mtime": 1782754974.6585288,
+    "ast_hash": "e187555463e0fa58d252359cd07de4e6",
+    "semantic_hash": ""
+  },
+  "src/scan_two_clusters_dropoff.py": {
+    "mtime": 1782754974.6585288,
+    "ast_hash": "54dd36e88bb37a64d34e5fa7e45d84c1",
+    "semantic_hash": ""
+  },
+  "src/services/__init__.py": {
+    "mtime": 1782754974.659041,
+    "ast_hash": "7e7ba72e0f6fb119313d3e15cee96355",
+    "semantic_hash": ""
+  },
+  "src/services/article_abc_report.py": {
+    "mtime": 1782755000.2979784,
+    "ast_hash": "ee2b1793a373d12556d9763e8d43ceb6",
+    "semantic_hash": ""
+  },
+  "src/services/article_accruals_report.py": {
+    "mtime": 1782755000.298486,
+    "ast_hash": "ccf7fd92ea12b55fc6d3436126586bd4",
+    "semantic_hash": ""
+  },
+  "src/services/finance_md_report.py": {
+    "mtime": 1782755000.298486,
+    "ast_hash": "1f31296d32a470607e3fc044d6039aed",
+    "semantic_hash": ""
+  },
+  "src/services/finance_report_accrual.py": {
+    "mtime": 1782755000.2989943,
+    "ast_hash": "5e62fc4cdaf7b9fc0a791f68942a81b1",
+    "semantic_hash": ""
+  },
+  "src/services/monthly_report.py": {
+    "mtime": 1782755000.2995045,
+    "ast_hash": "064d67555a76cf24250932e81b53e46d",
+    "semantic_hash": ""
+  },
+  "src/services/report_services.py": {
+    "mtime": 1782755000.2995045,
+    "ast_hash": "dc473893f132fcd47dfa2d21f94d2962",
+    "semantic_hash": ""
+  },
+  "src/services/returns_analytics.py": {
+    "mtime": 1782754974.6600623,
+    "ast_hash": "6cac3a0aea7d0cecbd18b319e2a3b3dd",
+    "semantic_hash": ""
+  },
+  "src/services/serp_service.py": {
+    "mtime": 1782755000.3000107,
+    "ast_hash": "ebd44d0206362dfe5c15b975bc420f04",
+    "semantic_hash": ""
+  },
+  "src/supply_create_from_plan.py": {
+    "mtime": 1782754974.6600623,
+    "ast_hash": "8ef182925b38f3ee6220e5dcbe9ac7c1",
+    "semantic_hash": ""
+  },
+  "src/supply_crossdock_candidates.py": {
+    "mtime": 1782754974.6605723,
+    "ast_hash": "80169288884209922b0de69da72d31f7",
+    "semantic_hash": ""
+  },
+  "src/supply_draft_create.py": {
+    "mtime": 1782754974.6605723,
+    "ast_hash": "0596a9ba3616eec8730c72a54cc30017",
+    "semantic_hash": ""
+  },
+  "src/supply_scan_warehouses_ui.py": {
+    "mtime": 1782754974.6610823,
+    "ast_hash": "78a6d28832f3e3ea9ceaf65eaa2d688c",
+    "semantic_hash": "78a6d28832f3e3ea9ceaf65eaa2d688c"
+  },
+  "src/supply_set_delivery_types.py": {
+    "mtime": 1782754974.6615922,
+    "ast_hash": "0567609087b83f20d146b02fefc686fc",
+    "semantic_hash": ""
+  },
+  "src/supply_stage2_warehouses.py": {
+    "mtime": 1782754974.6615922,
+    "ast_hash": "1de689332100fc191b2382c924287530",
+    "semantic_hash": "1de689332100fc191b2382c924287530"
+  },
+  "src/supply_warehouse_scanner.py": {
+    "mtime": 1782754974.662102,
+    "ast_hash": "270fa265ce7009c24459c5e23240c05a",
+    "semantic_hash": ""
+  },
+  "src/sync_manager.py": {
+    "mtime": 1782841162.8475437,
+    "ast_hash": "4ddb2d7e1fd87b968872f07d22c7623b",
+    "semantic_hash": ""
+  },
+  "src/wb_finance_client.py": {
+    "mtime": 1782755000.3020413,
+    "ast_hash": "6d53b6f921823820de5d0e53b8e5cef3",
+    "semantic_hash": ""
+  },
+  "src/wb_finance_sync.py": {
+    "mtime": 1782755000.3020413,
+    "ast_hash": "c03054834cedf16ee4e25072f0c59270",
+    "semantic_hash": ""
+  },
+  "supply_api_flow.py": {
+    "mtime": 1782754974.6631236,
+    "ast_hash": "7d028ffa4ed1254570776004f066f399",
+    "semantic_hash": "7d028ffa4ed1254570776004f066f399"
+  },
+  "supply_crossdock_test.py": {
+    "mtime": 1782754974.6631236,
+    "ast_hash": "e4416e032e4ee8c6a00e152d544ec245",
+    "semantic_hash": "e4416e032e4ee8c6a00e152d544ec245"
+  },
+  "supply_mixed_flow.py": {
+    "mtime": 1782754974.6631236,
+    "ast_hash": "4d4108af73bdf22d93f20a62cc713f8a",
+    "semantic_hash": "4d4108af73bdf22d93f20a62cc713f8a"
+  },
+  "supply_palletization_2026-04-01-11-59-23.json": {
+    "mtime": 1782754974.6631236,
+    "ast_hash": "7b681bdc7c84ba0577aa9df8e9a06d46",
+    "semantic_hash": ""
+  },
+  "supply_warehouse_scanner.py": {
+    "mtime": 1782754974.6651256,
+    "ast_hash": "66ec29aa41fc3272c10945f169bff604",
+    "semantic_hash": "66ec29aa41fc3272c10945f169bff604"
+  },
+  "swagger.json": {
+    "mtime": 1782755000.3130856,
+    "ast_hash": "4e2284d920719c367d0cbbf036fb3f1e",
+    "semantic_hash": ""
+  },
+  "sync_api_contract.py": {
+    "mtime": 1782755000.3130856,
+    "ast_hash": "97799bbed512856666fe19374232cb07",
+    "semantic_hash": ""
+  },
+  "sync_now.py": {
+    "mtime": 1782754974.6651256,
+    "ast_hash": "3cf58f640a39f50a1124c580a2ad5323",
+    "semantic_hash": ""
+  },
+  "test_analytics_stocks_resilient.py": {
+    "mtime": 1782755000.3130856,
+    "ast_hash": "a4cb5a3bf83354fa367ac191b1bcf1b9",
+    "semantic_hash": ""
+  },
+  "test_api_final.py": {
+    "mtime": 1782754974.6651256,
+    "ast_hash": "e31d9cae54e459f30ba107ab04397c7a",
+    "semantic_hash": "e31d9cae54e459f30ba107ab04397c7a"
+  },
+  "test_api_mock.py": {
+    "mtime": 1782754974.6651256,
+    "ast_hash": "1ad50d1e72178e767414560109d1fd05",
+    "semantic_hash": "1ad50d1e72178e767414560109d1fd05"
+  },
+  "test_api_pallets.py": {
+    "mtime": 1782754974.6651256,
+    "ast_hash": "58ff722e6ad5e8c5918b5a1820ce8bb3",
+    "semantic_hash": "58ff722e6ad5e8c5918b5a1820ce8bb3"
+  },
+  "test_articles_filter.py": {
+    "mtime": 1782755000.3130856,
+    "ast_hash": "493976ee8ec89a6aba75773bd60e1f1d",
+    "semantic_hash": ""
+  },
+  "test_bestsellers_normalization.py": {
+    "mtime": 1782755000.3130856,
+    "ast_hash": "cbb94060f03106c3b35d537f55334ca7",
+    "semantic_hash": ""
+  },
+  "test_cdp.js": {
+    "mtime": 1782754974.6651256,
+    "ast_hash": "416c07f3b1ae1cc545b9804952f327d7",
+    "semantic_hash": "416c07f3b1ae1cc545b9804952f327d7"
+  },
+  "test_cdp2.js": {
+    "mtime": 1782754974.6651256,
+    "ast_hash": "8149ac7bb98d40bb7bc2858ced87cc49",
+    "semantic_hash": "8149ac7bb98d40bb7bc2858ced87cc49"
+  },
+  "test_cdp_final.js": {
+    "mtime": 1782754974.6651256,
+    "ast_hash": "39163d36c3d9031d7746144edaaf0f36",
+    "semantic_hash": "39163d36c3d9031d7746144edaaf0f36"
+  },
+  "test_dashboard_sync_steps.py": {
+    "mtime": 1782755000.3130856,
+    "ast_hash": "dc65882a9d5cef41c62b702528e79db0",
+    "semantic_hash": ""
+  },
+  "test_db_source_guard.py": {
+    "mtime": 1782755000.3130856,
+    "ast_hash": "9ad6e1484cafa4cb2a5848b388c6737e",
+    "semantic_hash": ""
+  },
+  "test_orders_dashboard_offer_filter.js": {
+    "mtime": 1782755000.3150873,
+    "ast_hash": "b42f89bf8dd5dd4ecc46913f475df05b",
+    "semantic_hash": ""
+  },
+  "test_pallets_cdp.js": {
+    "mtime": 1782754974.6651256,
+    "ast_hash": "6025b43c742a63b009545d02b61958a6",
+    "semantic_hash": "6025b43c742a63b009545d02b61958a6"
+  },
+  "test_pallets_cdp2.js": {
+    "mtime": 1782754974.6671276,
+    "ast_hash": "b0a4323d4f2507027ead9ebb838e419c",
+    "semantic_hash": "b0a4323d4f2507027ead9ebb838e419c"
+  },
+  "test_serp_enrichment_fallback.py": {
+    "mtime": 1782755000.3160305,
+    "ast_hash": "730dbb9db363ce9aaf50f48f63be4004",
+    "semantic_hash": ""
+  },
+  "test_supply_draft.py": {
+    "mtime": 1782754974.6671276,
+    "ast_hash": "5943a0b237ce61cdc27929e7aec5c489",
+    "semantic_hash": "5943a0b237ce61cdc27929e7aec5c489"
+  },
+  "test_sync_regressions.py": {
+    "mtime": 1782755000.3160305,
+    "ast_hash": "29b9b4813da3582131216405b2e89008",
+    "semantic_hash": ""
+  },
+  "test_sync_report_registry.py": {
+    "mtime": 1782755000.316532,
+    "ast_hash": "84d394bb5ea069b95f1d79f14291d0a2",
+    "semantic_hash": ""
+  },
+  "test_sync_status_progress.py": {
+    "mtime": 1782755000.316532,
+    "ast_hash": "dfeab5ea0ab999adfb7367463b299607",
+    "semantic_hash": ""
+  },
+  "test_unitka_accrual_match.py": {
+    "mtime": 1782755000.3170407,
+    "ast_hash": "7a2d926bcb8d9d72721b0304f988fea1",
+    "semantic_hash": ""
+  },
+  "web/palletization/app.js": {
+    "mtime": 1782754974.6701052,
+    "ast_hash": "b01f3e7944e7ebd44da63dfb39ced4be",
+    "semantic_hash": "b01f3e7944e7ebd44da63dfb39ced4be"
+  },
+  ".superpowers/brainstorm/1960-1776445758/content/unit-structure.html": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "da025c9da39a3c5b46cb4eda24815548",
+    "semantic_hash": ""
+  },
+  ".superpowers/brainstorm/1960-1776445758/content/welcome.html": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "ed24d289158bce3fdae396a72fd06a4d",
+    "semantic_hash": ""
+  },
+  ".superpowers/brainstorm/2023-1776450226/content/unit-structure.html": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "a2bb9273daf514b06f373c7a69518740",
+    "semantic_hash": ""
+  },
+  ".superpowers/brainstorm/2023-1776450226/content/unitka-compact.html": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "583d4f1b8046f33f35d5f961297be580",
+    "semantic_hash": ""
+  },
+  ".superpowers/brainstorm/2023-1776450226/content/unitka-two-blocks-v2.html": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "d04f079fb4eb03934ea3a5edb3d9d01a",
+    "semantic_hash": ""
+  },
+  ".superpowers/brainstorm/2023-1776450226/content/unitka-two-blocks.html": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "3dff5f8b3eff84be2303563ff7d88701",
+    "semantic_hash": ""
+  },
+  ".superpowers/brainstorm/2023-1776450226/content/waiting.html": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "b2258b23931096b6ef84c63b82028bac",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1782755000.1214898,
+    "ast_hash": "510228b9f0bb33ed065c48f6fcc1183f",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1782755000.1214898,
+    "ast_hash": "d24132c8af3ec062267090b1501642f1",
+    "semantic_hash": ""
+  },
+  "DATABASE_SETUP.md": {
+    "mtime": 1782755000.1364577,
+    "ast_hash": "4b5756d09cf768c6c686fc0445bf86cb",
+    "semantic_hash": ""
+  },
+  "DATA_SOURCE_NOTICE.md": {
+    "mtime": 1782755000.1364577,
+    "ast_hash": "798c00e911552fe86a5b5e17b374085d",
+    "semantic_hash": ""
+  },
+  "METABASE_SETUP.md": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "cd8e4648ef872f660defc78b38d5383c",
+    "semantic_hash": ""
+  },
+  "NEXT_CHAT_CONTEXT.md": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "49a653ddfb48ec47459de444e63ee3fc",
+    "semantic_hash": ""
+  },
+  "POSTGRES_DOWNLOAD.md": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "c2c16ed840e34fd6f50e68f7d2b3d12c",
+    "semantic_hash": "c2c16ed840e34fd6f50e68f7d2b3d12c"
+  },
+  "POSTGRES_INSTALL.md": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "979256f1957f929cc3903b4c7bb0b7e3",
+    "semantic_hash": "979256f1957f929cc3903b4c7bb0b7e3"
+  },
+  "PROJECT_DATA_MAP.md": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "baac0f13a54489aa1a2457fe047ebd9c",
+    "semantic_hash": ""
+  },
+  "PROJECT_MARKERS.md": {
+    "mtime": 1782754974.6200235,
+    "ast_hash": "74798ad63be6a0d0e629989279e73589",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1782755000.1370127,
+    "ast_hash": "c584cba066c272368e9f8404875b860b",
+    "semantic_hash": ""
+  },
+  "REPORT_COMPARISON.md": {
+    "mtime": 1782754974.6254544,
+    "ast_hash": "14b9e441be13d7d882fa3079eb7e45a3",
+    "semantic_hash": "14b9e441be13d7d882fa3079eb7e45a3"
+  },
+  "REPORT_ROW_SOURCES.md": {
+    "mtime": 1782754974.6254544,
+    "ast_hash": "8acfb6fb61892272a8c2f8fdc90c2f0c",
+    "semantic_hash": ""
+  },
+  "STOCK_SNAPSHOT_PLAN.md": {
+    "mtime": 1782754974.6254544,
+    "ast_hash": "d95c8a3e857c68f17cb6c16267dc7755",
+    "semantic_hash": ""
+  },
+  "api_contract/contract_report.md": {
+    "mtime": 1782755000.138557,
+    "ast_hash": "13f97d6db4d983096372d906cbeded86",
+    "semantic_hash": "13f97d6db4d983096372d906cbeded86"
+  },
+  "api_used_methods_project.md": {
+    "mtime": 1782755000.1392598,
+    "ast_hash": "82ccaaa46792600a6288e70e22fe6b46",
+    "semantic_hash": "82ccaaa46792600a6288e70e22fe6b46"
+  },
+  "api_used_methods_with_docs.md": {
+    "mtime": 1782755000.1402936,
+    "ast_hash": "3d26fc539d38998398409012f7d61653",
+    "semantic_hash": "3d26fc539d38998398409012f7d61653"
+  },
+  "chrome-extension/unitka/popup.html": {
+    "mtime": 1782755000.142362,
+    "ast_hash": "9f255e36c887638bad3d3f2467821915",
+    "semantic_hash": ""
+  },
+  "clash_from_json.yaml": {
+    "mtime": 1782754974.6294603,
+    "ast_hash": "b5d4ce6da9dd6c20dc9a0afe3d5c723e",
+    "semantic_hash": "b5d4ce6da9dd6c20dc9a0afe3d5c723e"
+  },
+  "deploy/README.md": {
+    "mtime": 1782755000.1428778,
+    "ast_hash": "1bea8f902e0f484a4171826e42c834c5",
+    "semantic_hash": ""
+  },
+  "docker-compose.metabase-local.yml": {
+    "mtime": 1782754974.6294603,
+    "ast_hash": "ae11dcfb0d58795998503fd258917726",
+    "semantic_hash": ""
+  },
+  "docker-compose.yml": {
+    "mtime": 1782754974.6294603,
+    "ast_hash": "bcd9629e21ad71082b0906349a745df1",
+    "semantic_hash": ""
+  },
+  "docs/analysis/finance_report_monthly_guide.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "e7a1b3c5a6b79cfcd5077f4c4623dd81",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-04-17-production-plan-toggle.md": {
+    "mtime": 1782754974.6329322,
+    "ast_hash": "7e83588f43784b0fa5041303fa503b99",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-04-17-sku-diagnostics-cart-to-order-cr.md": {
+    "mtime": 1782754974.6329322,
+    "ast_hash": "595d195ede3d9946746659feef677f42",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-04-17-split-orders-dashboard.md": {
+    "mtime": 1782754974.6329322,
+    "ast_hash": "4606545d528fa8b2a3aaaba2caa0486e",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-04-19-finance-report-accrual-mode.md": {
+    "mtime": 1782754974.6329322,
+    "ast_hash": "dda6fbea931be91b56834eb244cee88b",
+    "semantic_hash": "dda6fbea931be91b56834eb244cee88b"
+  },
+  "docs/superpowers/plans/2026-06-02-monthly-ai-report.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "a6da4958c57f226fdd687b892ed23659",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-06-03-serp-module.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "c6784cd0e9f8e88108b8ad179b8e1dd9",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-06-19-db-source-guard.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "4140e8f59645b5a310f66cc688116168",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-04-17-production-plan-toggle-design.md": {
+    "mtime": 1782754974.6329322,
+    "ast_hash": "242d29fe94ed0d0382707b60c5636761",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-04-17-sku-diagnostics-cart-to-order-cr-design.md": {
+    "mtime": 1782754974.6329322,
+    "ast_hash": "23fb9b8683ee906c38b3517340ffad00",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-04-17-unitka-module-design.md": {
+    "mtime": 1782754974.6329322,
+    "ast_hash": "49b489cb292c14f655f91b0b1370e495",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-05-06-accrual-group-header-style.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "2408bdb5eaed1ea99a415e0d71f59cb5",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-06-02-monthly-ai-report-design.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "d707edb2bb058aaa7034373aaea78f39",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-06-03-serp-module-design.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "d53f4cda853cb65459c54fcc7cc160e1",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-06-12-finance-stock-snapshot-design.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "d98036e9d13e265d980d0d50527fbd76",
+    "semantic_hash": ""
+  },
+  "docs/ui_unification_spec.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "a0b31b7b591f10e9b0b1cda77e87a648",
+    "semantic_hash": ""
+  },
+  "docs/wb_finance_russian_articles_mapping.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "2dd3922e9988491b9d9fdc11247b6df0",
+    "semantic_hash": ""
+  },
+  "docs/wb_finance_step1_data_acquisition.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "76344bb3508d11cbec2531be7f748079",
+    "semantic_hash": ""
+  },
+  "docs/wb_finance_step3_articles_and_formulas_draft.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "dc1c27a213ade03cbbe0a85367d853cb",
+    "semantic_hash": ""
+  },
+  "otchet_reklama_artikul_30d.html": {
+    "mtime": 1782754974.6391273,
+    "ast_hash": "5fd04e2c395eb45a65824762b6b41427",
+    "semantic_hash": ""
+  },
+  "ozon_api_methods_guide.md": {
+    "mtime": 1782755000.283756,
+    "ast_hash": "e4ab6d8c96327ca84e8a52d2eb469110",
+    "semantic_hash": ""
+  },
+  "ozon_dashboard_vertical_headers.html": {
+    "mtime": 1782754974.63964,
+    "ast_hash": "aa742a681cfba6f34e6d1101b309d996",
+    "semantic_hash": ""
+  },
+  "requirements.txt": {
+    "mtime": 1782755000.284274,
+    "ast_hash": "83efefc0ac0382442d47d1e9b93bd99e",
+    "semantic_hash": ""
+  },
+  "src/palletization/requirements.txt": {
+    "mtime": 1782754974.6575043,
+    "ast_hash": "f57fa9c61ffbe00c5088566321c99e0c",
+    "semantic_hash": "f57fa9c61ffbe00c5088566321c99e0c"
+  },
+  "time-series-analysis-instruction.md": {
+    "mtime": 1782754974.6671276,
+    "ast_hash": "a90ead56214219ca3000cf9eb6c9568d",
+    "semantic_hash": ""
+  },
+  "web/finance_costs.html": {
+    "mtime": 1782755000.3175485,
+    "ast_hash": "af162a3f6f82cde94eb1fc07863355c2",
+    "semantic_hash": ""
+  },
+  "web/orders_dashboard.html": {
+    "mtime": 1782841472.6981986,
+    "ast_hash": "e2101c628a7d47a9e678fa093c377252",
+    "semantic_hash": ""
+  },
+  "web/palletization/index.html": {
+    "mtime": 1782755000.3226204,
+    "ast_hash": "8e7fc2b1af824db58b29ba259ed6f09d",
+    "semantic_hash": ""
+  },
+  "test_deploy_env_policy.py": {
+    "mtime": 1782755000.3130856,
+    "ast_hash": "d6bff4aa47ca332b01dd2ef8fdf395f2",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-06-25-article-analytics-portfolio-summary.md": {
+    "mtime": 1782755000.1439106,
+    "ast_hash": "9e3d651fac1ebb4b24912d72ee8250a8",
+    "semantic_hash": ""
+  },
+  "test_orders_dashboard_sku_diagnostics_charts.js": {
+    "mtime": 1782755000.3150873,
+    "ast_hash": "feddbbe9e7cd4cb30a9456a48245eeb4",
+    "semantic_hash": ""
+  },
+  "test_stock_snapshot_sync_hooks.js": {
+    "mtime": 1782755000.3160305,
+    "ast_hash": "51b8681aa153791f2885cc5815cfe901",
+    "semantic_hash": ""
+  },
+  "test_article_analytics_pdp_split.py": {
+    "mtime": 1782755000.3130856,
+    "ast_hash": "021d23330ff3efc4eeed55cd907ac0a1",
+    "semantic_hash": ""
+  },
+  "test_advertising_summary_stock_status.py": {
+    "mtime": 1782755000.3130856,
+    "ast_hash": "16735220c2dcf433952299cf0b88b76d",
+    "semantic_hash": ""
+  },
+  "test_orders_dashboard_wb_finance_mapping.js": {
+    "mtime": 1782755000.3150873,
+    "ast_hash": "c8b39d7c51c4ada4466e52a2e5d1c045",
+    "semantic_hash": ""
+  },
+  "migrations/add_finance_month_plan_marketplace.sql": {
+    "mtime": 1782755000.28272,
+    "ast_hash": "914d3abeb00529a6f680886a16b2919f",
+    "semantic_hash": ""
+  },
+  "check_result.txt": {
+    "mtime": 1782755000.1402936,
+    "ast_hash": "f20fc7336bc2eb1a5f0e5e07cb57e70d",
+    "semantic_hash": ""
+  },
+  "migrations/add_wb_advertising_tables.sql": {
+    "mtime": 1782755000.2832384,
+    "ast_hash": "cf392f2e18f8fb1b09e4621d88e1a666",
+    "semantic_hash": ""
+  },
+  "src/wb_advertising_client.py": {
+    "mtime": 1782755000.301534,
+    "ast_hash": "9dfb6d56ee7c152c99cdf9f0db9785c5",
+    "semantic_hash": ""
+  },
+  "src/wb_advertising_sync.py": {
+    "mtime": 1782755000.301534,
+    "ast_hash": "9ca60a7bc3c3da724ef9a55a292ad823",
+    "semantic_hash": ""
+  },
+  "scripts/verify_dashboard_auth.ps1": {
+    "mtime": 1782755000.285823,
+    "ast_hash": "ebcfd7c21f42763ebafb38b00d38abf8",
+    "semantic_hash": ""
+  },
+  "test_wb_advertising_sync.py": {
+    "mtime": 1782755000.3170407,
+    "ast_hash": "0d30d39d3de311a04aa3059a161789fb",
+    "semantic_hash": ""
+  },
+  "migrations/add_wb_stocks.sql": {
+    "mtime": 1782755000.2832384,
+    "ast_hash": "f76178cc00bbc57e98bfc1fa3ac75106",
+    "semantic_hash": ""
+  },
+  "src/wb_stocks_client.py": {
+    "mtime": 1782755000.30255,
+    "ast_hash": "2a8dc5abed3fffba7b966edc1d172e63",
+    "semantic_hash": ""
+  },
+  "src/wb_stocks_sync.py": {
+    "mtime": 1782755000.30255,
+    "ast_hash": "5118d9896b2f6f80df9e03bb022399af",
+    "semantic_hash": ""
+  },
+  "src/dashboard/routes/prices.py": {
+    "mtime": 1782841305.2259912,
+    "ast_hash": "bc970ccbff2d3e12d0aa0d2c05442753",
+    "semantic_hash": ""
+  },
+  "test_price_report.py": {
+    "mtime": 1782841446.4263022,
+    "ast_hash": "4747237e90efa3310fc0722eec197dc4",
+    "semantic_hash": ""
+  },
+  "\u2568\u0420\u2568\u255c\u2568\u2591\u2568\u2557\u2568\u2555\u2568\u2556 \u2564\u0411\u2564\u0412\u2564\u0410\u2564\u0413\u2568\u2551\u2564\u0412\u2564\u0413\u2564\u0410\u2564\u041b OZON \u0442\u0410\u0424 \u2564\u0410\u2568\u2561\u2568\u2556\u2564\u0413\u2568\u2557\u2564\u041c\u2564\u0412\u2568\u2591\u2564\u0412\u2564\u041b.txt": {
+    "mtime": 1782755000.3229647,
+    "ast_hash": "a61d8a4a662340ceeec8aedbf4303866",
+    "semantic_hash": ""
+  },
+  "migrations/add_product_price_details.sql": {
+    "mtime": 1782755445.2753148,
+    "ast_hash": "e0e2530a98fbb3621e38b1d7c0f42b91",
+    "semantic_hash": ""
+  },
+  "migrations/update_product_price_details_for_v5_prices.sql": {
+    "mtime": 1782757234.8572712,
+    "ast_hash": "9c3475746a58252683000c8ba9d297b1",
+    "semantic_hash": ""
+  },
+  "src/seller_price_control.py": {
+    "mtime": 1782843141.5931716,
+    "ast_hash": "8c59df1e4846ab4f36b09d79652c2a2f",
+    "semantic_hash": ""
+  },
+  "test_seller_price_control.py": {
+    "mtime": 1782842941.2822,
+    "ast_hash": "227b130fdabb663a12878383a507276e",
+    "semantic_hash": ""
+  }
+}

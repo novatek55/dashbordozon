@@ -1,0 +1,14 @@
+[Unit]
+Description=Ozon Seller price-control customer price sync
+After=network-online.target postgresql.service ozon-dashboard.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/ozon-dashboard
+EnvironmentFile=/etc/ozon-dashboard.env
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONUTF8=1
+ExecStart=/usr/bin/flock -n /opt/ozon-dashboard/logs/ozon-price-control-sync.lock /opt/ozon-dashboard/.venv/bin/python -m src.seller_price_control_sync --apply --seconds 75 --output /opt/ozon-dashboard/exports/price_control_sync.json

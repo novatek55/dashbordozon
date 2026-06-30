@@ -6,6 +6,8 @@ ENV_FILE="${ENV_FILE:-/etc/ozon-dashboard.env}"
 SERVICE_FILE="/etc/systemd/system/ozon-dashboard.service"
 SYNC_SERVICE_FILE="/etc/systemd/system/ozon-dashboard-sync.service"
 SYNC_TIMER_FILE="/etc/systemd/system/ozon-dashboard-sync.timer"
+PRICE_CONTROL_SERVICE_FILE="/etc/systemd/system/ozon-price-control-sync.service"
+PRICE_CONTROL_TIMER_FILE="/etc/systemd/system/ozon-price-control-sync.timer"
 NGINX_CONF_D="/etc/nginx/conf.d"
 NGINX_SITE="$NGINX_CONF_D/ozon-dashboard.conf"
 
@@ -15,7 +17,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 apt-get update
-apt-get install -y python3 python3-venv python3-pip postgresql postgresql-client nginx
+apt-get install -y python3 python3-venv python3-pip postgresql postgresql-client nginx chromium
 
 mkdir -p "$APP_DIR" "$APP_DIR/logs" "$APP_DIR/uploads" "$APP_DIR/exports"
 
@@ -45,6 +47,8 @@ python3 -m venv "$APP_DIR/.venv"
 cp deploy/ozon-dashboard.service "$SERVICE_FILE"
 cp deploy/ozon-dashboard-sync.service "$SYNC_SERVICE_FILE"
 cp deploy/ozon-dashboard-sync.timer "$SYNC_TIMER_FILE"
+cp deploy/ozon-price-control-sync.service "$PRICE_CONTROL_SERVICE_FILE"
+cp deploy/ozon-price-control-sync.timer "$PRICE_CONTROL_TIMER_FILE"
 mkdir -p "$NGINX_CONF_D"
 cp deploy/nginx-ozon-dashboard.conf "$NGINX_SITE"
 
@@ -63,6 +67,7 @@ Next:
 4. Run:
    systemctl enable --now ozon-dashboard
    systemctl enable --now ozon-dashboard-sync.timer
+   systemctl enable --now ozon-price-control-sync.timer
    systemctl reload nginx
 5. Check:
    curl -i http://127.0.0.1:18088/api/health
