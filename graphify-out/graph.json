@@ -4623,7 +4623,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "dashboard_helpers_month_bounds",
-      "community": 52,
+      "community": 174,
       "norm_label": "month_bounds()"
     },
     {
@@ -5723,7 +5723,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "routes_finance_ensure_finance_report_tables",
-      "community": 69,
+      "community": 52,
       "norm_label": "ensure_finance_report_tables()"
     },
     {
@@ -5733,7 +5733,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "src_dashboard_routes_finance_py_pool",
-      "community": 69,
+      "community": 52,
       "norm_label": "pool"
     },
     {
@@ -5753,7 +5753,7 @@
       "source_location": "L298",
       "_origin": "ast",
       "id": "src_dashboard_routes_finance_py_request",
-      "community": 52,
+      "community": 174,
       "norm_label": "request"
     },
     {
@@ -5763,7 +5763,7 @@
       "source_location": "L298",
       "_origin": "ast",
       "id": "src_dashboard_routes_finance_py_response",
-      "community": 52,
+      "community": 174,
       "norm_label": "response"
     },
     {
@@ -5783,7 +5783,7 @@
       "source_location": "L358",
       "_origin": "ast",
       "id": "routes_finance_save_settings_cost",
-      "community": 52,
+      "community": 174,
       "norm_label": "save_settings_cost()"
     },
     {
@@ -5803,7 +5803,7 @@
       "source_location": "L474",
       "_origin": "ast",
       "id": "routes_finance_save_finance_plan",
-      "community": 52,
+      "community": 174,
       "norm_label": "save_finance_plan()"
     },
     {
@@ -5813,7 +5813,7 @@
       "source_location": "L519",
       "_origin": "ast",
       "id": "routes_finance_get_cash_flow",
-      "community": 52,
+      "community": 174,
       "norm_label": "get_cash_flow()"
     },
     {
@@ -5853,7 +5853,7 @@
       "source_location": "L1163",
       "_origin": "ast",
       "id": "routes_finance_get_finance_report",
-      "community": 52,
+      "community": 174,
       "norm_label": "get_finance_report()"
     },
     {
@@ -5863,7 +5863,7 @@
       "source_location": "L1181",
       "_origin": "ast",
       "id": "routes_finance_get_finance_report_accrual",
-      "community": 52,
+      "community": 174,
       "norm_label": "get_finance_report_accrual()"
     },
     {
@@ -5873,7 +5873,7 @@
       "source_location": "L1199",
       "_origin": "ast",
       "id": "routes_finance_get_returns_analytics",
-      "community": 52,
+      "community": 174,
       "norm_label": "get_returns_analytics()"
     },
     {
@@ -5883,7 +5883,7 @@
       "source_location": "L1228",
       "_origin": "ast",
       "id": "routes_finance_get_accruals_comp_by_article_accrual",
-      "community": 52,
+      "community": 174,
       "norm_label": "get_accruals_comp_by_article_accrual()"
     },
     {
@@ -5903,7 +5903,7 @@
       "source_location": "L2396",
       "_origin": "ast",
       "id": "routes_finance_get_realization_v2",
-      "community": 52,
+      "community": 174,
       "norm_label": "get_realization_v2()"
     },
     {
@@ -5913,7 +5913,7 @@
       "source_location": "L2475",
       "_origin": "ast",
       "id": "routes_finance_get_wb_finance_report_daily",
-      "community": 52,
+      "community": 174,
       "norm_label": "get_wb_finance_report_daily()"
     },
     {
@@ -5923,7 +5923,7 @@
       "source_location": "L2755",
       "_origin": "ast",
       "id": "routes_finance_analyze_finance_data",
-      "community": 52,
+      "community": 174,
       "norm_label": "analyze_finance_data()"
     },
     {
@@ -5943,7 +5943,7 @@
       "source_location": "L1200",
       "_origin": "ast",
       "id": "routes_finance_rationale_1200",
-      "community": 52,
+      "community": 174,
       "norm_label": "\u0440\u045b\u0441\u201a\u0441\u2021\u0441\u2018\u0441\u201a \u0432\u00ab\u0440\u2019\u0440\u0455\u0440\u00b7\u0440\u0456\u0441\u0452\u0440\u00b0\u0441\u201a\u0441\u2039 \u0440\u0435 \u0440\u0455\u0441\u201a\u0440\u0458\u0440\u03bc\u0440\u0455\u0441\u2039\u0432\u00bb \u0432\u0452\u201d \u0441\u0433\u0440\u0455\u0440\u00b1\u0441\u2039\u0441\u201a\u0440\u0435\u0441\u045f \u0440\u00b7\u0440\u00b0 \u0440\u0456\u0440\u03bc\u0441\u0452\u0440\u0435"
     },
     {
@@ -5953,7 +5953,7 @@
       "source_location": "L1229",
       "_origin": "ast",
       "id": "routes_finance_rationale_1229",
-      "community": 52,
+      "community": 174,
       "norm_label": "accrual-\u0441\u0452\u0440\u03bc\u0440\u00b6\u0440\u0435\u0440\u0458 \u0440\u0455\u0441\u201a\u0441\u2021\u0441\u2018\u0441\u201a\u0440\u00b0 \u0432\u00ab\u0440\u043a\u0440\u00b0\u0441\u2021\u0440\u0435\u0441\u0433\u0440\u00bb\u0440\u03bc\u0440\u0455\u0440\u0435\u0441\u045f \u0440\u0456\u0440\u0455 \u0440\u00b0\u0441\u0452\u0441\u201a\u0440\u0435\u0440\u0454\u0441\u0433\u0440\u00bb\u0440\u00b0\u0440\u0458\u0432\u00bb"
     },
     {
@@ -5963,7 +5963,7 @@
       "source_location": "L2476",
       "_origin": "ast",
       "id": "routes_finance_rationale_2476",
-      "community": 52,
+      "community": 174,
       "norm_label": "wb finance daily report from wb_finance_daily vitrine."
     },
     {
@@ -5973,7 +5973,7 @@
       "source_location": "L2756",
       "_origin": "ast",
       "id": "routes_finance_rationale_2756",
-      "community": 52,
+      "community": 174,
       "norm_label": "analiz finansovyh dannyh za period."
     },
     {
@@ -8473,7 +8473,7 @@
       "source_location": "L213",
       "_origin": "ast",
       "id": "routes_system_create_pool",
-      "community": 69,
+      "community": 52,
       "norm_label": "create_pool()"
     },
     {
@@ -12883,7 +12883,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_ozon_client_ozonapierror_init",
-      "community": 53,
+      "community": 47,
       "norm_label": ".__init__()"
     },
     {
@@ -12933,7 +12933,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_init",
-      "community": 53,
+      "community": 47,
       "norm_label": ".__init__()"
     },
     {
@@ -13003,7 +13003,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_perform_http_request",
-      "community": 0,
+      "community": 53,
       "norm_label": "._perform_http_request()"
     },
     {
@@ -13023,7 +13023,7 @@
       "source_location": "L312",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_get_product_list",
-      "community": 190,
+      "community": 53,
       "norm_label": ".get_product_list()"
     },
     {
@@ -13033,7 +13033,7 @@
       "source_location": "L332",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_get_all_products",
-      "community": 190,
+      "community": 53,
       "norm_label": ".get_all_products()"
     },
     {
@@ -13123,7 +13123,7 @@
       "source_location": "L434",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_get_fbs_stocks_by_warehouse",
-      "community": 0,
+      "community": 53,
       "norm_label": ".get_fbs_stocks_by_warehouse()"
     },
     {
@@ -13283,7 +13283,7 @@
       "source_location": "L707",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_get_analytics_average_delivery_time_summary",
-      "community": 53,
+      "community": 0,
       "norm_label": ".get_analytics_average_delivery_time_summary()"
     },
     {
@@ -13423,7 +13423,7 @@
       "source_location": "L986",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_get_stock_on_warehouses",
-      "community": 47,
+      "community": 180,
       "norm_label": ".get_stock_on_warehouses()"
     },
     {
@@ -13473,7 +13473,7 @@
       "source_location": "L1082",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_get_analytics_stocks",
-      "community": 47,
+      "community": 180,
       "norm_label": ".get_analytics_stocks()"
     },
     {
@@ -13483,7 +13483,7 @@
       "source_location": "L1093",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_get_warehouses_list",
-      "community": 53,
+      "community": 0,
       "norm_label": ".get_warehouses_list()"
     },
     {
@@ -13563,7 +13563,7 @@
       "source_location": "L1173",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_get_review_comments",
-      "community": 53,
+      "community": 0,
       "norm_label": ".get_review_comments()"
     },
     {
@@ -13643,7 +13643,7 @@
       "source_location": "L1252",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_get_top_sku_with_questions",
-      "community": 53,
+      "community": 0,
       "norm_label": ".get_top_sku_with_questions()"
     },
     {
@@ -13823,7 +13823,7 @@
       "source_location": "L1542",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_create_report_warehouse_stock",
-      "community": 0,
+      "community": 53,
       "norm_label": ".create_report_warehouse_stock()"
     },
     {
@@ -13963,7 +13963,7 @@
       "source_location": "L1699",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_download_report",
-      "community": 53,
+      "community": 0,
       "norm_label": ".download_report()"
     },
     {
@@ -14033,7 +14033,7 @@
       "source_location": "L223",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_223",
-      "community": 0,
+      "community": 53,
       "norm_label": "nizkourovnevyj http-vyzov s edinym razborom otveta."
     },
     {
@@ -14053,7 +14053,7 @@
       "source_location": "L319",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_319",
-      "community": 190,
+      "community": 53,
       "norm_label": "poluchenie spiska tovarov."
     },
     {
@@ -14063,7 +14063,7 @@
       "source_location": "L333",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_333",
-      "community": 190,
+      "community": 53,
       "norm_label": "poluchenie vseh tovarov s paginaciej."
     },
     {
@@ -14153,7 +14153,7 @@
       "source_location": "L440",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_440",
-      "community": 0,
+      "community": 53,
       "norm_label": "poluchenie fbs-ostatkov po skladam prodavca."
     },
     {
@@ -14303,7 +14303,7 @@
       "source_location": "L711",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_711",
-      "community": 53,
+      "community": 0,
       "norm_label": "deprecated: /v1/analytics/average-delivery-time/summary may be obsolete for acco"
     },
     {
@@ -14443,7 +14443,7 @@
       "source_location": "L987",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_987",
-      "community": 47,
+      "community": 180,
       "norm_label": "deprecated wrapper: migrate calls to /v1/analytics/stocks."
     },
     {
@@ -14493,7 +14493,7 @@
       "source_location": "L1083",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_1083",
-      "community": 47,
+      "community": 180,
       "norm_label": "poluchenie analytics stocks po sku (1..100 za zapros)."
     },
     {
@@ -14503,7 +14503,7 @@
       "source_location": "L1094",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_1094",
-      "community": 53,
+      "community": 0,
       "norm_label": "poluchenie spiska skladov prodavca (fbo/fbs)."
     },
     {
@@ -14583,7 +14583,7 @@
       "source_location": "L1174",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_1174",
-      "community": 53,
+      "community": 0,
       "norm_label": "poluchenie kommentariev k otzyvu."
     },
     {
@@ -14663,7 +14663,7 @@
       "source_location": "L1253",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_1253",
-      "community": 53,
+      "community": 0,
       "norm_label": "poluchenie tovarov s voprosami."
     },
     {
@@ -14843,7 +14843,7 @@
       "source_location": "L1547",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_1547",
-      "community": 0,
+      "community": 53,
       "norm_label": "sozdanie otcheta po ostatkam na skladah."
     },
     {
@@ -14973,7 +14973,7 @@
       "source_location": "L1692",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_1692",
-      "community": 53,
+      "community": 0,
       "norm_label": "\u0441\u043a\u0430\u0447\u0438\u0432\u0430\u043d\u0438\u0435 \u0433\u043e\u0442\u043e\u0432\u043e\u0433\u043e json-\u043e\u0442\u0447\u0435\u0442\u0430 cpo-\u0437\u0430\u043a\u0430\u0437\u043e\u0432 \u043f\u043e uuid."
     },
     {
@@ -14983,7 +14983,7 @@
       "source_location": "L1700",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_1700",
-      "community": 53,
+      "community": 0,
       "norm_label": "skachivanie csv/zip otcheta."
     },
     {
@@ -16570,7 +16570,7 @@
       "label": "_get_json()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L93",
+      "source_location": "L100",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_get_json",
       "community": 20,
@@ -16580,7 +16580,7 @@
       "label": "ClientSession",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L93",
+      "source_location": "L100",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_py_clientsession",
       "community": 20,
@@ -16590,7 +16590,7 @@
       "label": "Any",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L93",
+      "source_location": "L100",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_py_any",
       "community": 20,
@@ -16600,7 +16600,7 @@
       "label": "find_or_create_target()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L99",
+      "source_location": "L106",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_find_or_create_target",
       "community": 20,
@@ -16610,7 +16610,7 @@
       "label": "send_cdp()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L122",
+      "source_location": "L129",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_send_cdp",
       "community": 20,
@@ -16620,7 +16620,7 @@
       "label": "ClientWebSocketResponse",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L122",
+      "source_location": "L129",
       "_origin": "ast",
       "id": "clientwebsocketresponse",
       "community": 20,
@@ -16630,7 +16630,7 @@
       "label": "wait_cdp_result()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L126",
+      "source_location": "L133",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_wait_cdp_result",
       "community": 20,
@@ -16640,7 +16640,7 @@
       "label": "capture_price_control()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L137",
+      "source_location": "L144",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_capture_price_control",
       "community": 20,
@@ -16650,7 +16650,7 @@
       "label": "run_sync()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L222",
+      "source_location": "L229",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_run_sync",
       "community": 20,
@@ -16660,7 +16660,7 @@
       "label": "Namespace",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L222",
+      "source_location": "L229",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_py_namespace",
       "community": 20,
@@ -16670,7 +16670,7 @@
       "label": "parse_args()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L274",
+      "source_location": "L281",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_parse_args",
       "community": 20,
@@ -16680,7 +16680,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L291",
+      "source_location": "L298",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_main",
       "community": 20,
@@ -18213,7 +18213,7 @@
       "source_location": "L723",
       "_origin": "ast",
       "id": "services_report_services_create_report_pool",
-      "community": 69,
+      "community": 52,
       "norm_label": "create_report_pool()"
     },
     {
@@ -18223,7 +18223,7 @@
       "source_location": "L723",
       "_origin": "ast",
       "id": "src_services_report_services_py_pool",
-      "community": 69,
+      "community": 52,
       "norm_label": "pool"
     },
     {
@@ -19003,7 +19003,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "e_\u0441\u043a\u0440\u0438\u043f\u0442\u044b_oz_ozonapi_src_supply_scan_warehouses_ui_py",
-      "community": 35,
+      "community": 184,
       "norm_label": "supply_scan_warehouses_ui.py"
     },
     {
@@ -19013,7 +19013,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_log",
-      "community": 174,
+      "community": 140,
       "norm_label": "_log()"
     },
     {
@@ -19053,7 +19053,7 @@
       "source_location": "L94",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_click_select_for_cluster",
-      "community": 174,
+      "community": 98,
       "norm_label": "_click_select_for_cluster()"
     },
     {
@@ -19083,7 +19083,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_open_cluster_items_modal",
-      "community": 174,
+      "community": 140,
       "norm_label": "_open_cluster_items_modal()"
     },
     {
@@ -19093,7 +19093,7 @@
       "source_location": "L205",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_wait_for_cluster_items_modal",
-      "community": 35,
+      "community": 184,
       "norm_label": "_wait_for_cluster_items_modal()"
     },
     {
@@ -19103,7 +19103,7 @@
       "source_location": "L214",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_activate_cluster_request_items_tab",
-      "community": 35,
+      "community": 184,
       "norm_label": "_activate_cluster_request_items_tab()"
     },
     {
@@ -19113,7 +19113,7 @@
       "source_location": "L226",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_set_cluster_items_search",
-      "community": 35,
+      "community": 184,
       "norm_label": "_set_cluster_items_search()"
     },
     {
@@ -19123,7 +19123,7 @@
       "source_location": "L268",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_read_cluster_items_summary",
-      "community": 35,
+      "community": 184,
       "norm_label": "_read_cluster_items_summary()"
     },
     {
@@ -19153,7 +19153,7 @@
       "source_location": "L419",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_type_warehouse_name",
-      "community": 174,
+      "community": 140,
       "norm_label": "_type_warehouse_name()"
     },
     {
@@ -19203,7 +19203,7 @@
       "source_location": "L776",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_pick_optimal_warehouses",
-      "community": 35,
+      "community": 184,
       "norm_label": "pick_optimal_warehouses()"
     },
     {
@@ -19213,7 +19213,7 @@
       "source_location": "L842",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_set_warehouses_for_draft",
-      "community": 174,
+      "community": 98,
       "norm_label": "set_warehouses_for_draft()"
     },
     {
@@ -19243,7 +19243,7 @@
       "source_location": "L1036",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_expand_all_clusters",
-      "community": 180,
+      "community": 98,
       "norm_label": "_expand_all_clusters()"
     },
     {
@@ -19253,7 +19253,7 @@
       "source_location": "L1063",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_read_warehouse_rows",
-      "community": 180,
+      "community": 140,
       "norm_label": "_read_warehouse_rows()"
     },
     {
@@ -19283,7 +19283,7 @@
       "source_location": "L1217",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_check_warehouse_button",
-      "community": 140,
+      "community": 184,
       "norm_label": "_check_warehouse_button()"
     },
     {
@@ -19293,7 +19293,7 @@
       "source_location": "L1238",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_click_replace_and_save",
-      "community": 140,
+      "community": 184,
       "norm_label": "_click_replace_and_save()"
     },
     {
@@ -19303,7 +19303,7 @@
       "source_location": "L1274",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_collect_timeslots_current_state",
-      "community": 180,
+      "community": 140,
       "norm_label": "_collect_timeslots_current_state()"
     },
     {
@@ -19373,7 +19373,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_1",
-      "community": 35,
+      "community": 184,
       "norm_label": "supply_scan_warehouses_ui.py \u2014 \u0441\u043a\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u0441\u043a\u043b\u0430\u0434\u043e\u0432 \u0447\u0435\u0440\u0435\u0437 ui seller.ozon.ru (pla"
     },
     {
@@ -19393,7 +19393,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_95",
-      "community": 174,
+      "community": 98,
       "norm_label": "\u043d\u0430\u0438\u0442\u0438 \u0441\u0442\u0440\u043e\u043a\u0443 \u043a\u043b\u0430\u0441\u0442\u0435\u0440\u0430 \u043f\u043e \u0438\u043c\u0435\u043d\u0438, \u043a\u043b\u0438\u043a\u043d\u0443\u0442\u044c \u043a\u043d\u043e\u043f\u043a\u0443 \u0432 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0435\u043c \u0441\u0442\u043e\u043b\u0431\u0446\u0435.     \u0438\u0441\u043f\u043e\u043b\u044c"
     },
     {
@@ -19423,7 +19423,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_158",
-      "community": 174,
+      "community": 140,
       "norm_label": "\u043e\u0442\u043a\u0440\u044b\u0442\u044c \u043c\u043e\u0434\u0430\u043b\u043a\u0443 \u0442\u043e\u0432\u0430\u0440\u043e\u0432 \u043a\u043b\u0430\u0441\u0442\u0435\u0440\u0430 \u0438\u0437 \u0441\u0442\u0440\u043e\u043a\u0438 \u0442\u0430\u0431\u043b\u0438\u0446\u044b \u0447\u0435\u0440\u043d\u043e\u0432\u0438\u043a\u0430."
     },
     {
@@ -19453,7 +19453,7 @@
       "source_location": "L420",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_420",
-      "community": 174,
+      "community": 140,
       "norm_label": "\u0432\u0432\u0435\u0441\u0442\u0438 \u0438\u043c\u044f \u0441\u043a\u043b\u0430\u0434\u0430 \u0432 \u043f\u043e\u043b\u0435 '\u043d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u0438\u043b\u0438 \u0430\u0434\u0440\u0435\u0441'.      label \u043f\u0435\u0440\u0435\u043a\u0440\u044b\u0432\u0430\u0435\u0442 inpu"
     },
     {
@@ -19503,7 +19503,7 @@
       "source_location": "L777",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_777",
-      "community": 35,
+      "community": 184,
       "norm_label": "\u0432\u044b\u0431\u0440\u0430\u0442\u044c \u043e\u043f\u0442\u0438\u043c\u0430\u043b\u044c\u043d\u044b\u0438 \u0441\u043a\u043b\u0430\u0434 \u0434\u043b\u044f \u043a\u0430\u0436\u0434\u043e\u0433\u043e \u043a\u043b\u0430\u0441\u0442\u0435\u0440\u0430.      \u0430\u043b\u0433\u043e\u0440\u0438\u0442\u043c:     1. \u043d\u0430\u0438\u0442\u0438 \u0441"
     },
     {
@@ -19513,7 +19513,7 @@
       "source_location": "L847",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_847",
-      "community": 174,
+      "community": 98,
       "norm_label": "\u0434\u043b\u044f \u043a\u0430\u0436\u0434\u043e\u0433\u043e \u043a\u043b\u0430\u0441\u0442\u0435\u0440\u0430: \u043e\u0442\u043a\u0440\u044b\u0442\u044c \u043c\u043e\u0434\u0430\u043b\u043a\u0443, \u0432\u0432\u0435\u0441\u0442\u0438 \u0441\u043a\u043b\u0430\u0434, \u043d\u0430\u0436\u0430\u0442\u044c     \"\u0432\u044b\u0431\u0440\u0430\u0442\u044c \u0442\u043e\u0447\u043a\u0443\""
     },
     {
@@ -19543,7 +19543,7 @@
       "source_location": "L1037",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_1037",
-      "community": 180,
+      "community": 98,
       "norm_label": "\u0440\u0430\u0441\u043a\u0440\u044b\u0442\u044c \u0432\u0441\u0435 \u0441\u0432\u0435\u0440\u043d\u0443\u0442\u044b\u0435 \u0430\u043a\u043a\u043e\u0440\u0434\u0435\u043e\u043d\u044b \u043a\u043b\u0430\u0441\u0442\u0435\u0440\u043e\u0432 (\u0448\u0435\u0432\u0440\u043e\u043d\u044b \u25b8)."
     },
     {
@@ -19553,7 +19553,7 @@
       "source_location": "L1064",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_1064",
-      "community": 180,
+      "community": 140,
       "norm_label": "\u043f\u0440\u043e\u0447\u0438\u0442\u0430\u0442\u044c \u0432\u0441\u0435 \u0441\u0442\u0440\u043e\u043a\u0438 \u0441\u043a\u043b\u0430\u0434\u043e\u0432 \u0438\u0437 \u0442\u0430\u0431\u043b\u0438\u0446\u044b \u044d\u0442\u0430\u043f\u0430 2.      \u0432\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u0441\u043f\u0438\u0441\u043e\u043a:"
     },
     {
@@ -19583,7 +19583,7 @@
       "source_location": "L1218",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_1218",
-      "community": 140,
+      "community": 184,
       "norm_label": "\u043f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u043a\u043d\u043e\u043f\u043a\u0438 '\u0432\u044b\u0431\u0440\u0430\u0442\u044c/\u0437\u0430\u043c\u0435\u043d\u0438\u0442\u044c \u0442\u043e\u0447\u043a\u0443'.     returns: 'active' | 'd"
     },
     {
@@ -19593,7 +19593,7 @@
       "source_location": "L1239",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_1239",
-      "community": 140,
+      "community": 184,
       "norm_label": "\u043d\u0430\u0436\u0430\u0442\u044c '\u0437\u0430\u043c\u0435\u043d\u0438\u0442\u044c \u0442\u043e\u0447\u043a\u0443' + '\u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c'. returns true \u0435\u0441\u043b\u0438 \u0443\u0441\u043f\u0435\u0448\u043d\u043e."
     },
     {
@@ -19603,7 +19603,7 @@
       "source_location": "L1277",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_1277",
-      "community": 180,
+      "community": 140,
       "norm_label": "\u0440\u0430\u0441\u043a\u0440\u044b\u0442\u044c \u0432\u0441\u0435 \u043a\u043b\u0430\u0441\u0442\u0435\u0440\u044b, \u043f\u0440\u043e\u0447\u0438\u0442\u0430\u0442\u044c \u0441\u043a\u043b\u0430\u0434\u044b, \u043a\u043b\u0438\u043a\u043d\u0443\u0442\u044c '\u0432\u044b\u0431\u0440\u0430\u0442\u044c' \u0438 \u0441\u043e\u0431\u0440\u0430\u0442\u044c \u0442\u0430\u0438\u043c\u0441\u043b\u043e\u0442\u044b."
     },
     {
@@ -22463,7 +22463,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_wb_finance_client_wbfinanceclient_init",
-      "community": 46,
+      "community": 19,
       "norm_label": ".__init__()"
     },
     {
@@ -22663,7 +22663,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_wb_stocks_client",
-      "community": 68,
+      "community": 46,
       "norm_label": "wb_stocks_client.py"
     },
     {
@@ -22673,7 +22673,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_wb_stocks_client_is_retryable",
-      "community": 68,
+      "community": 46,
       "norm_label": "_is_retryable()"
     },
     {
@@ -22683,7 +22683,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_wb_stocks_client_py_baseexception",
-      "community": 68,
+      "community": 46,
       "norm_label": "baseexception"
     },
     {
@@ -22753,7 +22753,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_wb_stocks_client_rationale_1",
-      "community": 68,
+      "community": 46,
       "norm_label": "client for wildberries stocks api."
     },
     {
@@ -99972,5 +99972,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "c34da5ab1ef8779d61fb91674b22ad0da704a83c"
+  "built_at_commit": "c6f3353960bc6118dbd89a1c317e0f8e31ad8fc6"
 }

@@ -73,13 +73,20 @@ async def ensure_chromium(
         "--no-first-run",
         "--no-default-browser-check",
         "--disable-background-networking",
+        "--disable-crash-reporter",
+        "--disable-crashpad",
         "--disable-sync",
         "--disable-dev-shm-usage",
         "--disable-blink-features=AutomationControlled",
     ]
     if headless:
         cmd.extend(["--headless=new", "--no-sandbox"])
-    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    profile_path = Path(profile_dir)
+    env = os.environ.copy()
+    env.setdefault("HOME", str(profile_path.parent))
+    env.setdefault("XDG_CONFIG_HOME", str(profile_path.parent / ".config"))
+    env.setdefault("XDG_CACHE_HOME", str(profile_path.parent / ".cache"))
+    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
 
     deadline = time.time() + wait_sec
     while time.time() < deadline:

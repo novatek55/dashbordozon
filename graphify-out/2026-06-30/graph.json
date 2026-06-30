@@ -13023,7 +13023,7 @@
       "source_location": "L312",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_get_product_list",
-      "community": 53,
+      "community": 190,
       "norm_label": ".get_product_list()"
     },
     {
@@ -13033,7 +13033,7 @@
       "source_location": "L332",
       "_origin": "ast",
       "id": "src_ozon_client_ozonclient_get_all_products",
-      "community": 53,
+      "community": 190,
       "norm_label": ".get_all_products()"
     },
     {
@@ -14053,7 +14053,7 @@
       "source_location": "L319",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_319",
-      "community": 53,
+      "community": 190,
       "norm_label": "poluchenie spiska tovarov."
     },
     {
@@ -14063,7 +14063,7 @@
       "source_location": "L333",
       "_origin": "ast",
       "id": "src_ozon_client_rationale_333",
-      "community": 53,
+      "community": 190,
       "norm_label": "poluchenie vseh tovarov s paginaciej."
     },
     {
@@ -16560,7 +16560,7 @@
       "label": "ensure_chromium()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L53",
+      "source_location": "L54",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_ensure_chromium",
       "community": 20,
@@ -16570,7 +16570,7 @@
       "label": "_get_json()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L92",
+      "source_location": "L93",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_get_json",
       "community": 20,
@@ -16580,7 +16580,7 @@
       "label": "ClientSession",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L92",
+      "source_location": "L93",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_py_clientsession",
       "community": 20,
@@ -16590,7 +16590,7 @@
       "label": "Any",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L92",
+      "source_location": "L93",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_py_any",
       "community": 20,
@@ -16600,7 +16600,7 @@
       "label": "find_or_create_target()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L98",
+      "source_location": "L99",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_find_or_create_target",
       "community": 20,
@@ -16610,7 +16610,7 @@
       "label": "send_cdp()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L121",
+      "source_location": "L122",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_send_cdp",
       "community": 20,
@@ -16620,7 +16620,7 @@
       "label": "ClientWebSocketResponse",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L121",
+      "source_location": "L122",
       "_origin": "ast",
       "id": "clientwebsocketresponse",
       "community": 20,
@@ -16630,7 +16630,7 @@
       "label": "wait_cdp_result()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L125",
+      "source_location": "L126",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_wait_cdp_result",
       "community": 20,
@@ -16640,7 +16640,7 @@
       "label": "capture_price_control()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L136",
+      "source_location": "L137",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_capture_price_control",
       "community": 20,
@@ -16650,7 +16650,7 @@
       "label": "run_sync()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L221",
+      "source_location": "L222",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_run_sync",
       "community": 20,
@@ -16660,7 +16660,7 @@
       "label": "Namespace",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L221",
+      "source_location": "L222",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_py_namespace",
       "community": 20,
@@ -16670,7 +16670,7 @@
       "label": "parse_args()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L273",
+      "source_location": "L274",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_parse_args",
       "community": 20,
@@ -16680,7 +16680,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "src/seller_price_control_sync.py",
-      "source_location": "L290",
+      "source_location": "L291",
       "_origin": "ast",
       "id": "src_seller_price_control_sync_main",
       "community": 20,
@@ -19083,7 +19083,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_open_cluster_items_modal",
-      "community": 35,
+      "community": 174,
       "norm_label": "_open_cluster_items_modal()"
     },
     {
@@ -19203,7 +19203,7 @@
       "source_location": "L776",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_pick_optimal_warehouses",
-      "community": 174,
+      "community": 35,
       "norm_label": "pick_optimal_warehouses()"
     },
     {
@@ -19423,7 +19423,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_158",
-      "community": 35,
+      "community": 174,
       "norm_label": "\u043e\u0442\u043a\u0440\u044b\u0442\u044c \u043c\u043e\u0434\u0430\u043b\u043a\u0443 \u0442\u043e\u0432\u0430\u0440\u043e\u0432 \u043a\u043b\u0430\u0441\u0442\u0435\u0440\u0430 \u0438\u0437 \u0441\u0442\u0440\u043e\u043a\u0438 \u0442\u0430\u0431\u043b\u0438\u0446\u044b \u0447\u0435\u0440\u043d\u043e\u0432\u0438\u043a\u0430."
     },
     {
@@ -19503,7 +19503,7 @@
       "source_location": "L777",
       "_origin": "ast",
       "id": "src_supply_scan_warehouses_ui_rationale_777",
-      "community": 174,
+      "community": 35,
       "norm_label": "\u0432\u044b\u0431\u0440\u0430\u0442\u044c \u043e\u043f\u0442\u0438\u043c\u0430\u043b\u044c\u043d\u044b\u0438 \u0441\u043a\u043b\u0430\u0434 \u0434\u043b\u044f \u043a\u0430\u0436\u0434\u043e\u0433\u043e \u043a\u043b\u0430\u0441\u0442\u0435\u0440\u0430.      \u0430\u043b\u0433\u043e\u0440\u0438\u0442\u043c:     1. \u043d\u0430\u0438\u0442\u0438 \u0441"
     },
     {
@@ -22463,7 +22463,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_wb_finance_client_wbfinanceclient_init",
-      "community": 19,
+      "community": 46,
       "norm_label": ".__init__()"
     },
     {
@@ -22663,7 +22663,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_wb_stocks_client",
-      "community": 46,
+      "community": 68,
       "norm_label": "wb_stocks_client.py"
     },
     {
@@ -22673,7 +22673,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_wb_stocks_client_is_retryable",
-      "community": 46,
+      "community": 68,
       "norm_label": "_is_retryable()"
     },
     {
@@ -22683,7 +22683,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_wb_stocks_client_py_baseexception",
-      "community": 46,
+      "community": 68,
       "norm_label": "baseexception"
     },
     {
@@ -22753,7 +22753,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_wb_stocks_client_rationale_1",
-      "community": 46,
+      "community": 68,
       "norm_label": "client for wildberries stocks api."
     },
     {
@@ -55057,9 +55057,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_database",
-      "confidence_score": 1.0
+      "target": "src_database"
     },
     {
       "relation": "imports_from",
@@ -76417,9 +76417,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control"
     },
     {
       "relation": "imports_from",
@@ -76692,9 +76692,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_extract_customer_prices_from_capture",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_extract_customer_prices_from_capture"
     },
     {
       "relation": "calls",
@@ -76703,9 +76703,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L232",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_run_sync",
-      "target": "src_seller_price_control_extract_customer_prices_from_capture",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_extract_customer_prices_from_capture"
     },
     {
       "relation": "imports",
@@ -76747,9 +76747,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_find_known_price_contexts",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_find_known_price_contexts"
     },
     {
       "relation": "calls",
@@ -76758,9 +76758,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L233",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_run_sync",
-      "target": "src_seller_price_control_find_known_price_contexts",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_find_known_price_contexts"
     },
     {
       "relation": "imports",
@@ -76802,9 +76802,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_upsert_customer_prices",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_upsert_customer_prices"
     },
     {
       "relation": "calls",
@@ -76813,9 +76813,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L260",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_run_sync",
-      "target": "src_seller_price_control_upsert_customer_prices",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_upsert_customer_prices"
     },
     {
       "relation": "calls",
@@ -76856,9 +76856,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L136",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_sync_capture_price_control",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_capture_price_control"
     },
     {
       "relation": "contains",
@@ -76866,9 +76866,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_sync_ensure_chromium",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_ensure_chromium"
     },
     {
       "relation": "contains",
@@ -76876,9 +76876,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L38",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_sync_find_chromium_executable",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_find_chromium_executable"
     },
     {
       "relation": "contains",
@@ -76886,9 +76886,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L98",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_sync_find_or_create_target",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_find_or_create_target"
     },
     {
       "relation": "contains",
@@ -76896,9 +76896,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L92",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_sync_get_json",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_get_json"
     },
     {
       "relation": "contains",
@@ -76906,9 +76906,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_sync_is_port_open",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_is_port_open"
     },
     {
       "relation": "contains",
@@ -76916,9 +76916,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L290",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_sync_main",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_main"
     },
     {
       "relation": "contains",
@@ -76926,9 +76926,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L273",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_sync_parse_args",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_parse_args"
     },
     {
       "relation": "contains",
@@ -76936,9 +76936,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L221",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_sync_run_sync",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_run_sync"
     },
     {
       "relation": "contains",
@@ -76946,9 +76946,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L121",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_sync_send_cdp",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_send_cdp"
     },
     {
       "relation": "contains",
@@ -76956,9 +76956,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L125",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync",
-      "target": "src_seller_price_control_sync_wait_cdp_result",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_wait_cdp_result"
     },
     {
       "relation": "rationale_for",
@@ -76966,9 +76966,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_rationale_1",
-      "target": "src_seller_price_control_sync",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync"
     },
     {
       "relation": "imports_from",
@@ -76977,9 +76977,9 @@
       "source_file": "test_seller_price_control_sync.py",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_seller_price_control_sync",
-      "target": "src_seller_price_control_sync",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync"
     },
     {
       "relation": "calls",
@@ -76988,9 +76988,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_ensure_chromium",
-      "target": "src_seller_price_control_sync_is_port_open",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_is_port_open"
     },
     {
       "relation": "calls",
@@ -76999,9 +76999,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L65",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_ensure_chromium",
-      "target": "src_seller_price_control_sync_find_chromium_executable",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_find_chromium_executable"
     },
     {
       "relation": "imports",
@@ -77010,9 +77010,9 @@
       "source_file": "test_seller_price_control_sync.py",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_seller_price_control_sync",
-      "target": "src_seller_price_control_sync_find_chromium_executable",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_find_chromium_executable"
     },
     {
       "relation": "calls",
@@ -77021,9 +77021,9 @@
       "source_file": "test_seller_price_control_sync.py",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_seller_price_control_sync_test_find_chromium_executable_errors_when_not_found",
-      "target": "src_seller_price_control_sync_find_chromium_executable",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_find_chromium_executable"
     },
     {
       "relation": "calls",
@@ -77032,9 +77032,9 @@
       "source_file": "test_seller_price_control_sync.py",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_seller_price_control_sync_test_find_chromium_executable_prefers_explicit_path",
-      "target": "src_seller_price_control_sync_find_chromium_executable",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_find_chromium_executable"
     },
     {
       "relation": "calls",
@@ -77043,9 +77043,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L223",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_run_sync",
-      "target": "src_seller_price_control_sync_ensure_chromium",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_ensure_chromium"
     },
     {
       "relation": "calls",
@@ -77054,9 +77054,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L104",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_find_or_create_target",
-      "target": "src_seller_price_control_sync_get_json",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_get_json"
     },
     {
       "relation": "references",
@@ -77065,9 +77065,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L92",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_get_json",
-      "target": "src_seller_price_control_sync_py_any",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_py_any"
     },
     {
       "relation": "references",
@@ -77076,9 +77076,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L92",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_get_json",
-      "target": "src_seller_price_control_sync_py_clientsession",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_py_clientsession"
     },
     {
       "relation": "calls",
@@ -77087,9 +77087,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L137",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_capture_price_control",
-      "target": "src_seller_price_control_sync_py_clientsession",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_py_clientsession"
     },
     {
       "relation": "references",
@@ -77098,9 +77098,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L98",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_find_or_create_target",
-      "target": "src_seller_price_control_sync_py_clientsession",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_py_clientsession"
     },
     {
       "relation": "references",
@@ -77109,9 +77109,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L136",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_capture_price_control",
-      "target": "src_seller_price_control_sync_py_any",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_py_any"
     },
     {
       "relation": "references",
@@ -77120,9 +77120,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L221",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_run_sync",
-      "target": "src_seller_price_control_sync_py_any",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_py_any"
     },
     {
       "relation": "references",
@@ -77131,9 +77131,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L121",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_send_cdp",
-      "target": "src_seller_price_control_sync_py_any",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_py_any"
     },
     {
       "relation": "references",
@@ -77142,9 +77142,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L125",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_wait_cdp_result",
-      "target": "src_seller_price_control_sync_py_any",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_py_any"
     },
     {
       "relation": "calls",
@@ -77153,9 +77153,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L138",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_capture_price_control",
-      "target": "src_seller_price_control_sync_find_or_create_target",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_find_or_create_target"
     },
     {
       "relation": "calls",
@@ -77164,9 +77164,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L151",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_capture_price_control",
-      "target": "src_seller_price_control_sync_send_cdp",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_send_cdp"
     },
     {
       "relation": "references",
@@ -77175,9 +77175,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L121",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_send_cdp",
-      "target": "clientwebsocketresponse",
-      "confidence_score": 1.0
+      "target": "clientwebsocketresponse"
     },
     {
       "relation": "references",
@@ -77186,9 +77186,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L125",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_wait_cdp_result",
-      "target": "clientwebsocketresponse",
-      "confidence_score": 1.0
+      "target": "clientwebsocketresponse"
     },
     {
       "relation": "calls",
@@ -77197,9 +77197,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L200",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_capture_price_control",
-      "target": "src_seller_price_control_sync_wait_cdp_result",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_wait_cdp_result"
     },
     {
       "relation": "calls",
@@ -77208,9 +77208,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L230",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_run_sync",
-      "target": "src_seller_price_control_sync_capture_price_control",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_capture_price_control"
     },
     {
       "relation": "calls",
@@ -77219,9 +77219,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L291",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_main",
-      "target": "src_seller_price_control_sync_run_sync",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_run_sync"
     },
     {
       "relation": "references",
@@ -77230,9 +77230,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L221",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_run_sync",
-      "target": "src_seller_price_control_sync_py_namespace",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_py_namespace"
     },
     {
       "relation": "references",
@@ -77241,9 +77241,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L273",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_parse_args",
-      "target": "src_seller_price_control_sync_py_namespace",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_py_namespace"
     },
     {
       "relation": "calls",
@@ -77252,9 +77252,9 @@
       "source_file": "src/seller_price_control_sync.py",
       "source_location": "L291",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_seller_price_control_sync_main",
-      "target": "src_seller_price_control_sync_parse_args",
-      "confidence_score": 1.0
+      "target": "src_seller_price_control_sync_parse_args"
     },
     {
       "relation": "rationale_for",
@@ -94119,9 +94119,9 @@
       "source_file": "test_seller_price_control_sync.py",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_seller_price_control_sync",
-      "target": "test_seller_price_control_sync_test_find_chromium_executable_errors_when_not_found",
-      "confidence_score": 1.0
+      "target": "test_seller_price_control_sync_test_find_chromium_executable_errors_when_not_found"
     },
     {
       "relation": "contains",
@@ -94129,9 +94129,9 @@
       "source_file": "test_seller_price_control_sync.py",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_seller_price_control_sync",
-      "target": "test_seller_price_control_sync_test_find_chromium_executable_prefers_explicit_path",
-      "confidence_score": 1.0
+      "target": "test_seller_price_control_sync_test_find_chromium_executable_prefers_explicit_path"
     },
     {
       "relation": "contains",
@@ -99972,5 +99972,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "bd689bea9c712ad2558edbbb7aed6b0562856a3c"
+  "built_at_commit": "c34da5ab1ef8779d61fb91674b22ad0da704a83c"
 }
