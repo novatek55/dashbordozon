@@ -32,6 +32,28 @@ def test_extract_customer_prices_from_payload_reads_explicit_customer_price_fiel
     ]
 
 
+def test_extract_customer_prices_from_payload_reads_seller_price_control_products():
+    payload = {
+        "products": [
+            {
+                "part_item": {"offer_id": "405-30"},
+                "part_marketing_price": {
+                    "price": {"currencyCode": "RUB", "units": "1093", "nanos": 0},
+                    "seller_price": {"currencyCode": "RUB", "units": "1600", "nanos": 0},
+                    "oa_price": {"currencyCode": "RUB", "units": "984", "nanos": 0},
+                },
+            }
+        ]
+    }
+
+    records = extract_customer_prices_from_payload(payload, "https://seller.ozon.ru/api/v1/products/list-by-filter")
+
+    assert len(records) == 1
+    assert records[0].offer_id == "405-30"
+    assert records[0].customer_price == 984.0
+    assert records[0].source_key == "part_marketing_price.oa_price"
+
+
 def test_extract_customer_prices_from_capture_reads_json_response_bodies():
     capture = {
         "events": [

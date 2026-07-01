@@ -55,6 +55,14 @@ def parse_money_value(value: Any) -> Optional[float]:
     if isinstance(value, (int, float)):
         return float(value) if value > 0 else None
     if isinstance(value, dict):
+        if "units" in value:
+            try:
+                units = float(value.get("units") or 0)
+                nanos = float(value.get("nanos") or 0) / 1_000_000_000
+            except (TypeError, ValueError):
+                return None
+            parsed = units + nanos
+            return parsed if parsed > 0 else None
         for key in ("value", "price", "amount", "amountValue", "rub", "text"):
             parsed = parse_money_value(value.get(key))
             if parsed is not None:
@@ -104,8 +112,42 @@ def _customer_price_from_dict(data: dict[str, Any]) -> tuple[Optional[float], st
     return None, ""
 
 
+def _extract_price_control_products(payload: Any, source_url: str) -> list[SellerCustomerPrice]:
+    if not isinstance(payload, dict) or not isinstance(payload.get("products"), list):
+        return []
+
+    records: list[SellerCustomerPrice] = []
+    for product in payload["products"]:
+        if not isinstance(product, dict):
+            continue
+        part_item = product.get("part_item") or {}
+        if not isinstance(part_item, dict):
+            continue
+        offer_id = str(part_item.get("offer_id") or "").strip()
+        if not offer_id:
+            continue
+        marketing_price = product.get("part_marketing_price") or {}
+        if not isinstance(marketing_price, dict):
+            continue
+        customer_price = parse_money_value(marketing_price.get("oa_price"))
+        if customer_price is None:
+            continue
+        records.append(
+            SellerCustomerPrice(
+                offer_id=offer_id,
+                customer_price=customer_price,
+                source_url=source_url,
+                source_key="part_marketing_price.oa_price",
+                raw_data=product,
+            )
+        )
+    return records
+
+
 def extract_customer_prices_from_payload(payload: Any, source_url: str = "") -> list[SellerCustomerPrice]:
     records: dict[str, SellerCustomerPrice] = {}
+    for record in _extract_price_control_products(payload, source_url):
+        records[record.offer_id] = record
     for data in _iter_dicts(payload):
         offer_id = _offer_id_from_dict(data)
         if not offer_id:
