@@ -1,8 +1,8 @@
 [Unit]
-Description=Run Ozon Seller price-control customer price sync every hour
+Description=Run Ozon Seller price-control customer price sync twice daily
 
 [Timer]
-OnCalendar=hourly
+OnCalendar=*-*-* 08,20:00:00
 Persistent=true
 RandomizedDelaySec=300
 Unit=ozon-price-control-sync.service
